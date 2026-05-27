@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const limited = await rateLimit(`admin-admins:${getClientIp(req)}`, { limit: 30, duration: 10 });
+    if (limited) return limited;
     if (!(await isAuthenticated())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -30,6 +33,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = await rateLimit(`admin-admins:${getClientIp(req)}`, { limit: 30, duration: 10 });
+    if (limited) return limited;
     if (!(await isAuthenticated())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

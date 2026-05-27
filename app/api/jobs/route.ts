@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   try {
+    const limited = await rateLimit(`jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });
+    if (limited) return limited;
     const { searchParams } = new URL(req.url);
     const title = searchParams.get("title");
 

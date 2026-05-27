@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession, setSessionCookie, hashPassword, verifyPassword } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = await rateLimit(`login:${getClientIp(req)}`, { limit: 5, duration: 60 });
+    if (limited) return limited;
     const { email, password } = await req.json();
 
     if (!email || !password) {

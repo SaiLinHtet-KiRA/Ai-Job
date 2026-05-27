@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { sendApplicationEmails } from "@/lib/email";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = await rateLimit(`apply:${getClientIp(req)}`, { limit: 5, duration: 60 });
+    if (limited) return limited;
     const formData = await req.formData();
 
     const name = formData.get("name") as string;

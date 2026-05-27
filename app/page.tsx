@@ -156,18 +156,25 @@ export default function Home() {
       </section>
 
       {/* ── Stats Bar ── */}
-      <section className="border-y border-zinc-100 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 divide-x divide-zinc-200 dark:divide-zinc-800 sm:grid-cols-4">
-          {stats.map((s) => (
-            <div key={s.label} className="px-6 py-8 text-center">
-              <p className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
-                {s.value}
-              </p>
-              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                {s.label}
-              </p>
-            </div>
-          ))}
+      <section className="border-y border-zinc-100 dark:border-zinc-800">
+        <div className="mx-auto max-w-5xl px-4 py-14 sm:py-20">
+          <div className="flex flex-col items-center gap-8 sm:flex-row sm:justify-between sm:gap-0">
+            {stats.map((s, i) => (
+              <div key={s.label} className="flex flex-col items-center text-center sm:min-w-[120px]">
+                <span className="text-4xl font-black tracking-tight sm:text-5xl">
+                  <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    {s.value}
+                  </span>
+                </span>
+                <span className="mt-1.5 text-xs font-medium uppercase tracking-[0.15em] text-zinc-400 dark:text-zinc-500">
+                  {s.label}
+                </span>
+                {i < stats.length - 1 && (
+                  <span className="mt-6 h-px w-12 bg-zinc-200 sm:hidden dark:bg-zinc-700" />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

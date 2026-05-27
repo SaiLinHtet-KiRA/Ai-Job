@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import ApplyModal from "@/components/ApplyModal";
 
 const steps = [
@@ -90,14 +92,17 @@ export default function Home() {
       {/* ── Nav ── */}
       <nav className="sticky top-0 z-40 border-b border-zinc-200/60 bg-white/80 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/80">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <span className="text-xl font-extrabold tracking-tight">
-            <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
-              AI-Job
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo.avif" alt="easy2apply" width={36} height={36} className="h-9 w-9 rounded-lg" />
+            <span className="text-xl font-extrabold tracking-tight">
+              <span className="bg-gradient-to-r from-primary via-primary-dark to-[#004DD4] bg-clip-text text-transparent">
+                easy2apply
+              </span>
             </span>
-          </span>
+          </Link>
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded-full bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-blue-700 hover:to-violet-700 hover:shadow-blue-500/40 active:scale-95"
+            className="rounded-full bg-gradient-to-r from-primary to-primary-dark px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:from-primary-dark hover:to-primary-dark hover:shadow-primary/30 active:scale-95"
           >
             Apply Now
           </button>
@@ -107,14 +112,14 @@ export default function Home() {
       {/* ── Hero ── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 -z-10 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-400/10 via-violet-400/10 to-purple-400/10 blur-3xl dark:from-blue-400/5 dark:via-violet-400/5 dark:to-purple-400/5" />
+          <div className="absolute left-1/2 top-0 -z-10 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-br from-primary/10 via-primary-dark/10 to-[#004DD4]/10 blur-3xl dark:from-primary/5 dark:via-primary-dark/5 dark:to-[#004DD4]/5" />
         </div>
 
         <div className="mx-auto max-w-4xl px-6 pb-24 pt-24 text-center sm:pt-32">
-          <div className="mb-8 inline-flex animate-slide-up items-center gap-2 rounded-full border border-blue-200/60 bg-blue-50/80 px-4 py-1.5 text-xs font-semibold tracking-wider text-blue-700 backdrop-blur-sm dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+          <div className="mb-8 inline-flex animate-slide-up items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-primary-dark backdrop-blur-sm dark:border-primary/40 dark:bg-primary/15 dark:text-primary/70">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-dark" />
             </span>
             NOW HIRING — 250+ OPEN POSITIONS
           </div>
@@ -122,7 +127,7 @@ export default function Home() {
           <h1 className="animate-slide-up text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl lg:text-8xl">
             One Click.
             <br />
-            <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-primary-dark to-[#004DD4] bg-clip-text text-transparent">
               Infinite Possibilities.
             </span>
           </h1>
@@ -136,7 +141,7 @@ export default function Home() {
           <div className="animate-slide-up mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <button
               onClick={() => setModalOpen(true)}
-              className="group relative inline-flex h-16 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 px-10 text-lg font-semibold text-white shadow-2xl shadow-blue-500/30 transition-all hover:from-blue-700 hover:to-violet-700 hover:shadow-blue-500/50 active:scale-[0.98] sm:w-auto"
+              className="group relative inline-flex h-16 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary-dark px-10 text-lg font-semibold text-white shadow-2xl shadow-primary/25 transition-all hover:from-primary-dark hover:to-primary-dark hover:shadow-primary/40 active:scale-[0.98] sm:w-auto"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -169,7 +174,7 @@ export default function Home() {
       {/* ── How It Works ── */}
       <section className="mx-auto max-w-7xl px-6 py-28">
         <div className="mb-16 text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
             How It Works
           </span>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
@@ -184,7 +189,7 @@ export default function Home() {
           {steps.map((item, i) => (
             <div
               key={item.num}
-              className="group relative rounded-3xl border border-zinc-200/60 bg-white p-8 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-xl hover:shadow-blue-500/5 dark:border-zinc-800 dark:bg-zinc-900/60"
+              className="group relative rounded-3xl border border-zinc-200/60 bg-white p-8 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5 dark:border-zinc-800 dark:bg-zinc-900/60"
             >
               <div className="mb-4 flex items-center gap-3">
                 <span className="text-4xl font-black tracking-tighter text-zinc-100 dark:text-zinc-800">
@@ -194,7 +199,7 @@ export default function Home() {
                   <div className="hidden h-px flex-1 bg-gradient-to-r from-zinc-200 to-transparent sm:block dark:from-zinc-700" />
                 )}
               </div>
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 text-blue-600 shadow-sm dark:from-blue-950 dark:to-purple-950 dark:text-blue-400">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 text-primary shadow-sm dark:from-primary/20 dark:to-accent/15 dark:text-primary/80">
                 {item.icon}
               </div>
               <h3 className="text-lg font-bold tracking-tight">{item.title}</h3>
@@ -206,12 +211,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Why AI-Job ── */}
+      {/* ── Why easy2apply ── */}
       <section className="bg-zinc-50/50 py-28 dark:bg-zinc-900/30">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-16 text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600">
-              Why AI-Job
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
+              Why easy2apply
             </span>
             <h2 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
               Everything you need
@@ -227,7 +232,7 @@ export default function Home() {
                 key={p.title}
                 className="group rounded-3xl border border-zinc-200/60 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900/60"
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 text-blue-600 shadow-sm dark:from-blue-950 dark:to-purple-950 dark:text-blue-400">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 text-primary shadow-sm dark:from-primary/20 dark:to-accent/15 dark:text-primary/80">
                   {p.icon}
                 </div>
                 <h3 className="text-base font-bold tracking-tight">{p.title}</h3>
@@ -242,12 +247,12 @@ export default function Home() {
 
       {/* ── CTA ── */}
       <section className="mx-auto max-w-7xl px-6 py-28">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-600 via-violet-600 to-purple-600 p-px shadow-2xl shadow-blue-500/20">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary-dark to-[#004DD4] p-px shadow-2xl shadow-primary/20">
           <div className="rounded-[2.45rem] bg-white px-8 py-16 text-center dark:bg-zinc-950 sm:px-16 sm:py-24">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-5xl">
               Ready to land your
               <br />
-              <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-primary-dark to-[#004DD4] bg-clip-text text-transparent">
                 dream job?
               </span>
             </h2>
@@ -257,7 +262,7 @@ export default function Home() {
             <div className="mt-8">
               <button
                 onClick={() => setModalOpen(true)}
-                className="group relative inline-flex h-16 items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 px-12 text-lg font-semibold text-white shadow-2xl shadow-blue-500/30 transition-all hover:from-blue-700 hover:to-violet-700 hover:shadow-blue-500/50 active:scale-[0.98]"
+                className="group relative inline-flex h-16 items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary-dark px-12 text-lg font-semibold text-white shadow-2xl shadow-primary/25 transition-all hover:from-primary-dark hover:to-primary-dark hover:shadow-primary/40 active:scale-[0.98]"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -272,7 +277,7 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className="border-t border-zinc-200/60 py-8 dark:border-zinc-800">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 text-center text-sm text-zinc-400 dark:text-zinc-500 sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} AI-Job. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} easy2apply. All rights reserved.</p>
           <p>
             Built with{" "}
             <span className="text-red-500">&hearts;</span> for job seekers

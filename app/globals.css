@@ -5,6 +5,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-primary: #0066FF;
+  --color-primary-dark: #005BFF;
+  --color-accent: #39D353;
+  --color-accent-bright: #3DDB5A;
 
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-slide-up: slide-up 0.4s ease-out;

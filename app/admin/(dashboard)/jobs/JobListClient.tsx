@@ -50,7 +50,7 @@ export function JobListClient({ initialJobs }: { initialJobs: Job[] }) {
           No jobs yet.{" "}
           <Link
             href="/admin/jobs/new"
-            className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="font-medium text-primary hover:text-primary-dark dark:text-primary/80"
           >
             Create your first job post
           </Link>
@@ -67,7 +67,7 @@ export function JobListClient({ initialJobs }: { initialJobs: Job[] }) {
           className="group rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50"
         >
           <div className="mb-3 flex items-start justify-between">
-            <span className="inline-block rounded-lg bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+            <span className="inline-block rounded-lg bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-dark dark:bg-primary/20 dark:text-primary/70">
               {job.type || "On-site"}
             </span>
             <span className="text-xs text-zinc-400 dark:text-zinc-500">
@@ -111,7 +111,7 @@ export function JobListClient({ initialJobs }: { initialJobs: Job[] }) {
           <div className="mt-4 flex gap-2 border-t border-zinc-100 pt-4 dark:border-zinc-800">
             <Link
               href={`/admin/jobs/${job.id}/edit`}
-              className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-center text-xs font-semibold text-zinc-600 transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-blue-800 dark:hover:bg-blue-950 dark:hover:text-blue-400"
+              className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-center text-xs font-semibold text-zinc-600 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary/80"
             >
               Update
             </Link>

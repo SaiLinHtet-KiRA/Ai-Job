@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI-Job — Find Your Dream Job",
+  title: "easy2apply — Find Your Dream Job",
   description: "AI-powered job matching platform connecting top talent with cutting-edge companies.",
 };
 

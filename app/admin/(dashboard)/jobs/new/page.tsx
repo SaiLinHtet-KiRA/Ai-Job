@@ -2,9 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import TitleSelector from "@/components/TitleSelector";
 
 const inputClasses =
-  "w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-blue-500 dark:focus:bg-zinc-800";
+  "w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-primary dark:focus:bg-zinc-800";
 
 const labelClasses =
   "flex flex-col gap-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300";
@@ -75,13 +76,7 @@ export default function NewJobPage() {
       >
         <label className={labelClasses}>
           Title <span className="text-red-500">*</span>
-          <input
-            className={inputClasses}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            placeholder="Senior Frontend Developer"
-          />
+          <TitleSelector value={title} onChange={setTitle} required />
         </label>
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -179,7 +174,7 @@ export default function NewJobPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-blue-700 hover:to-purple-700 hover:shadow-blue-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:from-primary-dark hover:to-primary-dark hover:shadow-primary/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Creating..." : "Create Job"}
           </button>

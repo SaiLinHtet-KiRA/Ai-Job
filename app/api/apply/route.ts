@@ -70,6 +70,8 @@ export async function POST(req: NextRequest) {
         name,
         email,
         position,
+        type,
+        salary,
         resumeUrl: publicUrl,
         jobs,
       });

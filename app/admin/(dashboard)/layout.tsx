@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 const navItems = [
   {
@@ -36,7 +37,7 @@ const navItems = [
 const linkBase =
   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all";
 const linkActive =
-  "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
+  "bg-primary/10 text-primary-dark dark:bg-primary/20 dark:text-primary/70";
 const linkInactive =
   "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800";
 
@@ -59,9 +60,10 @@ export default function AdminLayout({
 
       <aside className="fixed left-0 top-0 z-30 flex h-full w-60 flex-col border-r border-zinc-200/60 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="border-b border-zinc-200/60 px-5 py-5 dark:border-zinc-800">
-          <Link href="/admin/dashboard" className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              AI-Job
+          <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
+            <Image src="/logo.avif" alt="easy2apply" width={32} height={32} className="h-8 w-8 rounded-lg" />
+            <span className="bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+              easy2apply
             </span>{" "}
             Admin
           </Link>

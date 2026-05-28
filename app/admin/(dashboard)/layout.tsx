@@ -49,11 +49,8 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
+  const [sidebarOpenPathname, setSidebarOpenPathname] = useState<string | null>(null);
+  const sidebarOpen = sidebarOpenPathname === pathname;
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -72,7 +69,7 @@ export default function AdminLayout({
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-zinc-200/60 px-5 py-5 dark:border-zinc-800">
-        <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-bold tracking-tight text-zinc-900 dark:text-white" onClick={() => setSidebarOpen(false)}>
+        <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-bold tracking-tight text-zinc-900 dark:text-white" onClick={() => setSidebarOpenPathname(null)}>
           <Image src="/logo.avif" alt="easy2apply" width={32} height={32} className="h-8 w-8 rounded-lg" />
           <span className="bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
             easy2apply
@@ -80,7 +77,7 @@ export default function AdminLayout({
           Admin
         </Link>
         <button
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setSidebarOpenPathname(null)}
           className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 lg:hidden dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -94,7 +91,7 @@ export default function AdminLayout({
           <Link
             key={item.href}
             href={item.href}
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => setSidebarOpenPathname(null)}
             className={`${linkBase} ${
               pathname.startsWith(item.href) ? linkActive : linkInactive
             }`}
@@ -126,7 +123,7 @@ export default function AdminLayout({
       {/* Mobile top bar */}
       <div className="fixed left-0 right-0 top-0 z-20 flex h-14 items-center justify-between border-b border-zinc-200/60 bg-white/80 px-4 backdrop-blur-sm lg:hidden dark:border-zinc-800 dark:bg-zinc-950/80">
         <button
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => setSidebarOpenPathname(pathname)}
           className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -144,7 +141,7 @@ export default function AdminLayout({
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setSidebarOpenPathname(null)}
         />
       )}
 

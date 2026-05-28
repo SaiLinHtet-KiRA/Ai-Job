@@ -18,7 +18,6 @@ const inputClasses =
 
 export default function TitleSelector({ value, onChange, required }: Props) {
   const [titles, setTitles] = useState<Title[]>([]);
-  const [search, setSearch] = useState(value);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -35,10 +34,6 @@ export default function TitleSelector({ value, onChange, required }: Props) {
   }, []);
 
   useEffect(() => {
-    setSearch(value);
-  }, [value]);
-
-  useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -49,21 +44,20 @@ export default function TitleSelector({ value, onChange, required }: Props) {
   }, []);
 
   const filtered = titles
-    .filter((t) => t.name.toLowerCase().includes(search.toLowerCase()))
+    .filter((t) => t.name.toLowerCase().includes(value.toLowerCase()))
     .slice(0, 50);
 
   const exactMatch = titles.find(
-    (t) => t.name.toLowerCase() === search.trim().toLowerCase()
+    (t) => t.name.toLowerCase() === value.trim().toLowerCase()
   );
 
   function selectTitle(name: string) {
-    setSearch(name);
     onChange(name);
     setOpen(false);
   }
 
   async function createTitle() {
-    const name = search.trim();
+    const name = value.trim();
     if (!name) return;
     setCreating(true);
     try {
@@ -99,9 +93,8 @@ export default function TitleSelector({ value, onChange, required }: Props) {
         </svg>
         <input
           className={`${inputClasses} pl-10 pr-10`}
-          value={search}
+          value={value}
           onChange={(e) => {
-            setSearch(e.target.value);
             onChange(e.target.value);
             setOpen(true);
           }}
@@ -109,11 +102,10 @@ export default function TitleSelector({ value, onChange, required }: Props) {
           placeholder="Search job title..."
           required={required}
         />
-        {search && (
+        {value && (
           <button
             type="button"
             onClick={() => {
-              setSearch("");
               onChange("");
             }}
             className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
@@ -157,7 +149,7 @@ export default function TitleSelector({ value, onChange, required }: Props) {
             </div>
           )}
 
-          {search.trim() && !exactMatch && (
+          {value.trim() && !exactMatch && (
             <div className="border-t border-zinc-100 dark:border-zinc-700">
               <button
                 type="button"
@@ -168,7 +160,7 @@ export default function TitleSelector({ value, onChange, required }: Props) {
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                {creating ? "Creating..." : `Create "${search.trim()}"`}
+                {creating ? "Creating..." : `Create "${value.trim()}"`}
               </button>
             </div>
           )}

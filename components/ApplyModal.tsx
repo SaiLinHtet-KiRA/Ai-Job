@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, type FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 interface ApplyModalProps {
@@ -64,21 +64,20 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open) {
-      setDropdownOpen(false);
-      setStep(0);
-      setErrors({});
-    }
-  }, [open]);
+  const handleClose = useCallback(() => {
+    setDropdownOpen(false);
+    setStep(0);
+    setErrors({});
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     }
     if (open) document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
-  }, [open, onClose]);
+  }, [open, handleClose]);
 
   if (!open) return null;
 
@@ -169,7 +168,7 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
         ref={modalRef}
@@ -179,7 +178,7 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
         <div className="relative shrink-0 bg-gradient-to-r from-primary via-primary-dark to-[#004DD4] px-6 pb-6 pt-6 sm:px-8 sm:pt-7">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute right-4 top-4 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white sm:right-6 sm:top-5"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -429,7 +428,7 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
                 <>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm font-semibold text-zinc-600 transition-all hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                   >
                     Cancel

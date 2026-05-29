@@ -3,6 +3,11 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { jobQuerySchema, formatZodError } from "@/lib/validations";
 
+/**
+ * Search jobs by keyword
+ * @description Returns all jobs, optionally filtered by a title keyword (case-insensitive partial match).
+ * @tags ["Jobs"]
+ */
 export async function GET(req: NextRequest) {
   try {
     const limited = await rateLimit(`jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });

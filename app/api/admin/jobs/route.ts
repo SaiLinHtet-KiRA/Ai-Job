@@ -4,6 +4,10 @@ import { isAuthenticated } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { jobCreateSchema, formatZodError } from "@/lib/validations";
 
+/**
+ * List all jobs (admin)
+ * @tags ["Admin - Jobs"]
+ */
 export async function GET(req: NextRequest) {
   try {
     const limited = await rateLimit(`admin-jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });
@@ -31,6 +35,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Create a new job posting
+ * @tags ["Admin - Jobs"]
+ */
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`admin-jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });

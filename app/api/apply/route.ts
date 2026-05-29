@@ -4,6 +4,11 @@ import { sendApplicationEmails } from "@/lib/email";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { applySchema, formatZodError } from "@/lib/validations";
 
+/**
+ * Submit a job application
+ * @description Accepts multipart/form-data with name, email, position, type, salary, and resume file. Uploads the resume to Supabase Storage and stores the application.
+ * @tags ["Apply"]
+ */
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`apply:${getClientIp(req)}`, { limit: 5, duration: 60 });

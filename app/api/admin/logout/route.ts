@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { clearSessionCookie } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
+/**
+ * Admin logout
+ * @description Clears the admin session cookie.
+ * @tags ["Admin Auth"]
+ */
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`logout:${getClientIp(req)}`, { limit: 10, duration: 60 });

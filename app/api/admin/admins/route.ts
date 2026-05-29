@@ -5,6 +5,10 @@ import { hashPassword } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { adminCreateSchema, formatZodError } from "@/lib/validations";
 
+/**
+ * List all admin users
+ * @tags ["Admin - Admins"]
+ */
 export async function GET(req: NextRequest) {
   try {
     const limited = await rateLimit(`admin-admins:${getClientIp(req)}`, { limit: 30, duration: 10 });
@@ -32,6 +36,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Create a new admin user
+ * @description Returns 409 if an admin with this email already exists. Password is hashed before storage.
+ * @tags ["Admin - Admins"]
+ */
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`admin-admins:${getClientIp(req)}`, { limit: 30, duration: 10 });

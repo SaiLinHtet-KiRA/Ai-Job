@@ -4,6 +4,11 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { loginSchema, formatZodError } from "@/lib/validations";
 
+/**
+ * Admin login
+ * @description Authenticates with email and password. Creates a signed session cookie on success. If no admins exist yet, bootstraps the first admin from environment variables.
+ * @tags ["Admin Auth"]
+ */
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`login:${getClientIp(req)}`, { limit: 5, duration: 60 });

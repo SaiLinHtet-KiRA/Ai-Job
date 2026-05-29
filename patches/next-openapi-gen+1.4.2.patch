@@ -1,0 +1,39 @@
+diff --git a/node_modules/next-openapi-gen/dist/cli.js b/node_modules/next-openapi-gen/dist/cli.js
+index 5b1f035..e6a9c4c 100644
+--- a/node_modules/next-openapi-gen/dist/cli.js
++++ b/node_modules/next-openapi-gen/dist/cli.js
+@@ -41,7 +41,7 @@ function normalizeRapidocTemplate(template) {
+ }
+ 
+ // ../openapi-init/dist/init/ui-template.js
+-var packageRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
++var packageRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+ var uiTemplatesDir = path.join(packageRootDir, "templates", "init", "ui");
+ function resolveUiTemplatePath(framework, templateFile) {
+   return path.join(uiTemplatesDir, getUiFrameworkDirectory(framework), templateFile);
+diff --git a/node_modules/next-openapi-gen/dist/index.js b/node_modules/next-openapi-gen/dist/index.js
+index 48aea26..13ca1a7 100644
+--- a/node_modules/next-openapi-gen/dist/index.js
++++ b/node_modules/next-openapi-gen/dist/index.js
+@@ -17563,7 +17563,7 @@ function normalizeRapidocTemplate(template) {
+ }
+ 
+ // ../openapi-init/dist/init/ui-template.js
+-var packageRootDir = path16.resolve(path16.dirname(fileURLToPath(import.meta.url)), "..", "..");
++var packageRootDir = path16.resolve(path16.dirname(fileURLToPath(import.meta.url)), "..");
+ var uiTemplatesDir = path16.join(packageRootDir, "templates", "init", "ui");
+ function resolveUiTemplatePath(framework, templateFile) {
+   return path16.join(uiTemplatesDir, getUiFrameworkDirectory(framework), templateFile);
+diff --git a/node_modules/next-openapi-gen/dist/next/index.js b/node_modules/next-openapi-gen/dist/next/index.js
+index f30a8fd..1a67c04 100644
+--- a/node_modules/next-openapi-gen/dist/next/index.js
++++ b/node_modules/next-openapi-gen/dist/next/index.js
+@@ -46,7 +46,7 @@ function normalizeRapidocTemplate(template) {
+ }
+ 
+ // ../openapi-init/dist/init/ui-template.js
+-var packageRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
++var packageRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+ var uiTemplatesDir = path.join(packageRootDir, "templates", "init", "ui");
+ function resolveUiTemplatePath(framework, templateFile) {
+   return path.join(uiTemplatesDir, getUiFrameworkDirectory(framework), templateFile);

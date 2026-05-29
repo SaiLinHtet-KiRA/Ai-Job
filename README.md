@@ -1,143 +1,206 @@
-# easy2apply
+# ai-job
 
 AI-powered job matching platform — one form, hundreds of applications, personalized study roadmap.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router) + React 19
-- **Styling**: Tailwind CSS 4
-- **Database**: Supabase (PostgreSQL)
-- **Email**: Resend
-- **Language**: TypeScript
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) + React 19 |
+| Styling | Tailwind CSS 4 |
+| Database | Supabase (PostgreSQL) |
+| Auth | HMAC-signed session cookies |
+| Rate limiting | Upstash Redis (sliding window) |
+| Email | Resend |
+| Validation | Zod 4 |
+| API docs | Scalar (next-openapi-gen) |
+| Testing | Vitest + Playwright |
+| CI/CD | GitHub Actions → Vercel |
+| Language | TypeScript |
 
 ## Features
 
-- **One-click apply** — Single form submits your resume to all matching employers
+- **One-click apply** — Submit your resume to all matching employers via a single form
 - **Employer matching** — Auto-matches your target position with relevant job listings
-- **Email notifications** — Both applicants and employers receive branded email notifications
+- **Email notifications** — Branded emails to applicants and employers on submission
 - **Study roadmap** — Personalized learning path with curated courses and time estimates
-- **Admin dashboard** — Manage jobs, titles, and admin users via a protected admin panel
+- **Admin dashboard** — Full CRUD for jobs, titles, and admin users behind session auth
+- **Rate limiting** — Per-endpoint rate limits with graceful Redis-failure fallback
+- **Input validation** — Zod schemas on all API endpoints with descriptive error messages
+- **API documentation** — Interactive Scalar reference at `/api-docs`, auto-generated from JSDoc
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- Supabase project with database
+- Node.js 22+
+- Supabase project
+- Upstash Redis instance (rate limiting degrades gracefully if unavailable)
 - Resend API key
 
 ### Setup
 
 ```bash
-# Install dependencies
 npm install
-
-# Copy environment variables
 cp .env.example .env.local
 ```
 
 ### Environment Variables
 
 | Variable | Description |
-|---|---|
+|----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous/publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (keep secret) |
-| `ADMIN_EMAIL` | Default admin login email |
-| `ADMIN_PASSWORD` | Default admin login password |
-| `RESEND_API_KEY` | Resend API key for sending emails |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only) |
+| `ADMIN_EMAIL` | Bootstrap admin email |
+| `ADMIN_PASSWORD` | Bootstrap admin password |
+| `RESEND_API_KEY` | Resend API key |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
+| `SESSION_SECRET` | HMAC secret for session cookie signing |
 
-### Database Setup
+### Database
 
-Run the following SQL in your Supabase SQL editor:
-
-```sql
-CREATE TABLE titles (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE
-);
-
-CREATE TABLE jobs (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  title TEXT NOT NULL,
-  title_id BIGINT REFERENCES titles(id),
-  company TEXT DEFAULT '',
-  email TEXT DEFAULT '',
-  location TEXT DEFAULT '',
-  type TEXT DEFAULT 'On-site',
-  salary TEXT DEFAULT '',
-  description TEXT DEFAULT '',
-  image_url TEXT DEFAULT '',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE applications (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  position TEXT NOT NULL,
-  type TEXT NOT NULL,
-  salary TEXT NOT NULL,
-  resume_url TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE admins (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-### Seed Data
+Run `lib/setup.sql` in your Supabase SQL editor. Creates tables for titles, jobs, admins, and applications with RLS policies.
 
 ```bash
-node add-data/index.js
+npm run seed        # seeds job data from add-data/
 ```
 
 ### Development
 
 ```bash
-npm run dev
+npm run dev         # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+## API
 
-### Build
+12 endpoints across 10 route handlers. All inputs validated with shared Zod schemas (`lib/validations.ts`).
+
+### Public
+
+| Method | Path | Description | Rate limit |
+|--------|------|-------------|------------|
+| `GET` | `/api/titles` | List all job titles | 30 / 10s |
+| `GET` | `/api/jobs?title=` | Search jobs by keyword | 30 / 10s |
+| `POST` | `/api/apply` | Submit application (multipart) | 5 / 60s |
+
+### Admin (requires `admin_session` cookie)
+
+| Method | Path | Description | Rate limit |
+|--------|------|-------------|------------|
+| `POST` | `/api/admin/login` | Authenticate | 5 / 60s |
+| `POST` | `/api/admin/logout` | Clear session | 10 / 60s |
+| `GET` `POST` | `/api/admin/titles` | List / create titles | 30 / 10s |
+| `GET` `POST` | `/api/admin/jobs` | List / create jobs | 30 / 10s |
+| `PUT` `DELETE` | `/api/admin/jobs/:id` | Update / delete job | 30 / 10s |
+| `GET` `POST` | `/api/admin/admins` | List / create admins | 30 / 10s |
+| `PUT` `DELETE` | `/api/admin/admins/:id` | Update / delete admin | 30 / 10s |
+
+### API Docs
+
+Interactive Scalar docs at `/api-docs`. The OpenAPI spec is auto-generated from JSDoc annotations on route handlers and served at `/openapi.json`.
 
 ```bash
-npm run build
-npm start
+npm run openapi:generate    # regenerate manually
+```
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build (+ OpenAPI gen) |
+| `npm start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest unit tests |
+| `npm run test:watch` | Vitest watch mode |
+| `npm run test:e2e` | Playwright E2E tests |
+| `npm run test:e2e:ui` | Playwright with UI |
+| `npm run openapi:generate` | Regenerate OpenAPI spec |
+
+## Testing
+
+### Unit (Vitest)
+
+```
+lib/__tests__/validations.test.ts   — 50 tests for Zod schemas
+lib/__tests__/auth.test.ts          — password hashing, session tokens
+components/__tests__/               — ApplyModal rendering, validation
+```
+
+```bash
+npm test
+```
+
+### E2E (Playwright)
+
+```
+e2e/home.spec.ts    — landing page, modal, validation
+e2e/api.spec.ts     — API response shapes, status codes
+```
+
+```bash
+npm run test:e2e
+```
+
+## CI/CD
+
+GitHub Actions (`.github/workflows/test.yml`):
+
+```
+push / PR → lint → test → e2e → deploy (main only, Vercel)
 ```
 
 ## Project Structure
 
 ```
 ├── app/
-│   ├── admin/            # Admin dashboard (auth, jobs, admins CRUD)
-│   ├── api/              # API routes (jobs, titles, apply, admin)
-│   ├── data/             # Seed data (job.json, study-roadmaps.json)
-│   ├── results/          # Results page (job matches + study roadmap)
-│   ├── globals.css       # Global styles + Tailwind theme
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx          # Landing page
+│   ├── admin/                  # admin dashboard (login, jobs, admins)
+│   │   ├── (auth)/             #   login page
+│   │   └── (dashboard)/        #   dashboard, jobs CRUD, admins CRUD
+│   ├── api/
+│   │   ├── admin/              # admin API routes
+│   │   │   ├── admins/         #   [id] CRUD
+│   │   │   ├── jobs/           #   [id] CRUD
+│   │   │   ├── titles/         #   CRUD
+│   │   │   ├── login/          #   auth
+│   │   │   └── logout/         #   session clear
+│   │   ├── apply/              # job application
+│   │   ├── jobs/               # job search
+│   │   └── titles/             # title listing
+│   ├── api-docs/               # Scalar API docs page
+│   ├── data/                   # seed JSON
+│   ├── results/                # matches + roadmap
+│   ├── layout.tsx
+│   └── page.tsx
 ├── components/
-│   ├── ApplyModal.tsx    # Job application modal
-│   └── TitleSelector.tsx # Searchable title dropdown
+│   ├── __tests__/
+│   ├── ApplyModal.tsx           # multi-step application form
+│   └── TitleSelector.tsx        # searchable title dropdown
+├── e2e/                         # Playwright tests
 ├── lib/
-│   ├── supabase.ts       # Supabase client
-│   ├── auth.ts           # Admin auth (HMAC cookies)
-│   └── email.ts          # Email templates (Resend)
-└── add-data/
-    └── index.js          # Database seed script
+│   ├── __tests__/
+│   ├── auth.ts                  # HMAC session cookie auth
+│   ├── email.ts                 # Resend templates
+│   ├── rate-limit.ts            # Upstash rate limit helper
+│   ├── seed-admin.ts            # bootstrap first admin
+│   ├── setup.sql                # DB schema + RLS policies
+│   ├── supabase.ts              # Supabase client
+│   └── validations.ts           # Zod schemas
+├── patches/                     # patch-package fixes
+├── add-data/                    # seed script
+├── middleware.ts                 # auth guard (admin routes + API)
+├── next.config.ts               # withNextOpenApi wrapper
+├── next.openapi.json            # OpenAPI spec + generation config
+└── vitest.config.ts
 ```
 
 ## Admin Panel
 
-Access at `/admin`. Default credentials are set in `.env.local` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+`/admin` — boots admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD` on first access.
 
-- **Dashboard** — Stats overview and quick actions
-- **Jobs** — Create, edit, and delete job listings
-- **Admins** — Manage admin users
+- **Dashboard** — overview + quick stats
+- **Job Titles** — manage the title taxonomy
+- **Jobs** — create, edit, delete job listings
+- **Admins** — manage admin accounts (cannot self-delete)

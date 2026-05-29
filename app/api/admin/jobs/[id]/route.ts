@@ -4,6 +4,11 @@ import { isAuthenticated } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { jobUpdateSchema, formatZodError } from "@/lib/validations";
 
+/**
+ * Update a job posting
+ * @description All fields are optional; only provided fields will be updated.
+ * @tags ["Admin - Jobs"]
+ */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -58,6 +63,10 @@ export async function PUT(
   }
 }
 
+/**
+ * Delete a job posting
+ * @tags ["Admin - Jobs"]
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

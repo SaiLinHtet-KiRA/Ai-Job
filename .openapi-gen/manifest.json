@@ -1,0 +1,167 @@
+{
+  "configPath": "C:\\Users\\6807665\\Desktop\\ai-job\\next.openapi.json",
+  "outputFile": "C:\\Users\\6807665\\Desktop\\ai-job\\public\\openapi.json",
+  "diagnostics": [
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/admins/[id]/route.ts",
+      "routePath": "/admin/admins/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/admins/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\admins\\[id]\\route.ts",
+      "routePath": "/admin/admins/{id}"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/admins/[id]/route.ts",
+      "routePath": "/admin/admins/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/admins/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\admins\\[id]\\route.ts",
+      "routePath": "/admin/admins/{id}"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/admins/route.ts",
+      "routePath": "/admin/admins"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/admins/route.ts",
+      "routePath": "/admin/admins"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/jobs/[id]/route.ts",
+      "routePath": "/admin/jobs/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/jobs/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\jobs\\[id]\\route.ts",
+      "routePath": "/admin/jobs/{id}"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/jobs/[id]/route.ts",
+      "routePath": "/admin/jobs/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/jobs/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\jobs\\[id]\\route.ts",
+      "routePath": "/admin/jobs/{id}"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/jobs/route.ts",
+      "routePath": "/admin/jobs"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/jobs/route.ts",
+      "routePath": "/admin/jobs"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/login/route.ts",
+      "routePath": "/admin/login"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/logout/route.ts",
+      "routePath": "/admin/logout"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/titles/route.ts",
+      "routePath": "/admin/titles"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/admin/titles/route.ts",
+      "routePath": "/admin/titles"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/apply/route.ts",
+      "routePath": "/apply"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/jobs/route.ts",
+      "routePath": "/jobs"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/titles/route.ts",
+      "routePath": "/titles"
+    }
+  ],
+  "performance": {
+    "prepareTemplateMs": 0.5036999999999807,
+    "loadCustomFragmentsMs": 0.5380000000000109,
+    "prepareDocumentMs": 1.0416999999999916,
+    "scanRouteFilesMs": 4.301900000000046,
+    "deriveRoutePathMs": 0.6932000000005019,
+    "filterRouteCandidatesMs": 0.06410000000005311,
+    "sourcePrecheckMs": 2.402400000001421,
+    "readRouteFilesMs": 1.9536999999982072,
+    "parseRouteFilesMs": 40.07459999999958,
+    "analyzeRouteFilesMs": 32.04449999999974,
+    "typescriptResponseInferenceMs": 6307.998800000001,
+    "processRouteFilesMs": 6380.7682,
+    "registerRouteMs": 3.1960999999992055,
+    "getSchemaContentMs": 0,
+    "createRequestParamsMs": 0.14500000000043656,
+    "createRequestBodyMs": 0,
+    "processResponsesMs": 1.1981999999998152,
+    "createResponseSchemaMs": 0,
+    "buildOperationsMs": 3.289300000001276,
+    "sortAndMergePathsMs": 0.9258999999992739,
+    "buildPathsMs": 0.9258999999992739,
+    "defaultComponentsAndErrorsMs": 0.3287000000000262,
+    "mergeSchemasMs": 0.41820000000006985,
+    "finalizeDocumentMs": 4.80410000000029,
+    "totalMs": 6400.1422,
+    "scanRoutesMs": 6388.359400000002
+  }
+}

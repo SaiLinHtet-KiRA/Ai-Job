@@ -4,6 +4,10 @@ import { isAuthenticated } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { titleSchema, formatZodError } from "@/lib/validations";
 
+/**
+ * List all titles (admin)
+ * @tags ["Admin - Titles"]
+ */
 export async function GET(req: NextRequest) {
   try {
     const limited = await rateLimit(`admin-titles:${getClientIp(req)}`, { limit: 30, duration: 10 });
@@ -31,6 +35,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Create a new job title
+ * @description Title name must be unique. Returns 409 if the title already exists.
+ * @tags ["Admin - Titles"]
+ */
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`admin-titles:${getClientIp(req)}`, { limit: 30, duration: 10 });

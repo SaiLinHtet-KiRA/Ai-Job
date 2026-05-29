@@ -5,6 +5,11 @@ import { hashPassword } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { adminUpdateSchema, formatZodError } from "@/lib/validations";
 
+/**
+ * Update an admin user
+ * @description Email and/or password can be updated. Returns 400 if nothing to update, 409 if email already taken.
+ * @tags ["Admin - Admins"]
+ */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -71,6 +76,11 @@ export async function PUT(
   }
 }
 
+/**
+ * Delete an admin user
+ * @description Cannot delete your own account (returns 403).
+ * @tags ["Admin - Admins"]
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "API Documentation",
+    "title": "AI Job Board API",
     "version": "1.0.0",
-    "description": "This is the OpenAPI specification for your project."
+    "description": "API for the AI Job Board application — browse job titles, search jobs, and submit applications."
   },
   "servers": [
     {
@@ -13,103 +13,544 @@
   ],
   "components": {
     "securitySchemes": {
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "admin_session"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      },
+      "Title": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "title_id": { "type": "integer" },
+          "company": { "type": "string" },
+          "email": { "type": "string" },
+          "location": { "type": "string" },
+          "type": { "type": "string" },
+          "salary": { "type": "string" },
+          "description": { "type": "string" },
+          "image_url": { "type": "string" },
+          "created_at": { "type": "string" },
+          "updated_at": { "type": "string" }
+        }
+      },
+      "Admin": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "email": { "type": "string" },
+          "created_at": { "type": "string" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+      "TitleCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 }
+        }
+      },
+      "JobCreateRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "company": { "type": "string" },
+          "email": { "type": "string" },
+          "location": { "type": "string" },
+          "type": { "type": "string" },
+          "salary": { "type": "string" },
+          "description": { "type": "string" },
+          "image_url": { "type": "string" }
+        }
+      },
+      "AdminCreateRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+      "AdminUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/titles": {
+      "get": {
+        "summary": "List all job titles",
+        "tags": ["Public"],
+        "responses": {
+          "200": {
+            "description": "Array of job titles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Title" }
+                }
+              }
+            }
+          },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "summary": "Search jobs",
+        "description": "Returns jobs, optionally filtered by title keyword.",
+        "tags": ["Public"],
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "required": false,
+            "description": "Keyword to filter jobs by title (case-insensitive partial match)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of matching jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            }
+          },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/apply": {
+      "post": {
+        "summary": "Submit a job application",
+        "description": "Submits an application with resume upload. Accepts multipart/form-data.",
+        "tags": ["Public"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "position", "type", "salary", "resume"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "description": "Applicant full name" },
+                  "email": { "type": "string", "format": "email", "description": "Applicant email" },
+                  "position": { "type": "string", "minLength": 1, "description": "Job position applied for" },
+                  "type": { "type": "string", "minLength": 1, "description": "Job type (e.g. Full-time, Remote)" },
+                  "salary": { "type": "string", "minLength": 1, "description": "Expected salary" },
+                  "resume": { "type": "string", "format": "binary", "description": "Resume PDF file" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Application submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/login": {
+      "post": {
+        "summary": "Admin login",
+        "description": "Authenticate as an admin. Creates a session cookie on success.",
+        "tags": ["Admin Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": { "description": "Missing email or password" },
+          "401": { "description": "Invalid credentials" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/logout": {
+      "post": {
+        "summary": "Admin logout",
+        "description": "Clears the admin session cookie.",
+        "tags": ["Admin Auth"],
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/titles": {
+      "get": {
+        "summary": "List all titles (admin)",
+        "tags": ["Admin - Titles"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of all titles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Title" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "post": {
+        "summary": "Create a new title",
+        "tags": ["Admin - Titles"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TitleCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Title created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Title" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Title already exists" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/jobs": {
+      "get": {
+        "summary": "List all jobs (admin)",
+        "tags": ["Admin - Jobs"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of all jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "post": {
+        "summary": "Create a new job",
+        "tags": ["Admin - Jobs"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/jobs/{id}": {
+      "put": {
+        "summary": "Update a job",
+        "tags": ["Admin - Jobs"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a job",
+        "tags": ["Admin - Jobs"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/admins": {
+      "get": {
+        "summary": "List all admins",
+        "tags": ["Admin - Admins"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of admin users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Admin" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "post": {
+        "summary": "Create a new admin",
+        "tags": ["Admin - Admins"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Admin" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Email already exists" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/admins/{id}": {
+      "put": {
+        "summary": "Update an admin",
+        "tags": ["Admin - Admins"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Admin updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Admin" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Email already exists" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "delete": {
+        "summary": "Delete an admin",
+        "description": "You cannot delete your own account.",
+        "tags": ["Admin - Admins"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Cannot delete own account" },
+          "429": { "description": "Too many requests" }
+        }
       }
     }
   },
   "defaultResponseSet": "common",
   "responseSets": {
-    "common": [
-      "400",
-      "500"
-    ],
-    "auth": [
-      "400",
-      "401",
-      "403",
-      "500"
-    ],
-    "public": [
-      "400",
-      "500"
-    ]
+    "common": ["400", "500"],
+    "auth": ["400", "401", "403", "500"],
+    "public": ["400", "500"]
   },
   "errorConfig": {
     "template": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "string",
-          "example": "{{ERROR_MESSAGE}}"
-        },
-        "code": {
-          "type": "string",
-          "example": "{{ERROR_CODE}}"
-        }
+        "error": { "type": "string", "example": "{{ERROR_MESSAGE}}" }
       }
     },
     "codes": {
-      "400": {
-        "description": "Bad Request",
-        "variables": {
-          "ERROR_MESSAGE": "Invalid request parameters",
-          "ERROR_CODE": "BAD_REQUEST"
-        }
-      },
-      "401": {
-        "description": "Unauthorized",
-        "variables": {
-          "ERROR_MESSAGE": "Authentication required",
-          "ERROR_CODE": "UNAUTHORIZED"
-        }
-      },
-      "403": {
-        "description": "Forbidden",
-        "variables": {
-          "ERROR_MESSAGE": "Access denied",
-          "ERROR_CODE": "FORBIDDEN"
-        }
-      },
-      "404": {
-        "description": "Not Found",
-        "variables": {
-          "ERROR_MESSAGE": "Resource not found",
-          "ERROR_CODE": "NOT_FOUND"
-        }
-      },
-      "409": {
-        "description": "Conflict",
-        "variables": {
-          "ERROR_MESSAGE": "Resource already exists",
-          "ERROR_CODE": "CONFLICT"
-        }
-      },
-      "500": {
-        "description": "Internal Server Error",
-        "variables": {
-          "ERROR_MESSAGE": "An unexpected error occurred",
-          "ERROR_CODE": "INTERNAL_ERROR"
-        }
-      }
+      "400": { "description": "Bad Request" },
+      "401": { "description": "Unauthorized" },
+      "403": { "description": "Forbidden" },
+      "404": { "description": "Not Found" },
+      "409": { "description": "Conflict" },
+      "429": { "description": "Too Many Requests" },
+      "500": { "description": "Internal Server Error" }
     }
   },
   "schemaType": "zod",
-  "schemaFiles": [],
+  "schemaFiles": ["lib/validations.ts"],
   "docsUrl": "api-docs",
   "ui": "scalar",
   "outputFile": "openapi.json",
   "outputDir": "./public",
-  "diagnostics": {
-    "enabled": true
-  },
+  "diagnostics": { "enabled": true },
   "ignoreRoutes": [],
   "debug": false,
-  "apiDir": "./src/app/api",
+  "apiDir": "./app/api",
   "routerType": "app",
-  "schemaDir": "./src",
+  "schemaDir": "./",
   "framework": {
     "kind": "nextjs",
     "router": "app"

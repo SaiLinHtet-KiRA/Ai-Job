@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { adminCreateSchema, formatZodError } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -39,14 +40,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { email, password } = await req.json();
+    const parsed = adminCreateSchema.safeParse(await req.json());
 
-    if (!email || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Email and password are required." },
+        { error: formatZodError(parsed) },
         { status: 400 },
       );
     }
+
+    const { email, password } = parsed.data;
 
     const supabase = getSupabaseAdmin();
 

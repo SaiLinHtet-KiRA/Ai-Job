@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { jobUpdateSchema, formatZodError } from "@/lib/validations";
 
 export async function PUT(
   req: NextRequest,
@@ -15,8 +16,16 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const body = await req.json();
-    const { title, company, email, location, type, salary, description, image_url } = body;
+    const parsed = jobUpdateSchema.safeParse(await req.json());
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: formatZodError(parsed) },
+        { status: 400 },
+      );
+    }
+
+    const { title, company, email, location, type, salary, description, image_url } = parsed.data;
 
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase

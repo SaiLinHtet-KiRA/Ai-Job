@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { titleSchema, formatZodError } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,19 +39,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name } = await req.json();
+    const parsed = titleSchema.safeParse(await req.json());
 
-    if (!name || typeof name !== "string" || !name.trim()) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Title name is required." },
+        { error: formatZodError(parsed) },
         { status: 400 },
       );
     }
 
+    const { name } = parsed.data;
+
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("titles")
-      .insert({ name: name.trim() })
+      .insert({ name })
       .select()
       .single();
 

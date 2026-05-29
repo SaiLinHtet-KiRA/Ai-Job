@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { jobCreateSchema, formatZodError } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,28 +39,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { title, company, email, location, type, salary, description, image_url } = body;
+    const parsed = jobCreateSchema.safeParse(await req.json());
 
-    if (!title) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Title is required." },
+        { error: formatZodError(parsed) },
         { status: 400 },
       );
     }
+
+    const { title, company, email, location, type, salary, description, image_url } = parsed.data;
 
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("jobs")
       .insert({
         title,
-        company: company || "",
-        email: email || "",
-        location: location || "",
-        type: type || "On-site",
-        salary: salary || "",
-        description: description || "",
-        image_url: image_url || "",
+        company,
+        email,
+        location,
+        type,
+        salary,
+        description,
+        image_url,
       })
       .select()
       .single();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { sendApplicationEmails } from "@/lib/email";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { applySchema, formatZodError } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,19 +10,23 @@ export async function POST(req: NextRequest) {
     if (limited) return limited;
     const formData = await req.formData();
 
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const position = formData.get("position") as string;
-    const type = formData.get("type") as string;
-    const salary = formData.get("salary") as string;
-    const resumeFile = formData.get("resume") as File;
+    const parsed = applySchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      position: formData.get("position"),
+      type: formData.get("type"),
+      salary: formData.get("salary"),
+      resume: formData.get("resume"),
+    });
 
-    if (!name || !email || !position || !type || !salary || !resumeFile) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "All fields are required." },
+        { error: formatZodError(parsed) },
         { status: 400 },
       );
     }
+
+    const { name, email, position, type, salary, resume: resumeFile } = parsed.data;
 
     const filePath = `${Date.now()}_${resumeFile.name}`;
     const buffer = Buffer.from(await resumeFile.arrayBuffer());

@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSession, setSessionCookie, hashPassword, verifyPassword } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { loginSchema, formatZodError } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   try {
     const limited = await rateLimit(`login:${getClientIp(req)}`, { limit: 5, duration: 60 });
     if (limited) return limited;
-    const { email, password } = await req.json();
+    const parsed = loginSchema.safeParse(await req.json());
 
-    if (!email || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Email and password are required." },
+        { error: formatZodError(parsed) },
         { status: 400 },
       );
     }
+
+    const { email, password } = parsed.data;
 
     const supabase = getSupabaseAdmin();
 

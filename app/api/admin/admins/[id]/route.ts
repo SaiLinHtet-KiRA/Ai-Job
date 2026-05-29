@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated, getCurrentAdminId } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { adminUpdateSchema, formatZodError } from "@/lib/validations";
 
 export async function PUT(
   req: NextRequest,
@@ -16,9 +17,16 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const body = await req.json();
-    const { email, password } = body;
+    const parsed = adminUpdateSchema.safeParse(await req.json());
 
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: formatZodError(parsed) },
+        { status: 400 },
+      );
+    }
+
+    const { email, password } = parsed.data;
     const supabase = getSupabaseAdmin();
     const updates: Record<string, string> = {};
 
@@ -41,13 +49,6 @@ export async function PUT(
 
     if (password) {
       updates.password_hash = hashPassword(password);
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: "Nothing to update." },
-        { status: 400 },
-      );
     }
 
     const { data, error } = await supabase

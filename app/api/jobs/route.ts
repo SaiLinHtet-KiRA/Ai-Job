@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { jobQuerySchema, formatZodError } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
     const limited = await rateLimit(`jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });
     if (limited) return limited;
     const { searchParams } = new URL(req.url);
-    const title = searchParams.get("title");
+    const parsed = jobQuerySchema.safeParse({ title: searchParams.get("title") || undefined });
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: formatZodError(parsed) },
+        { status: 400 },
+      );
+    }
+
+    const { title } = parsed.data;
 
     const supabase = getSupabaseAdmin();
     let query = supabase

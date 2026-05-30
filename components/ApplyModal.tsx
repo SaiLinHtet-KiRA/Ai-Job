@@ -27,7 +27,7 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [allTitles, setAllTitles] = useState<string[]>([]);
   const [type, setType] = useState("on-site");
-  const [salary, setSalary] = useState("");
+  const [salary, setSalary] = useState<number | "">("");
   const [resume, setResume] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -100,7 +100,7 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
 
   function validateStep1() {
     const errs: Record<string, string> = {};
-    if (!salary.trim()) errs.salary = "Salary is required";
+    if (salary === "") errs.salary = "Salary is required";
     if (!resume) errs.resume = "Please upload your resume";
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -343,10 +343,11 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <input
+                          type="number"
                           className={`${inputBase} pl-10 ${errors.salary ? inputError : inputLight}`}
                           value={salary}
-                          onChange={(e) => { setSalary(e.target.value); setErrors((p) => ({ ...p, salary: "" })); }}
-                          placeholder="MMK 800,000 - 1,200,000"
+                          onChange={(e) => { const v = e.target.value; setSalary(v === "" ? "" : Number(v)); setErrors((p) => ({ ...p, salary: "" })); }}
+                          placeholder="800000"
                         />
                       </div>
                       {errors.salary && <p className="mt-1 text-xs text-red-500">{errors.salary}</p>}

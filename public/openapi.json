@@ -93,12 +93,15 @@
             "type": "string"
           },
           "salary": {
-            "type": "string"
+            "type": "number"
           },
           "description": {
             "type": "string"
           },
           "image_url": {
+            "type": "string"
+          },
+          "company_website": {
             "type": "string"
           },
           "created_at": {
@@ -132,12 +135,15 @@
             "type": "string"
           },
           "salary": {
-            "type": "string"
+            "type": "number"
           },
           "description": {
             "type": "string"
           },
           "image_url": {
+            "type": "string"
+          },
+          "company_website": {
             "type": "string"
           }
         }

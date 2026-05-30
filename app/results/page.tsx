@@ -13,9 +13,10 @@ interface Job {
   email: string;
   location: string;
   type: string;
-  salary: string;
+  salary: number;
   description: string;
   image_url: string;
+  company_website: string;
   created_at: string;
 }
 
@@ -148,9 +149,12 @@ function ResultsContent() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {matchedJobs.map((job) => (
-                <div
+                <a
                   key={job.id}
-                  className="group rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900/50"
+                  href={job.company_website || "#"}
+                  target={job.company_website ? "_blank" : undefined}
+                  rel={job.company_website ? "noopener noreferrer" : undefined}
+                  className={`group rounded-2xl border border-zinc-200/60 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900/50 ${job.company_website ? "cursor-pointer" : ""}`}
                 >
                   {job.image_url ? (
                     <div className="mb-4 h-40 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
@@ -184,7 +188,7 @@ function ResultsContent() {
                         {job.location}
                       </span>
                     )}
-                    {job.salary && (
+                    {job.salary != null && (
                       <span className="text-xs text-zinc-400 dark:text-zinc-500">
                         {job.salary}
                       </span>
@@ -197,7 +201,12 @@ function ResultsContent() {
                       day: "numeric",
                     })}
                   </p>
-                </div>
+                  {job.company_website && (
+                    <p className="mt-3 text-xs font-medium text-primary dark:text-primary/80">
+                      View Company Website &rarr;
+                    </p>
+                  )}
+                </a>
               ))}
             </div>
           )}

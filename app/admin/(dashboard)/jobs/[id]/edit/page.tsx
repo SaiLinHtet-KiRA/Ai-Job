@@ -20,9 +20,10 @@ export default function EditJobPage() {
   const [email, setEmail] = useState("");
   const [location, setLocation] = useState("");
   const [type, setType] = useState("On-site");
-  const [salary, setSalary] = useState("");
+  const [salary, setSalary] = useState<number | "">("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
@@ -40,9 +41,10 @@ export default function EditJobPage() {
             setEmail(job.email || "");
             setLocation(job.location || "");
             setType(job.type || "On-site");
-            setSalary(job.salary || "");
+            setSalary(job.salary != null ? job.salary : "");
             setDescription(job.description || "");
             setImageUrl(job.image_url || "");
+            setCompanyWebsite(job.company_website || "");
           }
         }
       } catch {
@@ -72,9 +74,10 @@ export default function EditJobPage() {
           email,
           location,
           type,
-          salary,
+          salary: salary === "" ? 0 : salary,
           description,
           image_url: imageUrl,
+          company_website: companyWebsite,
         }),
       });
       const data = await res.json();
@@ -170,10 +173,11 @@ export default function EditJobPage() {
           <label className={labelClasses}>
             Salary
             <input
+              type="number"
               className={inputClasses}
               value={salary}
-              onChange={(e) => setSalary(e.target.value)}
-              placeholder="$80k - $120k"
+              onChange={(e) => { const v = e.target.value; setSalary(v === "" ? "" : Number(v)); }}
+              placeholder="80000"
             />
           </label>
         </div>
@@ -195,6 +199,16 @@ export default function EditJobPage() {
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://example.com/logo.png"
+          />
+        </label>
+
+        <label className={labelClasses}>
+          Company Website
+          <input
+            className={inputClasses}
+            value={companyWebsite}
+            onChange={(e) => setCompanyWebsite(e.target.value)}
+            placeholder="https://acme.com"
           />
         </label>
 

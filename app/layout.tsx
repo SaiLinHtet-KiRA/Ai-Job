@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "easy2apply — Find Your Dream Job",
-  description: "AI-powered job matching platform connecting top talent with cutting-edge companies.",
+  title: "Find Your Dream Job | easy2apply",
+  description:
+    "AI-powered job matching platform connecting top talent with cutting-edge companies.",
 };
 
 export default function RootLayout({

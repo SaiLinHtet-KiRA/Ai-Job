@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { title, company, email, location, type, salary, description, image_url } = parsed.data;
+    const { title, company, email, location, type, salary, description, image_url, company_website } = parsed.data;
 
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
         salary,
         description,
         image_url,
+        company_website,
       })
       .select()
       .single();

@@ -126,7 +126,7 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
     formData.append("email", email);
     formData.append("position", position);
     formData.append("type", type);
-    formData.append("salary", salary);
+    formData.append("salary", String(salary));
     formData.append("resume", resume!);
 
     try {

@@ -233,8 +233,12 @@ describe("jobCreateSchema", () => {
       salary: 120000,
       description: "A great job",
       image_url: "https://example.com/img.png",
+      company_website: "https://acme.com",
     });
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.company_website).toBe("https://acme.com");
+    }
   });
 
   it("rejects missing title", () => {
@@ -284,6 +288,16 @@ describe("jobUpdateSchema", () => {
       company: "New Corp",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts updating company_website", () => {
+    const result = jobUpdateSchema.safeParse({
+      company_website: "https://new-site.com",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.company_website).toBe("https://new-site.com");
+    }
   });
 
   it("rejects an empty object", () => {

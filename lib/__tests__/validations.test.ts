@@ -59,7 +59,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Software Engineer",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: resumeFile,
     });
     expect(result.success).toBe(true);
@@ -70,7 +70,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Software Engineer",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -85,7 +85,7 @@ describe("applySchema", () => {
       email: "not-an-email",
       position: "Software Engineer",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -99,7 +99,7 @@ describe("applySchema", () => {
       name: "John",
       position: "Software Engineer",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -113,7 +113,7 @@ describe("applySchema", () => {
       name: "John",
       email: "john@example.com",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -128,7 +128,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Engineer",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -143,7 +143,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Engineer",
       type: "Full-time",
-      salary: "$100k",
+      salary: 100000,
       resume: "not-a-file",
     });
     expect(result.success).toBe(false);
@@ -230,7 +230,7 @@ describe("jobCreateSchema", () => {
       email: "hr@acme.com",
       location: "New York",
       type: "Remote",
-      salary: "$120k",
+      salary: 120000,
       description: "A great job",
       image_url: "https://example.com/img.png",
     });
@@ -261,9 +261,10 @@ describe("jobCreateSchema", () => {
       expect(result.data.email).toBe("");
       expect(result.data.location).toBe("");
       expect(result.data.type).toBe("On-site");
-      expect(result.data.salary).toBe("");
+      expect(result.data.salary).toBe(0);
       expect(result.data.description).toBe("");
       expect(result.data.image_url).toBe("");
+      expect(result.data.company_website).toBe("");
     }
   });
 });

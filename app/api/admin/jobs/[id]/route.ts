@@ -30,7 +30,7 @@ export async function PUT(
       );
     }
 
-    const { title, company, email, location, type, salary, description, image_url } = parsed.data;
+    const { title, company, email, location, type, salary, description, image_url, company_website } = parsed.data;
 
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -41,9 +41,10 @@ export async function PUT(
         email: email || "",
         location: location || "",
         type: type || "On-site",
-        salary: salary || "",
+        salary: salary || 0,
         description: description || "",
         image_url: image_url || "",
+        company_website: company_website || "",
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

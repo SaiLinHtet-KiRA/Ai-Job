@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS titles (
 
 ALTER TABLE titles ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY admin_full_access_titles ON titles
+  FOR ALL USING (true) WITH CHECK (true);
+
 -- ── jobs ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS jobs (
   id BIGSERIAL PRIMARY KEY,
@@ -18,15 +21,24 @@ CREATE TABLE IF NOT EXISTS jobs (
   email TEXT NOT NULL DEFAULT '',
   location TEXT NOT NULL DEFAULT '',
   type TEXT NOT NULL DEFAULT 'On-site',
-  salary INTEGER NOT NULL DEFAULT 0,
+  salary TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
   image_url TEXT NOT NULL DEFAULT '',
-  company_website TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+
+-- add columns to existing table (safe if run before the table was created)
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS title_id BIGINT REFERENCES titles(id) ON DELETE SET NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS salary TEXT NOT NULL DEFAULT '';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT '';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+CREATE POLICY admin_full_access_jobs ON jobs
+  FOR ALL USING (true) WITH CHECK (true);
 
 -- ── admins ─────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS admins (
@@ -38,6 +50,9 @@ CREATE TABLE IF NOT EXISTS admins (
 
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY admin_full_access_admins ON admins
+  FOR ALL USING (true) WITH CHECK (true);
+
 -- ── applications ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS applications (
   id BIGSERIAL PRIMARY KEY,
@@ -45,37 +60,235 @@ CREATE TABLE IF NOT EXISTS applications (
   email TEXT NOT NULL DEFAULT '',
   position TEXT NOT NULL,
   type TEXT NOT NULL,
-  salary INTEGER NOT NULL,
+  salary TEXT NOT NULL,
   resume_url TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 
--- ── policies: drop first so re-runs are idempotent ────────────
-DROP POLICY IF EXISTS admin_full_access_titles ON titles;
-DROP POLICY IF EXISTS admin_full_access_jobs ON jobs;
-DROP POLICY IF EXISTS admin_full_access_admins ON admins;
-DROP POLICY IF EXISTS admin_full_access_applications ON applications;
-
-CREATE POLICY admin_full_access_titles ON titles
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY admin_full_access_jobs ON jobs
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY admin_full_access_admins ON admins
-  FOR ALL USING (true) WITH CHECK (true);
+-- add email column to existing applications table
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT '';
 
 CREATE POLICY admin_full_access_applications ON applications
   FOR ALL USING (true) WITH CHECK (true);
 
--- add columns to existing tables (safe for migrations)
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS title_id BIGINT REFERENCES titles(id) ON DELETE SET NULL;
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS salary INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT '';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_website TEXT NOT NULL DEFAULT '';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+-- ── cv_scores ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS cv_scores (
+  id BIGSERIAL PRIMARY KEY,
+  ip_address TEXT NOT NULL,
+  email TEXT,
+  file_name TEXT NOT NULL,
+  file_size_kb INTEGER NOT NULL,
+  score INTEGER NOT NULL,
+  strengths JSONB NOT NULL DEFAULT '[]',
+  weaknesses JSONB NOT NULL DEFAULT '[]',
+  keywords_missing JSONB NOT NULL DEFAULT '[]',
+  summary TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-ALTER TABLE applications ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT '';
+ALTER TABLE cv_scores ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_cv_scores ON cv_scores
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_cv_scores_ip ON cv_scores (ip_address);
+CREATE INDEX IF NOT EXISTS idx_cv_scores_email ON cv_scores (email);
+
+-- ── leads ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS leads (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  ip_address TEXT,
+  cv_score_id BIGINT REFERENCES cv_scores(id),
+  source TEXT NOT NULL DEFAULT 'cv_score',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_leads ON leads
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_email ON leads (email);
+CREATE INDEX IF NOT EXISTS idx_leads_created ON leads (created_at DESC);
+
+-- ── courses ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS courses (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  url TEXT NOT NULL,
+  platform TEXT NOT NULL DEFAULT 'other',
+  duration TEXT,
+  level TEXT NOT NULL DEFAULT 'beginner',
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_courses ON courses
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- ── role_courses (many-to-many: role → courses) ────────────
+CREATE TABLE IF NOT EXISTS role_courses (
+  id BIGSERIAL PRIMARY KEY,
+  role TEXT NOT NULL,
+  course_id BIGINT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE role_courses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_role_courses ON role_courses
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_role_courses_role ON role_courses (role);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_role_courses_unique ON role_courses (role, course_id);
+
+-- ── job_listings (ingested from RSS / TheirStack) ──────────
+CREATE TABLE IF NOT EXISTS job_listings (
+  id BIGSERIAL PRIMARY KEY,
+  external_id TEXT,
+  title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  location TEXT,
+  job_type TEXT DEFAULT 'full-time',
+  salary_range TEXT,
+  skills JSONB NOT NULL DEFAULT '[]',
+  description TEXT,
+  apply_url TEXT,
+  apply_email TEXT,
+  source TEXT NOT NULL DEFAULT 'mock',
+  posted_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE job_listings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_job_listings ON job_listings
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_job_listings_external ON job_listings (source, external_id);
+CREATE INDEX IF NOT EXISTS idx_job_listings_posted ON job_listings (posted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_job_listings_skills ON job_listings USING GIN (skills);
+
+-- ── user_profiles (parsed CV data for matching) ────────────
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  email TEXT NOT NULL,
+  skills JSONB NOT NULL DEFAULT '[]',
+  experience_level TEXT DEFAULT 'mid',
+  target_roles JSONB NOT NULL DEFAULT '[]',
+  preferred_locations JSONB NOT NULL DEFAULT '[]',
+  remote_ok BOOLEAN DEFAULT true,
+  cv_file_url TEXT,
+  cv_text TEXT,
+  last_scored_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_user_profiles ON user_profiles
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_user ON user_profiles (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_skills ON user_profiles USING GIN (skills);
+
+-- ── daily_matches (cron output: user → matched jobs) ───────
+CREATE TABLE IF NOT EXISTS daily_matches (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  job_id BIGINT NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
+  match_score INTEGER NOT NULL,
+  missing_skills JSONB NOT NULL DEFAULT '[]',
+  tailored_cv_url TEXT,
+  cover_letter TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  matched_at TIMESTAMPTZ DEFAULT NOW(),
+  acted_at TIMESTAMPTZ
+);
+
+ALTER TABLE daily_matches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_daily_matches ON daily_matches
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_daily_matches_user ON daily_matches (user_id, matched_at DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_matches_status ON daily_matches (user_id, status);
+
+-- ── applications_sent (audit log) ─────────────────────────
+CREATE TABLE IF NOT EXISTS applications_sent (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  match_id BIGINT NOT NULL REFERENCES daily_matches(id),
+  job_id BIGINT NOT NULL REFERENCES job_listings(id),
+  method TEXT NOT NULL DEFAULT 'email',
+  sent_to TEXT,
+  sent_at TIMESTAMPTZ DEFAULT NOW(),
+  status TEXT NOT NULL DEFAULT 'sent',
+  response_status TEXT
+);
+
+ALTER TABLE applications_sent ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_applications_sent ON applications_sent
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_applications_sent_user ON applications_sent (user_id, sent_at DESC);
+
+-- ── user_cvs (CV storage & parsed data) ───────────────────────
+CREATE TABLE IF NOT EXISTS user_cvs (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  storage_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  parsed_text TEXT,
+  structured_data JSONB DEFAULT '{}',
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE user_cvs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY user_own_cv ON user_cvs
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY admin_full_access_user_cvs ON user_cvs
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_user_cvs_user ON user_cvs (user_id);
+
+-- ── applications (track job applications) ────────────────────
+CREATE TABLE IF NOT EXISTS applications (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  job_id BIGINT NOT NULL REFERENCES jobs(id),
+  cv_id BIGINT NOT NULL REFERENCES user_cvs(id),
+  cover_letter TEXT,
+  method TEXT CHECK (method IN ('email', 'api', 'portal')) DEFAULT 'email',
+  status TEXT DEFAULT 'pending',
+  sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY user_own_applications ON applications
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY admin_full_access_applications ON applications
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_applications_user ON applications (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_applications_job ON applications (job_id);
+
+-- ── jobs: add apply_email for email-apply method ─────────────
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_email TEXT;

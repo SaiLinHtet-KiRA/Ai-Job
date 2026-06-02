@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     const { data: jobs } = await supabase
       .from("jobs")
-      .select("id, title, company, email, location, type, salary, description, company_website")
+      .select("id, title, company, email, location, type, salary, description")
       .ilike("title", `%${position}%`);
 
     if (jobs?.length) {

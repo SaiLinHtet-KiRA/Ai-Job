@@ -1,53 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { isAuthenticated } from "@/lib/auth";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { createClient } from "@supabase/supabase-js";
 
-/**
- * List all applications (admin)
- * @tags ["Admin - Applications"]
- */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+// GET - Fetch all applications (admin view)
 export async function GET(req: NextRequest) {
   try {
-    const limited = await rateLimit(`admin-applications:${getClientIp(req)}`, { limit: 30, duration: 10 });
-    if (limited) return limited;
-    if (!(await isAuthenticated())) {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Check admin auth
+    const cookieHeader = req.headers.get("cookie");
+    if (!cookieHeader?.includes("admin_session=")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const url = new URL(req.url);
-    const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "10", 10) || 10));
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const supabase = getSupabaseAdmin();
-    const [{ data, error }, { count: total }] = await Promise.all([
-      supabase
-        .from("applications")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to),
-      supabase
-        .from("applications")
-        .select("*", { count: "exact", head: true }),
-    ]);
+    // Get applications with user and job details
+    const { data: applications, error } = await supabase
+      .from("applications")
+      .select(`
+        id,
+        cover_letter,
+        method,
+        status,
+        sent_at,
+        created_at,
+        user_id,
+        cv_id,
+        jobs:job_id (
+          id,
+          title,
+          company,
+          location,
+          apply_email
+        )
+      `)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Fetch applications error:", error);
+      return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
     }
 
-    return NextResponse.json({
-      data: data ?? [],
-      page,
-      limit,
-      total: total ?? 0,
-      totalPages: Math.max(1, Math.ceil((total ?? 0) / limit)),
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error." },
-      { status: 500 },
-    );
+    return NextResponse.json({ applications: applications || [] });
+
+  } catch (error) {
+    console.error("Admin applications API error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -59,7 +59,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Software Engineer",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: resumeFile,
     });
     expect(result.success).toBe(true);
@@ -70,7 +70,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Software Engineer",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -85,7 +85,7 @@ describe("applySchema", () => {
       email: "not-an-email",
       position: "Software Engineer",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -99,7 +99,7 @@ describe("applySchema", () => {
       name: "John",
       position: "Software Engineer",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -113,7 +113,7 @@ describe("applySchema", () => {
       name: "John",
       email: "john@example.com",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -128,7 +128,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Engineer",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: resumeFile,
     });
     expect(result.success).toBe(false);
@@ -143,7 +143,7 @@ describe("applySchema", () => {
       email: "john@example.com",
       position: "Engineer",
       type: "Full-time",
-      salary: 100000,
+      salary: "$100k",
       resume: "not-a-file",
     });
     expect(result.success).toBe(false);
@@ -230,15 +230,11 @@ describe("jobCreateSchema", () => {
       email: "hr@acme.com",
       location: "New York",
       type: "Remote",
-      salary: 120000,
+      salary: "$120k",
       description: "A great job",
       image_url: "https://example.com/img.png",
-      company_website: "https://acme.com",
     });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.company_website).toBe("https://acme.com");
-    }
   });
 
   it("rejects missing title", () => {
@@ -265,10 +261,9 @@ describe("jobCreateSchema", () => {
       expect(result.data.email).toBe("");
       expect(result.data.location).toBe("");
       expect(result.data.type).toBe("On-site");
-      expect(result.data.salary).toBe(0);
+      expect(result.data.salary).toBe("");
       expect(result.data.description).toBe("");
       expect(result.data.image_url).toBe("");
-      expect(result.data.company_website).toBe("");
     }
   });
 });
@@ -288,16 +283,6 @@ describe("jobUpdateSchema", () => {
       company: "New Corp",
     });
     expect(result.success).toBe(true);
-  });
-
-  it("accepts updating company_website", () => {
-    const result = jobUpdateSchema.safeParse({
-      company_website: "https://new-site.com",
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.company_website).toBe("https://new-site.com");
-    }
   });
 
   it("rejects an empty object", () => {

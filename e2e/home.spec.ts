@@ -60,7 +60,7 @@ test.describe("Home Page", () => {
     await page.locator("text=Continue").click();
 
     // Look for step 2 content instead of exact text (rendered as separate nodes)
-    await expect(page.getByPlaceholder("800000")).toBeVisible();
+    await expect(page.getByPlaceholder("MMK 800,000 - 1,200,000")).toBeVisible();
     await expect(page.locator("text=Submit Application")).toBeVisible();
   });
 });

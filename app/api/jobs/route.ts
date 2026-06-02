@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabaseAdmin();
     let query = supabase
       .from("jobs")
-      .select("id, title, title_id, company, email, location, type, salary, description, image_url, company_website, created_at")
+      .select("id, title, title_id, company, email, location, type, salary, description, image_url, created_at")
       .order("created_at", { ascending: false });
 
     if (title) {

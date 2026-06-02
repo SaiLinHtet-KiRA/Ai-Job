@@ -16,7 +16,7 @@ export const applySchema = z.object({
     .email("Invalid email address."),
   position: z.string({ message: "Position is required." }).min(1, "Position is required."),
   type: z.string({ message: "Job type is required." }).min(1, "Job type is required."),
-  salary: z.coerce.number({ message: "Salary is required." }).positive("Salary is required."),
+  salary: z.string({ message: "Salary is required." }).min(1, "Salary is required."),
   resume: z.instanceof(File, { message: "Resume file is required." }),
 });
 
@@ -35,10 +35,9 @@ export const jobCreateSchema = z.object({
   email: z.string().optional().default(""),
   location: z.string().optional().default(""),
   type: z.string().optional().default("On-site"),
-  salary: z.coerce.number().optional().default(0),
+  salary: z.string().optional().default(""),
   description: z.string().optional().default(""),
   image_url: z.string().optional().default(""),
-  company_website: z.string().optional().default(""),
 });
 
 export const jobUpdateSchema = z
@@ -48,10 +47,9 @@ export const jobUpdateSchema = z
     email: z.string().optional(),
     location: z.string().optional(),
     type: z.string().optional(),
-    salary: z.coerce.number().optional(),
+    salary: z.string().optional(),
     description: z.string().optional(),
     image_url: z.string().optional(),
-    company_website: z.string().optional(),
   })
   .refine(
     (data) => Object.keys(data).length > 0,

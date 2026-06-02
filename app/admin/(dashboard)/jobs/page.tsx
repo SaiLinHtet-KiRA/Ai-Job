@@ -9,10 +9,9 @@ interface Job {
   email: string;
   location: string;
   type: string;
-  salary: number;
+  salary: string;
   description: string;
   image_url: string;
-  company_website: string;
   created_at: string;
   updated_at: string;
 }

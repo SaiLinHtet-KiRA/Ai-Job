@@ -5,28 +5,24 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-primary: #0066FF;
-  --color-primary-dark: #005BFF;
-  --color-accent: #39D353;
-  --color-accent-bright: #3DDB5A;
+  --color-primary: #635BFF;
+  --color-primary-dark: #5851EB;
+  --color-accent: #00D4AA;
+  --color-accent-bright: #00E4B8;
 
-  --animate-fade-in: fade-in 0.3s ease-out;
-  --animate-slide-up: slide-up 0.4s ease-out;
+  --animate-fade-in: fade-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --animate-slide-up: slide-up 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -34,20 +30,31 @@
   }
 }
 
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a2540;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a2540;
+    --foreground: #f6f9fc;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(99, 91, 255, 0.15);
 }

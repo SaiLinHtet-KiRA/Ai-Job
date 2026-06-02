@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SessionProvider } from "./components/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +14,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Find Your Dream Job | easy2apply",
+  title: "AI-Powered Job Matching | easy2apply",
   description:
-    "AI-powered job matching platform connecting top talent with cutting-edge companies.",
+    "Get matched with your dream job using AI. Upload your CV, discover perfect matches, and apply with one click.",
+  keywords: [
+    "job matching",
+    "AI job search",
+    "career matching",
+    "bulk apply",
+    "job applications",
+    "CV score",
+    "ATS checker",
+    "resume score",
+    "job search",
+  ],
+  authors: [{ name: "easy2apply" }],
+  openGraph: {
+    type: "website",
+    title: "AI-Powered Job Matching | easy2apply",
+    description:
+      "Get matched with your dream job using AI. Upload your CV, discover perfect matches, and apply with one click.",
+    siteName: "easy2apply",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI-Powered Job Matching | easy2apply",
+    description:
+      "Get matched with your dream job using AI. Upload your CV, discover perfect matches, and apply with one click.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +59,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

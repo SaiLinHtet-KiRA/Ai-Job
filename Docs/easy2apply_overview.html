@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>easy2apply — Product Overview</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 32px;
+      background: #fff;
+    }
+
+    /* Cover */
+    .cover {
+      text-align: center;
+      padding: 80px 0 60px;
+      border-bottom: 3px solid #111;
+      margin-bottom: 48px;
+      page-break-after: always;
+    }
+
+    .cover h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .cover .tagline {
+      font-size: 20px;
+      color: #555;
+      font-weight: 400;
+    }
+
+    .cover .version {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #999;
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 48px;
+      page-break-inside: avoid;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+      color: #111;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    /* Flow diagram */
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .flow .step {
+      background: #111;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .flow .arrow {
+      color: #999;
+      font-size: 18px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Feature cards */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #111;
+    }
+
+    .feature .num {
+      font-size: 20px;
+      font-weight: 800;
+      color: #111;
+      min-width: 28px;
+    }
+
+    .feature .content {
+      flex: 1;
+    }
+
+    .feature .title {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .feature .desc {
+      font-size: 13px;
+      color: #555;
+    }
+
+    /* User model */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .col-card {
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .col-card h3 {
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .col-card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .col-card ul li {
+      padding: 4px 0;
+      font-size: 13px;
+      color: #444;
+    }
+
+    .col-card ul li::before {
+      content: "•";
+      margin-right: 8px;
+      color: #999;
+    }
+
+    /* Journey */
+    .journey-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .journey-step {
+      text-align: center;
+      flex: 1;
+    }
+
+    .journey-step .label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .journey-step .state {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .journey-arrow {
+      display: flex;
+      align-items: center;
+      color: #ccc;
+      font-size: 16px;
+    }
+
+    /* Phase flow */
+    .phase-flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .phase-box {
+      padding: 16px;
+      border-radius: 8px;
+      border: 2px solid #eee;
+      text-align: center;
+    }
+
+    .phase-box h4 {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .phase-box p {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .phase-box .detail {
+      font-size: 11px;
+      color: #777;
+    }
+
+    /* Principles */
+    .principles {
+      counter-reset: principle;
+    }
+
+    .principle {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .principle:last-child {
+      border-bottom: none;
+    }
+
+    .principle::before {
+      counter-increment: principle;
+      content: counter(principle);
+      font-size: 18px;
+      font-weight: 800;
+      color: #ddd;
+      min-width: 24px;
+    }
+
+    .principle strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .principle span {
+      font-size: 13px;
+      color: #666;
+    }
+
+    /* Competitive */
+    .vs-table td:first-child {
+      font-weight: 600;
+      width: 35%;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        padding: 0;
+        font-size: 12px;
+      }
+
+      .cover {
+        padding: 120px 0 80px;
+      }
+
+      section {
+        page-break-inside: avoid;
+      }
+
+      .feature {
+        break-inside: avoid;
+      }
+    }
+
+    .note {
+      font-size: 12px;
+      color: #999;
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    .highlight {
+      background: #fffde7;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid #ffd600;
+      margin-bottom: 16px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER -->
+  <div class="cover">
+    <h1>easy2apply</h1>
+    <p class="tagline">Score your CV. Match to real jobs. Close the gap.</p>
+    <p class="version">Product Overview v1.0 &mdash; May 2025</p>
+  </div>
+
+  <!-- VISION -->
+  <section>
+    <h2>Vision</h2>
+    <p>A platform that shows job seekers <strong>where they stand</strong>, <strong>what they can get</strong>, and <strong>how to get what they want</strong>.</p>
+    <div class="flow">
+      <span class="step">Upload CV</span>
+      <span class="arrow">→</span>
+      <span class="step">Score</span>
+      <span class="arrow">→</span>
+      <span class="step">Match Jobs</span>
+      <span class="arrow">→</span>
+      <span class="step">Learn Skills</span>
+      <span class="arrow">→</span>
+      <span class="step">Tailor CV</span>
+      <span class="arrow">→</span>
+      <span class="step">Apply</span>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section>
+    <h2>The Problem</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>What job seekers do today</th>
+          <th>What's broken</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Apply to 50+ jobs blindly</td>
+          <td>No feedback on why they're rejected</td>
+        </tr>
+        <tr>
+          <td>Guess which skills to learn</td>
+          <td>No connection between skill gaps and real demand</td>
+        </tr>
+        <tr>
+          <td>Use the same CV everywhere</td>
+          <td>CVs aren't tailored to specific roles</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- PRODUCT -->
+  <section>
+    <h2>Product &mdash; 5 Features</h2>
+    <div class="features">
+      <div class="feature">
+        <span class="num">1</span>
+        <div class="content">
+          <div class="title">CV Score</div>
+          <div class="desc">Free. No account. Instant ATS feedback on any CV.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="num">2</span>
+        <div class="content">
+          <div class="title">Job Matching</div>
+          <div class="desc">"Here are jobs you qualify for right now." Powered by real market data.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="num">3</span>
+        <div class="content">
+          <div class="title">Course Roadmap</div>
+          <div class="desc">"Here's what to learn to level up." Curated courses per role.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="num">4</span>
+        <div class="content">
+          <div class="title">CV Drafting</div>
+          <div class="desc">AI tailors your CV for a specific job. One click.</div>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="num">5</span>
+        <div class="content">
+          <div class="title">Job Insights</div>
+          <div class="desc">Market trends, demand %, salary data — by role and location.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USER MODEL -->
+  <section>
+    <h2>User Model</h2>
+    <div class="highlight">Show value first. Ask for commitment after.</div>
+    <div class="two-col">
+      <div class="col-card">
+        <h3>Free (no account)</h3>
+        <ul>
+          <li>CV Score</li>
+          <li>Top 3 job matches</li>
+          <li>Course preview</li>
+        </ul>
+      </div>
+      <div class="col-card">
+        <h3>Registered (free account)</h3>
+        <ul>
+          <li>Unlimited matches</li>
+          <li>CV Drafting</li>
+          <li>Job Insights</li>
+          <li>Saved history</li>
+          <li>Email alerts</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNEY -->
+  <section>
+    <h2>User Journey</h2>
+    <div class="journey-steps">
+      <div class="journey-step">
+        <div class="label">Stranger</div>
+        <div class="state">Visits site</div>
+      </div>
+      <div class="journey-arrow">→</div>
+      <div class="journey-step">
+        <div class="label">Anonymous</div>
+        <div class="state">Uploads CV</div>
+      </div>
+      <div class="journey-arrow">→</div>
+      <div class="journey-step">
+        <div class="label">Scored</div>
+        <div class="state">Gets results</div>
+      </div>
+      <div class="journey-arrow">→</div>
+      <div class="journey-step">
+        <div class="label">Lead</div>
+        <div class="state">Gives email</div>
+      </div>
+      <div class="journey-arrow">→</div>
+      <div class="journey-step">
+        <div class="label">Registered</div>
+        <div class="state">Full access</div>
+      </div>
+      <div class="journey-arrow">→</div>
+      <div class="journey-step">
+        <div class="label">Active</div>
+        <div class="state">Returns weekly</div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>User thinks</th>
+          <th>We deliver</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Awareness</strong></td>
+          <td>"Is this legit?"</td>
+          <td>Clean UI, clear promise, no clutter</td>
+        </tr>
+        <tr>
+          <td><strong>First use</strong></td>
+          <td>"Is it safe to upload?"</td>
+          <td>"Never stored without permission"</td>
+        </tr>
+        <tr>
+          <td><strong>Value</strong></td>
+          <td>"This is actually useful"</td>
+          <td>Specific score + real job matches</td>
+        </tr>
+        <tr>
+          <td><strong>Commit</strong></td>
+          <td>"Worth saving"</td>
+          <td>Email unlocks full report</td>
+        </tr>
+        <tr>
+          <td><strong>Retain</strong></td>
+          <td>"Helps me track progress"</td>
+          <td>New insights, alerts, draft history</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ROADMAP -->
+  <section>
+    <h2>Phase Roadmap</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Ship</th>
+          <th>Validate</th>
+          <th>Timeline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1</strong></td>
+          <td>CV Score + new homepage</td>
+          <td>50 uploads, 20 emails</td>
+          <td>~1 week</td>
+        </tr>
+        <tr>
+          <td><strong>2</strong></td>
+          <td>Job matching + courses</td>
+          <td>30% click-through on matches</td>
+          <td>~2-3 weeks</td>
+        </tr>
+        <tr>
+          <td><strong>3</strong></td>
+          <td>CV drafting + insights</td>
+          <td>10% use drafting</td>
+          <td>~3-4 weeks</td>
+        </tr>
+        <tr>
+          <td><strong>4</strong></td>
+          <td>Monetization</td>
+          <td>Willingness to pay</td>
+          <td>TBD</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">Each phase validates the next. Don't advance without signal.</p>
+  </section>
+
+  <!-- PHASE 1 FLOW -->
+  <section>
+    <h2>Phase 1 &mdash; User Flow</h2>
+    <div class="phase-flow">
+      <div class="phase-box">
+        <h4>Step 1</h4>
+        <p>Landing Page</p>
+        <span class="detail">Upload CV (PDF/Word). Free. No signup.</span>
+      </div>
+      <div class="phase-box">
+        <h4>Step 2</h4>
+        <p>Analyzing</p>
+        <span class="detail">"Analyzing your CV..." 5-10 seconds.</span>
+      </div>
+      <div class="phase-box">
+        <h4>Step 3</h4>
+        <p>Results</p>
+        <span class="detail">Score, strengths, weaknesses, keywords. Email gate below.</span>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Rule</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Privacy</td>
+          <td>CV never stored until user gives email</td>
+        </tr>
+        <tr>
+          <td>Rate limit</td>
+          <td>3 analyses per hour per IP</td>
+        </tr>
+        <tr>
+          <td>Errors</td>
+          <td>Friendly messages, never crashes</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- COMPETITIVE -->
+  <section>
+    <h2>Competitive Edge</h2>
+    <table class="vs-table">
+      <thead>
+        <tr>
+          <th>Competitor</th>
+          <th>They do</th>
+          <th>We do differently</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Resume Worded</td>
+          <td>Scores your CV</td>
+          <td>Score → match → teach → tailor (full loop)</td>
+        </tr>
+        <tr>
+          <td>Jobscan</td>
+          <td>Match against one JD</td>
+          <td>Match across the whole market</td>
+        </tr>
+        <tr>
+          <td>LinkedIn</td>
+          <td>Apply and hope</td>
+          <td>Prepare before applying</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Moat:</strong> Market data compounds daily. Course mappings grow. CV rewrites are job-specific, not generic.</p>
+  </section>
+
+  <!-- TECH -->
+  <section>
+    <h2>Technical Stack</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Technology</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Framework</td><td>Next.js 16 + React 19</td></tr>
+        <tr><td>Database</td><td>Supabase (PostgreSQL)</td></tr>
+        <tr><td>Auth</td><td>Supabase Auth (Phase 2+)</td></tr>
+        <tr><td>AI</td><td>Anthropic Claude (scoring + drafting)</td></tr>
+        <tr><td>Job Data</td><td>TheirStack API</td></tr>
+        <tr><td>Email</td><td>Resend</td></tr>
+        <tr><td>Hosting</td><td>Vercel</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section>
+    <h2>Principles</h2>
+    <div class="principles">
+      <div class="principle">
+        <div>
+          <strong>Value before gate</strong>
+          <span>Never hide the score behind a wall</span>
+        </div>
+      </div>
+      <div class="principle">
+        <div>
+          <strong>Ship small, validate fast</strong>
+          <span>One feature, one metric, one week</span>
+        </div>
+      </div>
+      <div class="principle">
+        <div>
+          <strong>Data compounds</strong>
+          <span>Every day of snapshots = stronger insights</span>
+        </div>
+      </div>
+      <div class="principle">
+        <div>
+          <strong>Bridge, don't orphan</strong>
+          <span>Each phase connects to the next</span>
+        </div>
+      </div>
+      <div class="principle">
+        <div>
+          <strong>Specific > generic</strong>
+          <span>"Add React to your skills section" beats "improve your CV"</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OPEN QUESTIONS -->
+  <section>
+    <h2>Open Questions</h2>
+    <table>
+      <tbody>
+        <tr><td>Distribution channels for Phase 1 launch</td></tr>
+        <tr><td>Free vs. paid boundary — when to test pricing</td></tr>
+        <tr><td>TheirStack API limits and cost</td></tr>
+        <tr><td>English only or multi-language</td></tr>
+        <tr><td>Responsive web only or PWA later</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</body>
+</html>

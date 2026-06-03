@@ -69,3 +69,12 @@ export const adminUpdateSchema = z
   .refine((data) => data.email || data.password, {
     message: "Nothing to update.",
   });
+
+export const cvScoresQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).optional().default(10),
+});
+
+export const cvScoresIdSchema = z.object({
+  id: z.coerce.number().int().min(1, "Invalid ID"),
+});

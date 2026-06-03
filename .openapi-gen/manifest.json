@@ -45,6 +45,34 @@
       "routePath": "/admin/admins"
     },
     {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/courses/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\courses\\[id]\\route.ts",
+      "routePath": "/admin/courses/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/courses/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\courses\\[id]\\route.ts",
+      "routePath": "/admin/courses/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/courses/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\courses\\[id]\\route.ts",
+      "routePath": "/admin/courses/{id}"
+    },
+    {
+      "code": "missing-path-params-type",
+      "severity": "warning",
+      "message": "Route /admin/cv-scores/{id} contains path parameters id but no @pathParams type is defined.",
+      "filePath": "app\\api\\admin\\cv-scores\\[id]\\route.ts",
+      "routePath": "/admin/cv-scores/{id}"
+    },
+    {
       "code": "response-inference-unresolved",
       "severity": "warning",
       "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
@@ -132,36 +160,50 @@
       "code": "response-inference-unresolved",
       "severity": "warning",
       "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/leads/route.ts",
+      "routePath": "/leads"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
+      "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/score/route.ts",
+      "routePath": "/score"
+    },
+    {
+      "code": "response-inference-unresolved",
+      "severity": "warning",
+      "message": "Could not fully infer a response schema from a return statement. Add an explicit @response tag to make the output deterministic.",
       "filePath": "C:/Users/6807665/Desktop/ai-job/app/api/titles/route.ts",
       "routePath": "/titles"
     }
   ],
   "performance": {
-    "prepareTemplateMs": 0.5036999999999807,
-    "loadCustomFragmentsMs": 0.5380000000000109,
-    "prepareDocumentMs": 1.0416999999999916,
-    "scanRouteFilesMs": 4.301900000000046,
-    "deriveRoutePathMs": 0.6932000000005019,
-    "filterRouteCandidatesMs": 0.06410000000005311,
-    "sourcePrecheckMs": 2.402400000001421,
-    "readRouteFilesMs": 1.9536999999982072,
-    "parseRouteFilesMs": 40.07459999999958,
-    "analyzeRouteFilesMs": 32.04449999999974,
-    "typescriptResponseInferenceMs": 6307.998800000001,
-    "processRouteFilesMs": 6380.7682,
-    "registerRouteMs": 3.1960999999992055,
+    "prepareTemplateMs": 0.5281999999999698,
+    "loadCustomFragmentsMs": 0.6240999999999985,
+    "prepareDocumentMs": 1.1522999999999683,
+    "scanRouteFilesMs": 12.30779999999993,
+    "deriveRoutePathMs": 0.8906000000047243,
+    "filterRouteCandidatesMs": 0.08280000000104337,
+    "sourcePrecheckMs": 7.4441000000015265,
+    "readRouteFilesMs": 6.752699999999095,
+    "parseRouteFilesMs": 69.95750000000726,
+    "analyzeRouteFilesMs": 76.08030000000554,
+    "typescriptResponseInferenceMs": 8853.291200000003,
+    "processRouteFilesMs": 9000.537999999997,
+    "registerRouteMs": 7.46389999999883,
     "getSchemaContentMs": 0,
-    "createRequestParamsMs": 0.14500000000043656,
+    "createRequestParamsMs": 0.2114000000019587,
     "createRequestBodyMs": 0,
-    "processResponsesMs": 1.1981999999998152,
+    "processResponsesMs": 3.463800000006813,
     "createResponseSchemaMs": 0,
-    "buildOperationsMs": 3.289300000001276,
-    "sortAndMergePathsMs": 0.9258999999992739,
-    "buildPathsMs": 0.9258999999992739,
-    "defaultComponentsAndErrorsMs": 0.3287000000000262,
-    "mergeSchemasMs": 0.41820000000006985,
-    "finalizeDocumentMs": 4.80410000000029,
-    "totalMs": 6400.1422,
-    "scanRoutesMs": 6388.359400000002
+    "buildOperationsMs": 7.6234999999924185,
+    "sortAndMergePathsMs": 1.9341000000003987,
+    "buildPathsMs": 1.9341000000003987,
+    "defaultComponentsAndErrorsMs": 0.3513999999995576,
+    "mergeSchemasMs": 0.4241999999994732,
+    "finalizeDocumentMs": 28.564900000001217,
+    "totalMs": 9062.4945,
+    "scanRoutesMs": 9020.46929999999
   }
 }

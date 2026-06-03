@@ -53,7 +53,29 @@ ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 CREATE POLICY admin_full_access_admins ON admins
   FOR ALL USING (true) WITH CHECK (true);
 
--- ── applications ───────────────────────────────────────────────
+-- ── user_cvs (CV storage & parsed data) ───────────────────────
+CREATE TABLE IF NOT EXISTS user_cvs (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  storage_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  parsed_text TEXT,
+  structured_data JSONB DEFAULT '{}',
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE user_cvs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY user_own_cv ON user_cvs
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY admin_full_access_user_cvs ON user_cvs
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_user_cvs_user ON user_cvs (user_id);
+
+-- ── applications (legacy – apply form) ────────────────────────
 CREATE TABLE IF NOT EXISTS applications (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL,
@@ -65,19 +87,25 @@ CREATE TABLE IF NOT EXISTS applications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- add columns for the authenticated apply flow (migration-safe)
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS job_id BIGINT REFERENCES jobs(id);
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS cv_id BIGINT REFERENCES user_cvs(id);
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS cover_letter TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS method TEXT DEFAULT 'email';
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
+
 ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 
 -- add email column to existing applications table
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT '';
 
-CREATE POLICY admin_full_access_applications ON applications
-  FOR ALL USING (true) WITH CHECK (true);
-
 -- ── cv_scores ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS cv_scores (
   id BIGSERIAL PRIMARY KEY,
   ip_address TEXT NOT NULL,
-  email TEXT,
+  email TEXT NOT NULL,
   file_name TEXT NOT NULL,
   file_size_kb INTEGER NOT NULL,
   score INTEGER NOT NULL,
@@ -244,42 +272,7 @@ CREATE POLICY admin_full_access_applications_sent ON applications_sent
 
 CREATE INDEX IF NOT EXISTS idx_applications_sent_user ON applications_sent (user_id, sent_at DESC);
 
--- ── user_cvs (CV storage & parsed data) ───────────────────────
-CREATE TABLE IF NOT EXISTS user_cvs (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL,
-  storage_path TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  parsed_text TEXT,
-  structured_data JSONB DEFAULT '{}',
-  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE user_cvs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY user_own_cv ON user_cvs
-  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY admin_full_access_user_cvs ON user_cvs
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE INDEX IF NOT EXISTS idx_user_cvs_user ON user_cvs (user_id);
-
--- ── applications (track job applications) ────────────────────
-CREATE TABLE IF NOT EXISTS applications (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL,
-  job_id BIGINT NOT NULL REFERENCES jobs(id),
-  cv_id BIGINT NOT NULL REFERENCES user_cvs(id),
-  cover_letter TEXT,
-  method TEXT CHECK (method IN ('email', 'api', 'portal')) DEFAULT 'email',
-  status TEXT DEFAULT 'pending',
-  sent_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
+-- ── applications: RLS & indices ────────────────────────────
 
 CREATE POLICY user_own_applications ON applications
   FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());

@@ -14,10 +14,8 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Generate reset token
-    const resetToken = crypto.randomUUID();
     const resetExpires = new Date();
-    resetExpires.setHours(resetExpires.getHours() + 1); // 1 hour expiry
+    resetExpires.setHours(resetExpires.getHours() + 1);
 
     // Store reset token in user metadata or separate table
     // For demo, we'll just use Supabase's built-in reset

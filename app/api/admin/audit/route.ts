@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // GET - Fetch admin audit log
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Check admin auth
     const cookieHeader = req.headers.get("cookie");
     if (!cookieHeader?.includes("admin_session=")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

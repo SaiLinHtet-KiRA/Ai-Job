@@ -6,7 +6,8 @@ import { authOptions } from "@/lib/next-auth";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export async function DELETE(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function DELETE(_req: NextRequest) {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

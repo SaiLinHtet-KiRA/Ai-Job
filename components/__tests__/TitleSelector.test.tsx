@@ -57,7 +57,6 @@ describe("TitleSelector", () => {
   });
 
   it("opens dropdown on input focus", async () => {
-    const user = userEvent.setup();
     render(<TitleSelector value="" onChange={vi.fn()} />);
 
     const input = screen.getByPlaceholderText("Search job title...");
@@ -69,7 +68,6 @@ describe("TitleSelector", () => {
   });
 
   it("filters titles based on input value", async () => {
-    const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       json: () => Promise.resolve(mockTitles),
     } as Response);

@@ -32,11 +32,12 @@ export default function Home() {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
 
-  const validateFile = (f: File): string | null => {
+  const validateFile = useCallback((f: File): string | null => {
     if (!ALLOWED_TYPES.includes(f.type)) return "Please upload a PDF or Word (.docx) file.";
     if (f.size > MAX_SIZE) return "File is too large (max 5 MB).";
     return null;
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFile = useCallback((f: File) => {
     setError(null);
@@ -47,7 +48,7 @@ export default function Home() {
       return;
     }
     setFile(f);
-  }, []);
+  }, [validateFile]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {

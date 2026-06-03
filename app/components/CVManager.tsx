@@ -23,15 +23,16 @@ export default function CVManager() {
       if (data.cv) {
         setCv(data.cv);
       }
-    } catch (err) {
-      console.error("Failed to fetch CV:", err);
+    } catch {
+      console.error("Failed to fetch CV:");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void fetchCV();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCV();
   }, [fetchCV]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +71,7 @@ export default function CVManager() {
 
       setCv(data.cv);
       setSuccess("CV uploaded successfully!");
-    } catch (err) {
+    } catch {
       setError("Failed to upload CV. Please try again.");
     } finally {
       setUploading(false);
@@ -97,7 +98,7 @@ export default function CVManager() {
 
       setCv(null);
       setSuccess("CV deleted successfully");
-    } catch (err) {
+    } catch {
       setError("Failed to delete CV");
     } finally {
       setDeleting(false);

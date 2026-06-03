@@ -18,7 +18,6 @@ interface Step1FormProps {
   onTypeChange: (value: string) => void;
   onSalaryChange: (value: string) => void;
   onResumeChange: (file: File | null) => void;
-  onErrorClear: (field: string) => void;
 }
 
 export default function Step1Form({
@@ -30,7 +29,6 @@ export default function Step1Form({
   onTypeChange,
   onSalaryChange,
   onResumeChange,
-  onErrorClear: _onErrorClear,
 }: Step1FormProps) {
   return (
     <div className="space-y-5">

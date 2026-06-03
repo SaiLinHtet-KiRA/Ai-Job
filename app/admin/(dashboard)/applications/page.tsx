@@ -45,7 +45,12 @@ export default function ApplicationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchApplications();
+  }, [fetchApplications]);
 
   const filtered = useMemo(() => {
     return apps.filter((app) => {

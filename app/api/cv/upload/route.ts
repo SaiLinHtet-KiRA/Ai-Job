@@ -115,7 +115,8 @@ export async function POST(req: NextRequest) {
 }
 
 // Get user's CV
-export async function GET(req: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_req: NextRequest) {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

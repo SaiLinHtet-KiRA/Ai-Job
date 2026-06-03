@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
@@ -70,6 +71,7 @@ const MOCK_JOBS: Job[] = [
 
 export default function JobsPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [jobs] = useState<Job[]>(MOCK_JOBS);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("all");
@@ -77,7 +79,7 @@ export default function JobsPage() {
 
   const handleApply = (job: Job) => {
     if (!session) {
-      const { useRouter } = await import("next/navigation");
+      router.push("/login");
       return;
     }
     if (job.apply_url) {

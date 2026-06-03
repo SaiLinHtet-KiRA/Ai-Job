@@ -188,7 +188,6 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
                   position={position}
                   positionSearch={positionSearch}
                   errors={errors}
-                  allTitles={allTitles}
                   dropdownOpen={dropdownOpen}
                   filteredTitles={filteredTitles}
                   onNameChange={(v) => { setName(v); setErrors((p) => ({ ...p, name: "" })); }}
@@ -211,7 +210,6 @@ export default function ApplyModal({ open, onClose }: ApplyModalProps) {
                   onTypeChange={setType}
                   onSalaryChange={(v) => { setSalary(v); setErrors((p) => ({ ...p, salary: "" })); }}
                   onResumeChange={(f) => { setResume(f); setErrors((p) => ({ ...p, resume: "" })); }}
-                  onErrorClear={(field) => { setErrors((p) => ({ ...p, [field]: "" })); }}
                 />
               )}
               {message && message !== "success" && (

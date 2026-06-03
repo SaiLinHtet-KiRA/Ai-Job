@@ -48,7 +48,8 @@ export default function ApplicationsPage() {
   }, []);
 
   useEffect(() => {
-    void fetchApplications();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchApplications();
   }, [fetchApplications]);
 
   const filtered = applications.filter((app) => {

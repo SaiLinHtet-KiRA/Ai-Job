@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     return NextResponse.json(
       { error: "Internal server error." },
       { status: 500 },

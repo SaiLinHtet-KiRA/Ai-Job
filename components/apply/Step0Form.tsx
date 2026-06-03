@@ -15,7 +15,6 @@ interface Step0FormProps {
   position: string;
   positionSearch: string;
   errors: Record<string, string>;
-  allTitles: string[];
   dropdownOpen: boolean;
   filteredTitles: string[];
   onNameChange: (value: string) => void;
@@ -34,7 +33,6 @@ export default function Step0Form({
   position,
   positionSearch,
   errors,
-  allTitles: _allTitles,
   dropdownOpen,
   filteredTitles,
   onNameChange,

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Mock now, Claude later
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { cv_text, job_title, company, required_skills, user_skills } = body;
+  const { job_title, company, required_skills, user_skills } = body;
 
   if (!job_title || !company) {
     return NextResponse.json(

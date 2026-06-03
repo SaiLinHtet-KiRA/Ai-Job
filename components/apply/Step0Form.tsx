@@ -23,8 +23,8 @@ interface Step0FormProps {
   onPositionSelect: (title: string) => void;
   onDropdownOpen: (open: boolean) => void;
   onClearSearch: () => void;
-  dropdownRef: React.RefObject<HTMLDivElement>;
-  positionAnchorRef: React.RefObject<HTMLDivElement>;
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  positionAnchorRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export default function Step0Form({

@@ -14,7 +14,7 @@ interface Step1FormProps {
   salary: string;
   resume: File | null;
   errors: Record<string, string>;
-  fileRef: React.RefObject<HTMLInputElement>;
+  fileRef: React.RefObject<HTMLInputElement | null>;
   onTypeChange: (value: string) => void;
   onSalaryChange: (value: string) => void;
   onResumeChange: (file: File | null) => void;

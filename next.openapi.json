@@ -43,10 +43,9 @@
           "email": { "type": "string" },
           "location": { "type": "string" },
           "type": { "type": "string" },
-          "salary": { "type": "number" },
+          "salary": { "type": "string" },
           "description": { "type": "string" },
           "image_url": { "type": "string" },
-          "company_website": { "type": "string" },
           "created_at": { "type": "string" },
           "updated_at": { "type": "string" }
         }
@@ -83,10 +82,9 @@
           "email": { "type": "string" },
           "location": { "type": "string" },
           "type": { "type": "string" },
-          "salary": { "type": "number" },
+          "salary": { "type": "string" },
           "description": { "type": "string" },
-          "image_url": { "type": "string" },
-          "company_website": { "type": "string" }
+          "image_url": { "type": "string" }
         }
       },
       "AdminCreateRequest": {
@@ -180,7 +178,7 @@
                   "email": { "type": "string", "format": "email", "description": "Applicant email" },
                   "position": { "type": "string", "minLength": 1, "description": "Job position applied for" },
                   "type": { "type": "string", "minLength": 1, "description": "Job type (e.g. Full-time, Remote)" },
-                  "salary": { "type": "number", "minimum": 0, "description": "Expected salary" },
+                  "salary": { "type": "string", "minLength": 1, "description": "Expected salary" },
                   "resume": { "type": "string", "format": "binary", "description": "Resume PDF file" }
                 }
               }

@@ -12,10 +12,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Generated / third-party files:
-    "playwright-report/**",
-    "test-results/**",
-    "public/openapi.json",
   ]),
 ]);
 

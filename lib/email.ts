@@ -7,9 +7,8 @@ export interface Job {
   email: string;
   location: string;
   type: string;
-  salary: number;
+  salary: string;
   description: string;
-  company_website: string;
 }
 
 const FROM = "easy2apply@easy2apply.work";
@@ -21,7 +20,7 @@ export async function sendApplicationEmails(params: {
   email: string;
   position: string;
   type: string;
-  salary: number;
+  salary: string;
   resumeUrl: string;
   jobs: Job[];
 }) {
@@ -63,7 +62,7 @@ function employerTemplate(p: {
   email: string;
   position: string;
   type: string;
-  salary: number;
+  salary: string;
   resumeUrl: string;
   job: Job;
 }) {
@@ -110,7 +109,7 @@ function applicantTemplate(p: { name: string; position: string; jobs: Job[] }) {
   const cards = jobs
     .map(
       (j) =>
-        `<div style="border:1px solid #e4e4e7;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px;color:#18181b">${j.title}</h3><p style="margin:0 0 4px;font-size:14px;color:#3f3f46">${companyIcon}${j.company}</p><p style="margin:0 0 4px;font-size:13px;color:#71717a">${mailIcon}${j.email}</p><p style="margin:0;font-size:13px;color:#71717a">${j.location || ""}${j.location && j.salary != null ? " &middot; " : ""}${j.salary != null ? j.salary : ""}</p></div>`,
+        `<div style="border:1px solid #e4e4e7;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px;color:#18181b">${j.title}</h3><p style="margin:0 0 4px;font-size:14px;color:#3f3f46">${companyIcon}${j.company}</p><p style="margin:0 0 4px;font-size:13px;color:#71717a">${mailIcon}${j.email}</p><p style="margin:0;font-size:13px;color:#71717a">${j.location || ""}${j.location && j.salary ? " &middot; " : ""}${j.salary || ""}</p></div>`,
     )
     .join("");
 

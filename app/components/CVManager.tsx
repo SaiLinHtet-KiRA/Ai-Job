@@ -31,7 +31,7 @@ export default function CVManager() {
   }, []);
 
   useEffect(() => {
-    fetchCV();
+    void fetchCV();
   }, [fetchCV]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

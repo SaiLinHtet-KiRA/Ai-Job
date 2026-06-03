@@ -185,7 +185,7 @@ export default function MatchesFeed() {
   return (
     <div className="mt-8">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold text-white">Today's Matches</h2>
+        <h2 className="text-[15px] font-semibold text-white">Today&apos;s Matches</h2>
         <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-400">
           Demo data
         </span>

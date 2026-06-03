@@ -77,7 +77,7 @@ export default function JobsPage() {
 
   const handleApply = (job: Job) => {
     if (!session) {
-      window.location.href = "/login";
+      const { useRouter } = await import("next/navigation");
       return;
     }
     if (job.apply_url) {

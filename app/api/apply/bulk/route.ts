@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Filter to only email-apply jobs
-    const emailApplications = applications.filter((app: any) => app.apply_email);
+    const emailApplications = applications.filter((app: Record<string, unknown>) => app.apply_email);
 
     if (emailApplications.length === 0) {
       return NextResponse.json({ error: "No email-apply jobs selected" }, { status: 400 });
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const results = {
       successful: 0,
       failed: 0,
-      details: [] as any[],
+      details: [] as { job_id: number; status: string; error?: string }[],
     };
 
     // Process each application

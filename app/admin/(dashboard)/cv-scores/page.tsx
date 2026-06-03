@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import CVScoreDetail from "./CVScoreDetail";
 
-const MOCK_SCORES = [
-  { id: 1, email: "sarah@gmail.com", score: 78, file_name: "Sarah_CV.pdf", file_size: 245760, summary: "Strong frontend profile with React experience", created_at: "2025-05-30T10:12:00Z" },
-  { id: 2, email: null, score: 52, file_name: "resume.docx", file_size: 128000, summary: "Junior developer, needs more project experience", created_at: "2025-05-30T09:45:00Z" },
-  { id: 3, email: "mike.dev@outlook.com", score: 85, file_name: "Mike_Resume_2025.pdf", file_size: 312000, summary: "Senior full-stack engineer with cloud expertise", created_at: "2025-05-29T16:40:00Z" },
-  { id: 4, email: "anna.chen@yahoo.com", score: 64, file_name: "CV_Anna.pdf", file_size: 198000, summary: "Data analyst transitioning to engineering", created_at: "2025-05-29T09:28:00Z" },
-  { id: 5, email: null, score: 71, file_name: "CV.pdf", file_size: 156000, summary: "Mid-level backend developer, good Python skills", created_at: "2025-05-28T22:15:00Z" },
-  { id: 6, email: "john.k@proton.me", score: 43, file_name: "John_K_CV.pdf", file_size: 89000, summary: "Career changer, limited tech experience", created_at: "2025-05-28T14:18:00Z" },
-];
+type CVScore = {
+  id: number;
+  ip_address: string;
+  email: string | null;
+  file_name: string;
+  file_size_kb: number;
+  score: number;
+  strengths: string[];
+  weaknesses: string[];
+  keywords_missing: string[];
+  summary: string;
+  created_at: string;
+};
+
+const PAGE_SIZE = 10;
 
 const thClass = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400";
 const tdClass = "px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300";
@@ -21,14 +29,62 @@ function scoreColor(score: number) {
 }
 
 export default function CVScoresPage() {
-  const [scores] = useState(MOCK_SCORES);
+  const [scores, setScores] = useState<CVScore[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [selectedScoreId, setSelectedScoreId] = useState<number | null>(null);
+
+  const fetchScores = useCallback(async (p: number) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/cv-scores?page=${p}&pageSize=${PAGE_SIZE}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setScores(data.scores);
+      setPage(data.page);
+      setTotalPages(data.totalPages);
+      setTotal(data.total);
+    } catch {
+      setScores([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchScores(1);
+  }, [fetchScores]);
+
+  const goToPage = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    fetchScores(p);
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push("...");
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+        pages.push(i);
+      }
+      if (page < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">CV Scores</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{scores.length} scored CVs</p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{total} scored CVs</p>
         </div>
       </div>
 
@@ -44,29 +100,98 @@ export default function CVScoresPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {scores.map((s) => (
-              <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                <td className={tdClass}>
-                  <div>
-                    <p className="font-medium">{s.file_name}</p>
-                    <p className="text-xs text-zinc-400">{(s.file_size / 1024).toFixed(0)} KB</p>
-                  </div>
-                </td>
-                <td className={tdClass}>
-                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${scoreColor(s.score)}`}>
-                    {s.score}/100
-                  </span>
-                </td>
-                <td className={`${tdClass} text-zinc-400`}>{s.email ?? "—"}</td>
-                <td className={`${tdClass} max-w-xs truncate text-zinc-400`}>{s.summary}</td>
-                <td className={`${tdClass} text-zinc-400 whitespace-nowrap`}>
-                  {new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-sm text-zinc-400">
+                  Loading...
                 </td>
               </tr>
-            ))}
+            ) : scores.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-sm text-zinc-400">
+                  No CV scores yet.
+                </td>
+              </tr>
+            ) : (
+              scores.map((s) => (
+                <tr
+                  key={s.id}
+                  onClick={() => setSelectedScoreId(s.id)}
+                  className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                >
+                  <td className={tdClass}>
+                    <div>
+                      <p className="font-medium">{s.file_name}</p>
+                      <p className="text-xs text-zinc-400">{s.file_size_kb} KB</p>
+                    </div>
+                  </td>
+                  <td className={tdClass}>
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${scoreColor(s.score)}`}
+                    >
+                      {s.score}/100
+                    </span>
+                  </td>
+                  <td className={`${tdClass} text-zinc-400`}>{s.email ?? "—"}</td>
+                  <td className={`${tdClass} max-w-xs truncate text-zinc-400`}>{s.summary}</td>
+                  <td className={`${tdClass} whitespace-nowrap text-zinc-400`}>
+                    {new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-1">
+          <button
+            onClick={() => goToPage(page - 1)}
+            disabled={page <= 1}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            Prev
+          </button>
+          {getPageNumbers().map((p, i) =>
+            typeof p === "string" ? (
+              <span key={`ellipsis-${i}`} className="px-2 text-sm text-zinc-400">...</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => goToPage(p)}
+                className={`min-w-[36px] rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                  p === page
+                    ? "bg-primary/10 text-primary dark:bg-primary/20"
+                    : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => goToPage(page + 1)}
+            disabled={page >= totalPages}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {selectedScoreId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            data-testid="modal-backdrop"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setSelectedScoreId(null)}
+          />
+          <div className="relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-zinc-200/60 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+            <CVScoreDetail scoreId={selectedScoreId} onClose={() => setSelectedScoreId(null)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

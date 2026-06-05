@@ -206,22 +206,6 @@ test.describe("API Routes", () => {
     expect(res.status()).not.toBe(400);
   });
 
-  test("GET /api/admin/jobs returns 401 without auth", async ({
-    request,
-  }) => {
-    const res = await request.get("/api/admin/jobs");
-    expect(res.status()).toBe(401);
-  });
-
-  test("POST /api/admin/jobs returns 401 without auth", async ({
-    request,
-  }) => {
-    const res = await request.post("/api/admin/jobs", {
-      data: { title: "Test Job" },
-    });
-    expect(res.status()).toBe(401);
-  });
-
   test("GET /api/admin/titles returns 401 without auth", async ({
     request,
   }) => {

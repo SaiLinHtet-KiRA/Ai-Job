@@ -6,4 +6,12 @@ interface CV {
   parsedText: string;
 }
 
-export type { CV };
+interface CVScore {
+  score: number;
+  strengths?: string[];
+  weaknesses?: string[];
+  keywords_missing?: string[];
+  summary?: string;
+}
+
+export type { CV, CVScore };

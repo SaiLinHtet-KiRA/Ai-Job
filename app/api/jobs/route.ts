@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
-import { jobQuerySchema, formatZodError } from "@/lib/validations";
 
 /**
- * Search jobs by keyword
- * @description Returns all jobs, optionally filtered by a title keyword (case-insensitive partial match).
+ * Search job listings by keyword
+ * @description Returns all job listings, optionally filtered by a title keyword (case-insensitive partial match).
  * @tags ["Jobs"]
  */
 export async function GET(req: NextRequest) {
@@ -13,21 +12,12 @@ export async function GET(req: NextRequest) {
     const limited = await rateLimit(`jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });
     if (limited) return limited;
     const { searchParams } = new URL(req.url);
-    const parsed = jobQuerySchema.safeParse({ title: searchParams.get("title") || undefined });
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: formatZodError(parsed) },
-        { status: 400 },
-      );
-    }
-
-    const { title } = parsed.data;
+    const title = searchParams.get("title");
 
     const supabase = getSupabaseAdmin();
     let query = supabase
-      .from("jobs")
-      .select("id, title, title_id, company, email, location, type, salary, description, image_url, created_at")
+      .from("job_listings")
+      .select("id, title, company, location, job_type, salary_range, skills, description, apply_url, apply_email, created_at")
       .order("created_at", { ascending: false });
 
     if (title) {

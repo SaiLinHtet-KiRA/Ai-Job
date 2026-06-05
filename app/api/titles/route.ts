@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("titles")
-      .select("id, name")
+      .select("id, name, jobs_size")
       .order("name", { ascending: true });
 
     if (error) {

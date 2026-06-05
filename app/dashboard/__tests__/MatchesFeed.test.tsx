@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import MatchesFeed from "@/app/dashboard/MatchesFeed";
@@ -10,46 +10,136 @@ vi.mock("next-auth/react", () => ({
   }),
 }));
 
+const mockMatches = [
+  {
+    id: 1,
+    match_score: 85,
+    missing_skills: ["Docker", "CI/CD"],
+    cover_letter: "Generated cover letter for Frontend Developer...",
+    status: "pending",
+    matched_at: "2026-06-01T00:00:00.000Z",
+    job_listings: {
+      id: 101,
+      title: "Frontend Developer",
+      company: "CloudBase",
+      location: "Yangon",
+      skills: ["React", "TypeScript", "Tailwind CSS", "Docker", "CI/CD"],
+      apply_email: "jobs@cloudbase.io",
+      apply_url: null,
+    },
+  },
+  {
+    id: 2,
+    match_score: 72,
+    missing_skills: ["PostgreSQL"],
+    cover_letter: "Generated cover letter for Full Stack Developer...",
+    status: "pending",
+    matched_at: "2026-06-01T00:00:00.000Z",
+    job_listings: {
+      id: 102,
+      title: "Full Stack Developer",
+      company: "DataFlow",
+      location: "Singapore",
+      skills: ["Node.js", "React", "PostgreSQL", "AWS"],
+      apply_email: null,
+      apply_url: "https://example.com/apply",
+    },
+  },
+  {
+    id: 3,
+    match_score: 68,
+    missing_skills: ["AWS"],
+    cover_letter: "Generated cover letter for Frontend Engineer...",
+    status: "pending",
+    matched_at: "2026-06-01T00:00:00.000Z",
+    job_listings: {
+      id: 103,
+      title: "Frontend Engineer (Vue.js)",
+      company: "VueTech",
+      location: "Bangkok",
+      skills: ["Vue.js", "JavaScript", "CSS", "AWS"],
+      apply_email: "hr@vuetech.com",
+      apply_url: null,
+    },
+  },
+  {
+    id: 4,
+    match_score: 61,
+    missing_skills: ["Expo"],
+    cover_letter: "Generated cover letter for React Native Developer...",
+    status: "pending",
+    matched_at: "2026-06-01T00:00:00.000Z",
+    job_listings: {
+      id: 104,
+      title: "React Native Developer",
+      company: "AppWorks",
+      location: "Remote",
+      skills: ["React Native", "TypeScript", "Expo"],
+      apply_email: null,
+      apply_url: "https://appworks.io/jobs/104",
+    },
+  },
+];
+
+const mockFetch = vi.fn();
+
+beforeEach(() => {
+  mockFetch.mockReset();
+  mockFetch.mockImplementation(async (_url: string, init?: RequestInit) => {
+    if (init?.method === "PATCH") {
+      return { ok: true, json: async () => ({}) };
+    }
+    if (init?.method === "POST") {
+      return { ok: true, json: async () => ({ successful: 2, failed: 0 }) };
+    }
+    return { ok: true, json: async () => mockMatches };
+  });
+  globalThis.fetch = mockFetch;
+});
+
 describe("MatchesFeed", () => {
   it("renders today's matches heading", () => {
     render(<MatchesFeed />);
     expect(screen.getByText("Today's Matches")).toBeInTheDocument();
   });
 
-  it("shows demo data badge", () => {
+  it("renders match cards with job titles", async () => {
     render(<MatchesFeed />);
-    expect(screen.getByText("Demo data")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Frontend Developer")).toBeInTheDocument();
+      expect(screen.getByText("Full Stack Developer")).toBeInTheDocument();
+      expect(
+        screen.getByText("Frontend Engineer (Vue.js)"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("React Native Developer")).toBeInTheDocument();
+    });
   });
 
-  it("renders match cards with job titles", () => {
+  it("renders match scores", async () => {
     render(<MatchesFeed />);
-    expect(screen.getByText("Frontend Developer")).toBeInTheDocument();
-    expect(screen.getByText("Full Stack Developer")).toBeInTheDocument();
-    expect(
-      screen.getByText("Frontend Engineer (Vue.js)"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("React Native Developer")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("85% match")).toBeInTheDocument();
+      expect(screen.getByText("72% match")).toBeInTheDocument();
+      expect(screen.getByText("68% match")).toBeInTheDocument();
+      expect(screen.getByText("61% match")).toBeInTheDocument();
+    });
   });
 
-  it("renders match scores", () => {
+  it("shows Skip and Preview buttons on each match card", async () => {
     render(<MatchesFeed />);
-    expect(screen.getByText("85% match")).toBeInTheDocument();
-    expect(screen.getByText("72% match")).toBeInTheDocument();
-    expect(screen.getByText("68% match")).toBeInTheDocument();
-    expect(screen.getByText("61% match")).toBeInTheDocument();
-  });
-
-  it("shows Skip and Preview buttons on each match card", () => {
-    render(<MatchesFeed />);
-    const skipButtons = screen.getAllByText("Skip");
-    const previewButtons = screen.getAllByText("Preview");
-    expect(skipButtons.length).toBe(4);
-    expect(previewButtons.length).toBe(4);
+    await waitFor(() => {
+      const skipButtons = screen.getAllByText("Skip");
+      const previewButtons = screen.getAllByText("Preview");
+      expect(skipButtons.length).toBe(4);
+      expect(previewButtons.length).toBe(4);
+    });
   });
 
   it("expands cover letter preview when Preview is clicked", async () => {
     const user = userEvent.setup();
     render(<MatchesFeed />);
+
+    await waitFor(() => expect(screen.queryAllByText("Preview").length).toBeGreaterThan(0));
 
     const previewButtons = screen.getAllByText("Preview");
     await user.click(previewButtons[0]);
@@ -65,6 +155,8 @@ describe("MatchesFeed", () => {
     const user = userEvent.setup();
     render(<MatchesFeed />);
 
+    await waitFor(() => expect(screen.queryAllByText("Preview").length).toBeGreaterThan(0));
+
     const previewButtons = screen.getAllByText("Preview");
     await user.click(previewButtons[0]);
 
@@ -77,6 +169,8 @@ describe("MatchesFeed", () => {
     const user = userEvent.setup();
     render(<MatchesFeed />);
 
+    await waitFor(() => expect(screen.queryAllByText("Skip").length).toBeGreaterThan(0));
+
     const skipButtons = screen.getAllByText("Skip");
     await user.click(skipButtons[0]);
 
@@ -85,16 +179,20 @@ describe("MatchesFeed", () => {
     });
   });
 
-  it("shows bulk action bar with select all checkbox", () => {
+  it("shows bulk action bar with select all checkbox", async () => {
     render(<MatchesFeed />);
-    expect(screen.getByText(/0 of 4 selected/)).toBeInTheDocument();
-    const checkboxes = screen.getAllByRole("checkbox");
-    expect(checkboxes.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getByText(/0 of 4 selected/)).toBeInTheDocument();
+      const checkboxes = screen.getAllByRole("checkbox");
+      expect(checkboxes.length).toBeGreaterThan(0);
+    });
   });
 
   it("selects all matches when select all checkbox is clicked", async () => {
     const user = userEvent.setup();
     render(<MatchesFeed />);
+
+    await waitFor(() => expect(screen.queryAllByRole("checkbox").length).toBeGreaterThan(0));
 
     const checkboxes = screen.getAllByRole("checkbox");
     await user.click(checkboxes[0]);
@@ -108,6 +206,8 @@ describe("MatchesFeed", () => {
     const user = userEvent.setup();
     render(<MatchesFeed />);
 
+    await waitFor(() => expect(screen.queryAllByRole("checkbox").length).toBeGreaterThan(0));
+
     const checkboxes = screen.getAllByRole("checkbox");
     await user.click(checkboxes[0]);
 
@@ -120,6 +220,8 @@ describe("MatchesFeed", () => {
   it("opens Review modal when Review & Apply is clicked", async () => {
     const user = userEvent.setup();
     render(<MatchesFeed />);
+
+    await waitFor(() => expect(screen.queryAllByRole("checkbox").length).toBeGreaterThan(0));
 
     const checkboxes = screen.getAllByRole("checkbox");
     await user.click(checkboxes[1]);
@@ -135,19 +237,23 @@ describe("MatchesFeed", () => {
     });
   });
 
-  it("renders missing skills badges", () => {
+  it("renders missing skills badges", async () => {
     render(<MatchesFeed />);
-    expect(screen.getByText("Docker")).toBeInTheDocument();
-    expect(screen.getByText("CI/CD")).toBeInTheDocument();
-    expect(screen.getByText("PostgreSQL")).toBeInTheDocument();
-    expect(screen.getByText("AWS")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Docker")).toBeInTheDocument();
+      expect(screen.getByText("CI/CD")).toBeInTheDocument();
+      expect(screen.getByText("PostgreSQL")).toBeInTheDocument();
+      expect(screen.getByText("AWS")).toBeInTheDocument();
+    });
   });
 
-  it("shows Email apply or Manual apply badges", () => {
+  it("shows Email apply or Manual apply badges", async () => {
     render(<MatchesFeed />);
-    const emailApply = screen.getAllByText("Email apply");
-    const manualApply = screen.getAllByText("Manual apply");
-    expect(emailApply.length).toBeGreaterThan(0);
-    expect(manualApply.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      const emailApply = screen.getAllByText("Email apply");
+      const manualApply = screen.getAllByText("Manual apply");
+      expect(emailApply.length).toBeGreaterThan(0);
+      expect(manualApply.length).toBeGreaterThan(0);
+    });
   });
 });

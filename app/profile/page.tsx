@@ -1,16 +1,21 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
+import { getUserProfile } from "@/lib/user-profile";
 import Link from "next/link";
 import CVManager from "../components/CVManager";
 import SignOutButton from "../components/SignOutButton";
 
 async function getUser() {
   const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
+
+  const profile = await getUserProfile(session.user.id);
+  if (!profile) return null;
+
   return {
-    id: session.user.id ?? session.user.email ?? "user",
-    email: session.user.email ?? "",
+    id: profile.user_id,
+    email: profile.email,
   };
 }
 

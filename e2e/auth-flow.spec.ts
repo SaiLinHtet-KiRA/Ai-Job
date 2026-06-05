@@ -1,34 +1,48 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Authentication Flows", () => {
-  test("login page loads and shows Auth0 login button", async ({ page }) => {
+  test("login page loads and shows credentials form", async ({ page }) => {
     await page.goto("/login");
 
     await expect(
       page.getByText("Welcome back"),
     ).toBeVisible();
     await expect(
-      page.getByText("Continue with Auth0"),
+      page.getByPlaceholder("you@example.com"),
     ).toBeVisible();
     await expect(
-      page.getByText("Check your CV score"),
+      page.getByPlaceholder("Your password"),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Sign up"),
     ).toBeVisible();
   });
 
   test("login page shows error when error param is present", async ({
     page,
   }) => {
-    await page.goto("/login?error=auth_failed");
+    await page.goto("/login?error=Invalid%20email%20or%20password");
 
     await expect(
-      page.getByText("Auth Error: auth_failed"),
+      page.getByText("Invalid email or password"),
     ).toBeVisible();
   });
 
-  test("signup page redirects to login", async ({ page }) => {
+  test("signup page loads and shows form", async ({ page }) => {
     await page.goto("/signup");
 
-    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByRole("heading", { name: "Create account" }),
+    ).toBeVisible();
+    await expect(
+      page.getByPlaceholder("you@example.com"),
+    ).toBeVisible();
+    await expect(
+      page.getByPlaceholder("Minimum 6 characters"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Create account" }),
+    ).toBeVisible();
   });
 
   test("unauthenticated user is redirected from protected pages", async ({

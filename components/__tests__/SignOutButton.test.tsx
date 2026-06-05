@@ -1,11 +1,22 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SignOutButton from "@/app/components/SignOutButton";
 
 const mockSignOut = vi.fn();
+const mockSupabaseSignOut = vi.fn().mockResolvedValue(undefined);
+const mockRouterPush = vi.fn();
+
 vi.mock("next-auth/react", () => ({
   signOut: (...args: unknown[]) => mockSignOut(...args),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockRouterPush }),
+}));
+
+vi.mock("@/lib/supabase-browser", () => ({
+  getSupabaseBrowser: () => ({ auth: { signOut: mockSupabaseSignOut } }),
 }));
 
 describe("SignOutButton", () => {
@@ -25,8 +36,7 @@ describe("SignOutButton", () => {
     await user.click(screen.getByText("Sign out"));
 
     expect(mockSignOut).toHaveBeenCalledWith({
-      callbackUrl: "/",
-      redirect: true,
+      redirect: false,
     });
   });
 

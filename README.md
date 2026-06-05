@@ -24,7 +24,7 @@ AI-powered job matching platform — one form, hundreds of applications, persona
 - **Employer matching** — Auto-matches your target position with relevant job listings
 - **Email notifications** — Branded emails to applicants and employers on submission
 - **Study roadmap** — Personalized learning path with curated courses and time estimates
-- **Admin dashboard** — Full CRUD for jobs, titles, and admin users behind session auth
+- **Admin dashboard** — Full CRUD for job listings, titles, and admin users behind session auth
 - **Rate limiting** — Per-endpoint rate limits with graceful Redis-failure fallback
 - **Input validation** — Zod schemas on all API endpoints with descriptive error messages
 - **API documentation** — Interactive Scalar reference at `/api-docs`, auto-generated from JSDoc
@@ -61,11 +61,7 @@ cp .env.example .env.local
 
 ### Database
 
-Run `lib/setup.sql` in your Supabase SQL editor. Creates tables for titles, jobs, admins, and applications with RLS policies.
-
-```bash
-npm run seed        # seeds job data from add-data/
-```
+Run `lib/setup.sql` in your Supabase SQL editor. Creates tables for titles, job_listings, admins, and applications with RLS policies.
 
 ### Development
 
@@ -82,7 +78,7 @@ npm run dev         # http://localhost:3000
 | Method | Path | Description | Rate limit |
 |--------|------|-------------|------------|
 | `GET` | `/api/titles` | List all job titles | 30 / 10s |
-| `GET` | `/api/jobs?title=` | Search jobs by keyword | 30 / 10s |
+| `GET` | `/api/jobs?title=` | Search job listings by keyword | 30 / 10s |
 | `POST` | `/api/apply` | Submit application (multipart) | 5 / 60s |
 
 ### Admin (requires `admin_session` cookie)
@@ -92,8 +88,8 @@ npm run dev         # http://localhost:3000
 | `POST` | `/api/admin/login` | Authenticate | 5 / 60s |
 | `POST` | `/api/admin/logout` | Clear session | 10 / 60s |
 | `GET` `POST` | `/api/admin/titles` | List / create titles | 30 / 10s |
-| `GET` `POST` | `/api/admin/jobs` | List / create jobs | 30 / 10s |
-| `PUT` `DELETE` | `/api/admin/jobs/:id` | Update / delete job | 30 / 10s |
+| `GET` `POST` | `/api/admin/job-listings` | List / create job listings | 30 / 10s |
+| `DELETE` | `/api/admin/job-listings?id=` | Delete job listing | 30 / 10s |
 | `GET` `POST` | `/api/admin/admins` | List / create admins | 30 / 10s |
 | `PUT` `DELETE` | `/api/admin/admins/:id` | Update / delete admin | 30 / 10s |
 
@@ -156,13 +152,13 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 
 ```
 ├── app/
-│   ├── admin/                  # admin dashboard (login, jobs, admins)
+│   ├── admin/                  # admin dashboard (login, job listings, admins)
 │   │   ├── (auth)/             #   login page
-│   │   └── (dashboard)/        #   dashboard, jobs CRUD, admins CRUD
+│   │   └── (dashboard)/        #   dashboard, job listings CRUD, admins CRUD
 │   ├── api/
 │   │   ├── admin/              # admin API routes
 │   │   │   ├── admins/         #   [id] CRUD
-│   │   │   ├── jobs/           #   [id] CRUD
+│   │   │   ├── job-listings/   #   CRUD
 │   │   │   ├── titles/         #   CRUD
 │   │   │   ├── login/          #   auth
 │   │   │   └── logout/         #   session clear
@@ -170,7 +166,6 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   ├── jobs/               # job search
 │   │   └── titles/             # title listing
 │   ├── api-docs/               # Scalar API docs page
-│   ├── data/                   # seed JSON
 │   ├── results/                # matches + roadmap
 │   ├── layout.tsx
 │   └── page.tsx
@@ -189,7 +184,7 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   ├── supabase.ts              # Supabase client
 │   └── validations.ts           # Zod schemas
 ├── patches/                     # patch-package fixes
-├── add-data/                    # seed script
+├── add-data/                    # batch job listing data
 ├── middleware.ts                 # auth guard (admin routes + API)
 ├── next.config.ts               # withNextOpenApi wrapper
 ├── next.openapi.json            # OpenAPI spec + generation config
@@ -202,5 +197,5 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 
 - **Dashboard** — overview + quick stats
 - **Job Titles** — manage the title taxonomy
-- **Jobs** — create, edit, delete job listings
+- **Job Listings** — create, edit, delete job listings
 - **Admins** — manage admin accounts (cannot self-delete)

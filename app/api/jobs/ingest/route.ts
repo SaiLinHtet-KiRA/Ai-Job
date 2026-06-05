@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { incrementLocationJobsSize, incrementTitleJobsSize } from "@/lib/location";
 
 // Mock job data — simulates what RSS/TheirStack would return
 const MOCK_JOBS = [
@@ -14,7 +15,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/frontend-cloudbase",
     apply_email: "jobs@cloudbase.io",
     source: "mock",
-    posted_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
     external_id: "rem-002",
@@ -27,7 +27,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/backend-dataflow",
     apply_email: "careers@dataflow.sg",
     source: "mock",
-    posted_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
   {
     external_id: "rem-003",
@@ -40,7 +39,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/fullstack-startuphub",
     apply_email: "hire@startuphub.co",
     source: "mock",
-    posted_at: new Date(Date.now() - 3 * 86400000).toISOString(),
   },
   {
     external_id: "rem-004",
@@ -53,7 +51,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/mobile-appify",
     apply_email: null,
     source: "mock",
-    posted_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
   {
     external_id: "rem-005",
@@ -66,7 +63,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/data-pulsetech",
     apply_email: "data-team@pulsetech.io",
     source: "mock",
-    posted_at: new Date().toISOString(),
   },
   {
     external_id: "rem-006",
@@ -79,7 +75,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/ux-clearcode",
     apply_email: "design@clearcode.uk",
     source: "mock",
-    posted_at: new Date(Date.now() - 4 * 86400000).toISOString(),
   },
   {
     external_id: "rem-007",
@@ -92,7 +87,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/devops-scaleup",
     apply_email: "ops@scaleup.dev",
     source: "mock",
-    posted_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
     external_id: "rem-008",
@@ -105,7 +99,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/pm-nextgen",
     apply_email: null,
     source: "mock",
-    posted_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
   {
     external_id: "rem-009",
@@ -118,7 +111,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/python-byteshift",
     apply_email: "eng@byteshift.de",
     source: "mock",
-    posted_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
   {
     external_id: "rem-010",
@@ -131,7 +123,6 @@ const MOCK_JOBS = [
     apply_url: "https://example.com/apply/vue-zendev",
     apply_email: "jobs@zendev.jp",
     source: "mock",
-    posted_at: new Date().toISOString(),
   },
 ];
 
@@ -169,8 +160,7 @@ export async function POST(req: NextRequest) {
         apply_url: job.apply_url,
         apply_email: job.apply_email,
         source: job.source,
-        posted_at: job.posted_at,
-      },
+          },
       { onConflict: "source,external_id" },
     );
 
@@ -178,6 +168,12 @@ export async function POST(req: NextRequest) {
       skipped++;
     } else {
       inserted++;
+      incrementLocationJobsSize(job.location).catch((err) =>
+        console.error("Failed to increment location jobs_size:", err)
+      );
+      incrementTitleJobsSize(job.title).catch((err) =>
+        console.error("Failed to increment title jobs_size:", err)
+      );
     }
   }
 

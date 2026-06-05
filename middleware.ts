@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getToken } from "next-auth/jwt";
+import { isUserBanned } from "@/lib/user-profile";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Admin auth (existing) ──
   if (pathname.startsWith("/admin") && pathname !== "/admin") {
     const session = request.cookies.get("admin_session");
     if (!session?.value) {
@@ -23,20 +24,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── NextAuth/Auth0 session check ──
-  // Temporarily disabled - Auth0 redirect loop issue
-  // const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  // 
-  // Protected routes - require authentication
-  // const protectedPaths = ["/dashboard", "/jobs", "/roadmap", "/applications", "/profile"];
-  // const isProtected = protectedPaths.some(path => pathname.startsWith(path));
-  // 
-  // if (isProtected && !token) {
-  //   return NextResponse.redirect(new URL("/login", request.url));
-  // }
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-  // ── Supabase Auth session refresh (legacy support) ──
-  // Keep Supabase for admin operations that need it
+  const protectedPaths = ["/dashboard", "/jobs", "/roadmap", "/applications", "/profile"];
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+
+  if (isProtected && !token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  if (isProtected && token?.id) {
+    const banned = await isUserBanned(token.id as string);
+    if (banned) {
+      const response = NextResponse.redirect(new URL("/login?error=banned", request.url));
+      response.cookies.set("next-auth.session-token", "", { path: "/", maxAge: 0 });
+      response.cookies.set("__Secure-next-auth.session-token", "", { path: "/", maxAge: 0 });
+      return response;
+    }
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -57,7 +63,6 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    // Refresh the session (this updates the cookie if needed)
     await supabase.auth.getUser();
 
     return response;

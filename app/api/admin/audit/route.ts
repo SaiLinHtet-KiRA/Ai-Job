@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       {
         id: 4,
         admin_email: "admin@example.com",
-        action: "job_created",
+        action: "job_listing_created",
         target_job_id: 15,
         details: "Created new job listing via admin panel",
         created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago

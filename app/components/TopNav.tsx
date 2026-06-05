@@ -1,22 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import NotificationCenter from "./NotificationCenter";
 
 export default function TopNav() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/", redirect: true });
+    console.log("dasdasd");
+    const supabase = getSupabaseBrowser();
+    await supabase.auth.signOut();
+    await signOut({ redirect: false });
+    router.push("/");
   };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0a2540]/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         {/* Logo */}
-        <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2">
+        <Link
+          href={isAuthenticated ? "/dashboard" : "/"}
+          className="flex items-center gap-2"
+        >
           <div className="h-7 w-7 rounded-lg bg-primary" />
           <span className="font-semibold text-white">easy2apply</span>
         </Link>
@@ -24,16 +34,28 @@ export default function TopNav() {
         {/* Navigation Links */}
         {isAuthenticated && (
           <div className="hidden items-center gap-6 md:flex">
-            <Link href="/dashboard" className="text-[14px] text-[#8898aa] hover:text-white transition-colors">
+            <Link
+              href="/dashboard"
+              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
+            >
               Dashboard
             </Link>
-            <Link href="/jobs" className="text-[14px] text-[#8898aa] hover:text-white transition-colors">
+            <Link
+              href="/jobs"
+              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
+            >
               Browse Jobs
             </Link>
-            <Link href="/applications" className="text-[14px] text-[#8898aa] hover:text-white transition-colors">
+            <Link
+              href="/applications"
+              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
+            >
               Applications
             </Link>
-            <Link href="/profile" className="text-[14px] text-[#8898aa] hover:text-white transition-colors">
+            <Link
+              href="/profile"
+              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
+            >
               Profile
             </Link>
           </div>
@@ -59,7 +81,10 @@ export default function TopNav() {
             </>
           ) : (
             <>
-              <Link href="/cv-check" className="hidden text-[14px] text-[#8898aa] hover:text-white transition-colors sm:block">
+              <Link
+                href="/cv-check"
+                className="hidden text-[14px] text-[#8898aa] hover:text-white transition-colors sm:block"
+              >
                 CV Score
               </Link>
               <Link

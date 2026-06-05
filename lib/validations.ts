@@ -4,10 +4,6 @@ export function formatZodError(result: { success: false; error: z.ZodError }): s
   return result.error.issues[0]?.message ?? "Validation failed.";
 }
 
-export const jobQuerySchema = z.object({
-  title: z.string().optional(),
-});
-
 export const applySchema = z.object({
   name: z.string({ message: "Name is required." }).min(1, "Name is required."),
   email: z
@@ -28,33 +24,6 @@ export const loginSchema = z.object({
 export const titleSchema = z.object({
   name: z.string({ message: "Title name is required." }).min(1, "Title name is required."),
 });
-
-export const jobCreateSchema = z.object({
-  title: z.string({ message: "Title is required." }).min(1, "Title is required."),
-  company: z.string().optional().default(""),
-  email: z.string().optional().default(""),
-  location: z.string().optional().default(""),
-  type: z.string().optional().default("On-site"),
-  salary: z.string().optional().default(""),
-  description: z.string().optional().default(""),
-  image_url: z.string().optional().default(""),
-});
-
-export const jobUpdateSchema = z
-  .object({
-    title: z.string().min(1).optional(),
-    company: z.string().optional(),
-    email: z.string().optional(),
-    location: z.string().optional(),
-    type: z.string().optional(),
-    salary: z.string().optional(),
-    description: z.string().optional(),
-    image_url: z.string().optional(),
-  })
-  .refine(
-    (data) => Object.keys(data).length > 0,
-    { message: "Nothing to update." },
-  );
 
 export const adminCreateSchema = z.object({
   email: z.string({ message: "Email is required." }).min(1, "Email is required."),
@@ -77,4 +46,18 @@ export const cvScoresQuerySchema = z.object({
 
 export const cvScoresIdSchema = z.object({
   id: z.coerce.number().int().min(1, "Invalid ID"),
+});
+
+export const jobListingCreateSchema = z.object({
+  title: z.string({ message: "Title is required." }).min(1, "Title is required."),
+  company: z.string({ message: "Company is required." }).min(1, "Company is required."),
+  location: z.string().optional().default(""),
+  job_type: z.string().optional().default("full-time"),
+  salary_range: z.string().optional().default(""),
+  skills: z.array(z.string()).optional().default([]),
+  description: z.string().optional().default(""),
+  apply_url: z.string().optional().default(""),
+  apply_email: z.string().optional().default(""),
+  source: z.string().optional().default("manual"),
+  expires_in_days: z.number().int().min(1).max(365).optional().default(30),
 });

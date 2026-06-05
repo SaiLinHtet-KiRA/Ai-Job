@@ -1,34 +1,77 @@
 import NextAuth from "next-auth";
 import type { NextAuthOptions } from "next-auth";
-import Auth0Provider from "next-auth/providers/auth0";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { createClient } from "@supabase/supabase-js";
+import { isUserBanned } from "@/lib/user-profile";
+
+const supabaseAdmin = () =>
+  createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    Auth0Provider({
-      clientId: process.env.AUTH0_CLIENT_ID!,
-      clientSecret: process.env.AUTH0_CLIENT_SECRET!,
-      issuer: process.env.AUTH0_ISSUER!,
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const supabase = supabaseAdmin();
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password,
+        });
+
+        if (error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes("banned") || msg.includes("disabled")) {
+            throw new Error("Your account has been banned.");
+          }
+          return null;
+        }
+
+        if (!data.user) return null;
+
+        const banned = await isUserBanned(data.user.id);
+        if (banned) {
+          throw new Error("Your account has been banned.");
+        }
+
+        return {
+          id: data.user.id,
+          email: data.user.email,
+        };
+      },
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
-      if (account) {
-        token.accessToken = account.access_token;
-        token.id = profile?.sub;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
       }
-      session.accessToken = token.accessToken as string;
       return session;
     },
   },
   pages: {
     signIn: "/login",
-    error: "/auth/error",
+    error: "/login",
+  },
+  session: {
+    strategy: "jwt",
   },
 };
 

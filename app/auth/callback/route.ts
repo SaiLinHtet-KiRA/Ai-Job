@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { encode } from "next-auth/jwt";
+import { ensureUserProfile } from "@/lib/user-profile";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -7,31 +9,52 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get("next") ?? "/dashboard";
 
   if (code) {
-    const response = NextResponse.redirect(`${origin}${next}`);
-
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              response.cookies.set(name, value, options);
-            });
+          getAll() { return request.cookies.getAll(); },
+          setAll(_cookiesToSet: never) { void _cookiesToSet;
+            // will be set on the response below
           },
         },
       },
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && data.user) {
+      const name = data.user.user_metadata?.name ?? data.user.user_metadata?.full_name ?? null;
+      await ensureUserProfile(data.user.id, data.user.email!, name);
+
+      const response = NextResponse.redirect(`${origin}${next}`);
+
+      const nextAuthToken = await encode({
+        token: {
+          id: data.user.id,
+          email: data.user.email,
+        },
+        secret: process.env.NEXTAUTH_SECRET!,
+        maxAge: 30 * 24 * 60 * 60,
+      });
+
+      const cookieName =
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token";
+
+      response.cookies.set(cookieName, nextAuthToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+
       return response;
     }
   }
 
-  // If code exchange failed, redirect to login with error
   return NextResponse.redirect(`${origin}/login?error=auth_failed`);
 }

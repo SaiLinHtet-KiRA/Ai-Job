@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ── load .env.local ──────────────────────────────────────────────
 function loadEnv(filePath) {
   if (!fs.existsSync(filePath)) return;
   const lines = fs.readFileSync(filePath, "utf8").split("\n");
@@ -38,7 +37,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ── helpers ──────────────────────────────────────────────────────
 function chunk(arr, size) {
   const chunks = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -47,63 +45,165 @@ function chunk(arr, size) {
   return chunks;
 }
 
-// ── main ─────────────────────────────────────────────────────────
 async function seed() {
-  const jobPath = path.resolve(__dirname, "..", "app", "data", "job.json");
+  const jobPath = path.resolve(__dirname, "data", "jobs.json");
   const raw = JSON.parse(fs.readFileSync(jobPath, "utf8"));
 
-  console.log(`Loaded ${raw.length} jobs from job.json`);
+  console.log(`Loaded ${raw.length} jobs from jobs.json`);
 
-  // 1) Collect unique titles
+  // 1) Collect unique titles and ensure they exist in titles table
   const uniqueTitles = [...new Set(raw.map((j) => j.title))];
   console.log(`Found ${uniqueTitles.length} unique titles`);
 
-  // 2) Upsert titles in batches of 100
+  let titlesCreated = 0;
   for (const batch of chunk(uniqueTitles, 100)) {
-    const { error } = await supabase.from("titles").upsert(
-      batch.map((name) => ({ name })),
-      { onConflict: "name", ignoreDuplicates: true },
-    );
-    if (error) {
-      console.error("Error upserting titles:", error.message);
-      process.exit(1);
+    const { data: existing } = await supabase
+      .from("titles")
+      .select("name")
+      .in("name", batch);
+
+    const existingNames = new Set((existing || []).map((t) => t.name));
+    const toCreate = batch.filter((name) => !existingNames.has(name));
+
+    if (toCreate.length > 0) {
+      const { error } = await supabase
+        .from("titles")
+        .upsert(toCreate.map((name) => ({ name })), { onConflict: "name", ignoreDuplicates: true });
+      if (error) {
+        console.error("Error upserting titles:", error.message);
+        process.exit(1);
+      }
+      titlesCreated += toCreate.length;
     }
   }
+  console.log(`Created ${titlesCreated} new titles`);
 
-  // 3) Fetch all titles so we can map name → id
-  const { data: titleRows, error: titleErr } = await supabase
-    .from("titles")
-    .select("id, name");
+  // 2) Collect unique locations and ensure they exist in locations table
+  const uniqueLocations = [...new Set(raw.map((j) => j.location).filter(Boolean))];
+  console.log(`Found ${uniqueLocations.length} unique locations`);
 
-  if (titleErr) {
-    console.error("Error fetching titles:", titleErr.message);
-    process.exit(1);
+  let locationsCreated = 0;
+  for (const batch of chunk(uniqueLocations, 100)) {
+    const { data: existing } = await supabase
+      .from("locations")
+      .select("name")
+      .in("name", batch);
+
+    const existingNames = new Set((existing || []).map((l) => l.name));
+    const toCreate = batch.filter((name) => !existingNames.has(name));
+
+    if (toCreate.length > 0) {
+      const { error } = await supabase
+        .from("locations")
+        .upsert(toCreate.map((name) => ({ name })), { onConflict: "name", ignoreDuplicates: true });
+      if (error) {
+        console.error("Error upserting locations:", error.message);
+        process.exit(1);
+      }
+      locationsCreated += toCreate.length;
+    }
   }
+  console.log(`Created ${locationsCreated} new locations`);
 
-  const titleMap = Object.fromEntries(titleRows.map((t) => [t.name, t.id]));
-  console.log(`Matched ${titleRows.length} titles in DB`);
+  // 3) Insert job listings
+  console.log("Inserting job listings...");
 
-  // 4) Prepare job inserts
   const jobRows = raw.map((job) => ({
     title: job.title,
-    title_id: titleMap[job.title] || null,
-    email: job.email || "",
-    image_url: job.imageUrl || "",
-    created_at: job.createdAt || new Date().toISOString(),
+    company: job.company,
+    location: job.location || "",
+    job_type: job.job_type || "full-time",
+    salary_range: job.salary_range || "",
+    skills: job.skills || [],
+    description: job.description || "",
+    apply_url: job.apply_url || "",
+    apply_email: job.apply_email || "",
+    source: job.source || "manual",
+    expires_at: new Date(
+      Date.now() + (job.expires_in_days || 30) * 24 * 60 * 60 * 1000
+    ).toISOString(),
   }));
 
-  // 5) Insert jobs in batches of 100
   let inserted = 0;
   for (const batch of chunk(jobRows, 100)) {
-    const { error } = await supabase.from("jobs").insert(batch);
+    const { error } = await supabase.from("job_listings").insert(batch);
     if (error) {
-      console.error("Error inserting jobs:", error.message);
+      console.error("Error inserting job listings:", error.message);
       process.exit(1);
     }
     inserted += batch.length;
   }
 
-  console.log(`\nDone — inserted ${inserted} jobs`);
+  console.log(`Inserted ${inserted} job listings`);
+
+  // 4) Increment jobs_size for each title
+  console.log("Updating jobs_size counters...");
+
+  const titleCounts = {};
+  for (const job of raw) {
+    titleCounts[job.title] = (titleCounts[job.title] || 0) + 1;
+  }
+
+  for (const [title, count] of Object.entries(titleCounts)) {
+    // Try RPC first
+    const { error: rpcErr } = await supabase.rpc("increment_title_jobs_size", {
+      title_name: title,
+      increment_by: count,
+    });
+
+    if (rpcErr) {
+      // Fallback: get current count and update
+      const { data: row } = await supabase
+        .from("titles")
+        .select("id, jobs_size")
+        .eq("name", title)
+        .single();
+
+      if (row) {
+        await supabase
+          .from("titles")
+          .update({ jobs_size: row.jobs_size + count })
+          .eq("id", row.id);
+      }
+    }
+  }
+
+  console.log(`Updated jobs_size for ${Object.keys(titleCounts).length} titles`);
+
+  // 5) Increment jobs_size for each location
+  console.log("Updating location jobs_size counters...");
+
+  const locationCounts = {};
+  for (const job of raw) {
+    if (job.location) {
+      locationCounts[job.location] = (locationCounts[job.location] || 0) + 1;
+    }
+  }
+
+  for (const [location, count] of Object.entries(locationCounts)) {
+    const { error: rpcErr } = await supabase.rpc("increment_location_jobs_size", {
+      loc_name: location,
+      increment_by: count,
+    });
+
+    if (rpcErr) {
+      const { data: row } = await supabase
+        .from("locations")
+        .select("id, jobs_size")
+        .eq("name", location)
+        .single();
+
+      if (row) {
+        await supabase
+          .from("locations")
+          .update({ jobs_size: row.jobs_size + count })
+          .eq("id", row.id);
+      }
+    }
+  }
+
+  console.log(`Updated jobs_size for ${Object.keys(locationCounts).length} locations`);
+  console.log("\nDone!");
 }
 
 seed().catch((err) => {

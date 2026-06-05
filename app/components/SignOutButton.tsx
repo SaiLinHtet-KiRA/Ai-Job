@@ -1,10 +1,17 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 export default function SignOutButton() {
+  const router = useRouter();
+
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/", redirect: true });
+    const supabase = getSupabaseBrowser();
+    await supabase.auth.signOut();
+    await signOut({ redirect: false });
+    router.push("/");
   };
 
   return (

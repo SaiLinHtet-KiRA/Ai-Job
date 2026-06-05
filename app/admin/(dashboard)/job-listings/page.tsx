@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import JobListingFormModal from "./JobListingFormModal";
 
 type Job = {
@@ -31,11 +31,18 @@ export default function JobListingsPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  const fetchJobs = useCallback(async (p = 1) => {
+  const abortRef = useRef<AbortController | null>(null);
+
+  const loadPage = async (p: number) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/job-listings?page=${p}&limit=${PAGE_SIZE}`);
+      const res = await fetch(`/api/admin/job-listings?page=${p}&limit=${PAGE_SIZE}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("Failed to fetch job listings");
       const json = await res.json();
       setJobs(json.data);
@@ -43,15 +50,18 @@ export default function JobListingsPage() {
       setTotalPages(json.totalPages);
       setPage(json.page);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Failed to load job listings");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    fetchJobs(page);
-  }, [page, fetchJobs]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPage(page);
+    return () => abortRef.current?.abort();
+  }, [page]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -84,7 +94,7 @@ export default function JobListingsPage() {
         </div>
         <div className="flex gap-3">
           <button
-            onClick={() => fetchJobs(page)}
+            onClick={() => loadPage(page)}
             className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-600 transition-all hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -107,7 +117,7 @@ export default function JobListingsPage() {
       {error && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
           {error}
-          <button onClick={() => fetchJobs(page)} className="ml-2 underline">
+          <button onClick={() => loadPage(page)} className="ml-2 underline">
             Retry
           </button>
         </div>
@@ -218,7 +228,7 @@ export default function JobListingsPage() {
       <JobListingFormModal
         open={showForm}
         onClose={() => setShowForm(false)}
-        onCreated={() => fetchJobs(page)}
+        onCreated={() => loadPage(page)}
       />
     </div>
   );

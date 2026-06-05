@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, type FormEvent } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, type FormEvent } from "react";
 import LocationSelector from "@/components/LocationSelector";
 import TitleSelector from "@/components/TitleSelector";
 
@@ -37,9 +37,14 @@ export default function JobListingFormModal({ open, onClose, onCreated }: JobLis
     onClose();
   }, [onClose]);
 
-  const expiresDate = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
+  const expiresDate = useMemo(
+    () =>
+      // eslint-disable-next-line react-hooks/purity
+      new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+    [expiresInDays],
+  );
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -55,13 +60,20 @@ export default function JobListingFormModal({ open, onClose, onCreated }: JobLis
     setError("");
   }, []);
 
+  const prevOpen = useRef(false);
+
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") handleClose();
     }
     if (open) {
       document.addEventListener("keydown", handleEsc);
-      resetForm();
+      if (!prevOpen.current) {
+        resetForm();
+      }
+      prevOpen.current = true;
+    } else {
+      prevOpen.current = false;
     }
     return () => document.removeEventListener("keydown", handleEsc);
   }, [open, handleClose, resetForm]);

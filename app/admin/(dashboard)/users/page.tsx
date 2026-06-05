@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
 interface UserProfile {
   user_id: string;
@@ -40,7 +40,12 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async (p: number, status: string) => {
+  const abortRef = useRef<AbortController | null>(null);
+
+  const loadUsers = async (p: number, status: string) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     try {
       const url = new URL("/api/admin/users", window.location.origin);
@@ -49,7 +54,7 @@ export default function UsersPage() {
       if (status !== "all") {
         url.searchParams.set("status", status);
       }
-      const res = await fetch(url.toString());
+      const res = await fetch(url.toString(), { signal: controller.signal });
       const data = await res.json();
       if (res.ok) {
         setUsers(data.users);
@@ -57,16 +62,18 @@ export default function UsersPage() {
         setTotal(data.total);
         setTotalPages(data.totalPages);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    fetchUsers(1, statusFilter);
-  }, [fetchUsers, statusFilter]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUsers(1, statusFilter);
+    return () => abortRef.current?.abort();
+  }, [statusFilter]);
 
   const filtered = useMemo(() => {
     if (!search) return users;
@@ -79,7 +86,7 @@ export default function UsersPage() {
 
   const handlePageChange = (p: number) => {
     if (p < 1 || p > totalPages) return;
-    fetchUsers(p, statusFilter);
+    loadUsers(p, statusFilter);
   };
 
   const handleBan = async (userId: string, ban: boolean) => {

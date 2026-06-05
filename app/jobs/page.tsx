@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -69,28 +69,37 @@ export default function JobsPage() {
   const [data, setData] = useState<JobsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
-  const fetchJobs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const qs = buildQuery(searchQ, locationQ, typeQ, pageQ, limitQ);
-      router.replace(`/jobs?${qs}`, { scroll: false });
-
-      const res = await fetch(`/api/job-listings?${qs}`);
-      if (!res.ok) throw new Error("Failed to load jobs");
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load jobs");
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQ, locationQ, typeQ, pageQ, limitQ, router]);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const qs = buildQuery(searchQ, locationQ, typeQ, pageQ, limitQ);
+        router.replace(`/jobs?${qs}`, { scroll: false });
+
+        const res = await fetch(`/api/job-listings?${qs}`, { signal: controller.signal });
+        if (!res.ok) throw new Error("Failed to load jobs");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : "Failed to load jobs");
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => controller.abort();
+  }, [searchQ, locationQ, typeQ, pageQ, limitQ, router, retryKey]);
 
   const applyFilters = () => {
     setPage(1);
@@ -211,7 +220,7 @@ export default function JobsPage() {
           ) : error ? (
             <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center">
               <p className="text-[14px] text-red-400">{error}</p>
-              <button onClick={fetchJobs} className="mt-2 text-[13px] text-[#8898aa] underline">
+              <button onClick={() => setRetryKey((k) => k + 1)} className="mt-2 text-[13px] text-[#8898aa] underline">
                 Retry
               </button>
             </div>

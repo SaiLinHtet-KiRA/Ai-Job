@@ -14,7 +14,7 @@ test.describe("Authentication Flows", () => {
       page.getByPlaceholder("Your password"),
     ).toBeVisible();
     await expect(
-      page.getByText("Create an account"),
+      page.getByText("Sign up"),
     ).toBeVisible();
   });
 
@@ -32,7 +32,7 @@ test.describe("Authentication Flows", () => {
     await page.goto("/signup");
 
     await expect(
-      page.getByText("Create account"),
+      page.getByRole("heading", { name: "Create account" }),
     ).toBeVisible();
     await expect(
       page.getByPlaceholder("you@example.com"),

@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import CVUploader from "./CVUploader";
 import CVCard from "./CVCard";
-import type { CV } from "./types-cv";
+import CVScoreCard from "./CVScoreCard";
+import type { CV, CVScore } from "./types-cv";
 
 export default function CVManager() {
   const [cv, setCv] = useState<CV | null>(null);
+  const [score, setScore] = useState<CVScore | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -22,6 +24,9 @@ export default function CVManager() {
       const data = await res.json();
       if (data.cv) {
         setCv(data.cv);
+      }
+      if (data.score) {
+        setScore(data.score);
       }
     } catch {
       console.error("Failed to fetch CV:");
@@ -70,6 +75,9 @@ export default function CVManager() {
       }
 
       setCv(data.cv);
+      if (data.score) {
+        setScore(data.score);
+      }
       setSuccess("CV uploaded successfully!");
     } catch {
       setError("Failed to upload CV. Please try again.");
@@ -97,6 +105,7 @@ export default function CVManager() {
       }
 
       setCv(null);
+      setScore(null);
       setSuccess("CV deleted successfully");
     } catch {
       setError("Failed to delete CV");
@@ -133,6 +142,8 @@ export default function CVManager() {
           {success}
         </div>
       )}
+
+      {score && <CVScoreCard score={score} />}
 
       {cv ? (
         <CVCard

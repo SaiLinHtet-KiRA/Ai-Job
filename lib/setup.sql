@@ -4,41 +4,57 @@
 CREATE TABLE IF NOT EXISTS titles (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
+  jobs_size INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE titles ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE titles ADD COLUMN IF NOT EXISTS jobs_size INTEGER NOT NULL DEFAULT 0;
+
 CREATE POLICY admin_full_access_titles ON titles
   FOR ALL USING (true) WITH CHECK (true);
 
--- ── jobs ───────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS jobs (
+-- ── locations ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS locations (
   id BIGSERIAL PRIMARY KEY,
-  title TEXT NOT NULL DEFAULT '',
-  title_id BIGINT REFERENCES titles(id) ON DELETE SET NULL,
-  company TEXT NOT NULL DEFAULT '',
-  email TEXT NOT NULL DEFAULT '',
-  location TEXT NOT NULL DEFAULT '',
-  type TEXT NOT NULL DEFAULT 'On-site',
-  salary TEXT NOT NULL DEFAULT '',
-  description TEXT NOT NULL DEFAULT '',
-  image_url TEXT NOT NULL DEFAULT '',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  name TEXT NOT NULL UNIQUE,
+  jobs_size INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
 
--- add columns to existing table (safe if run before the table was created)
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS title_id BIGINT REFERENCES titles(id) ON DELETE SET NULL;
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS salary TEXT NOT NULL DEFAULT '';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT '';
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE locations ADD COLUMN IF NOT EXISTS jobs_size INTEGER NOT NULL DEFAULT 0;
 
-CREATE POLICY admin_full_access_jobs ON jobs
+CREATE POLICY admin_full_access_locations ON locations
   FOR ALL USING (true) WITH CHECK (true);
+
+-- ── job_listings (ingested from RSS / TheirStack) ──────────
+CREATE TABLE IF NOT EXISTS job_listings (
+  id BIGSERIAL PRIMARY KEY,
+  external_id TEXT,
+  title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  location TEXT,
+  job_type TEXT DEFAULT 'full-time',
+  salary_range TEXT,
+  skills JSONB NOT NULL DEFAULT '[]',
+  description TEXT,
+  apply_url TEXT,
+  apply_email TEXT,
+  source TEXT NOT NULL DEFAULT 'mock',
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE job_listings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_job_listings ON job_listings
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_job_listings_external ON job_listings (source, external_id);
+CREATE INDEX IF NOT EXISTS idx_job_listings_skills ON job_listings USING GIN (skills);
 
 -- ── admins ─────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS admins (
@@ -89,7 +105,7 @@ CREATE TABLE IF NOT EXISTS applications (
 
 -- add columns for the authenticated apply flow (migration-safe)
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS user_id UUID;
-ALTER TABLE applications ADD COLUMN IF NOT EXISTS job_id BIGINT REFERENCES jobs(id);
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS job_id BIGINT REFERENCES job_listings(id);
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS cv_id BIGINT REFERENCES user_cvs(id);
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS cover_letter TEXT;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS method TEXT DEFAULT 'email';
@@ -177,39 +193,12 @@ CREATE POLICY admin_full_access_role_courses ON role_courses
 CREATE INDEX IF NOT EXISTS idx_role_courses_role ON role_courses (role);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_role_courses_unique ON role_courses (role, course_id);
 
--- ── job_listings (ingested from RSS / TheirStack) ──────────
-CREATE TABLE IF NOT EXISTS job_listings (
-  id BIGSERIAL PRIMARY KEY,
-  external_id TEXT,
-  title TEXT NOT NULL,
-  company TEXT NOT NULL,
-  location TEXT,
-  job_type TEXT DEFAULT 'full-time',
-  salary_range TEXT,
-  skills JSONB NOT NULL DEFAULT '[]',
-  description TEXT,
-  apply_url TEXT,
-  apply_email TEXT,
-  source TEXT NOT NULL DEFAULT 'mock',
-  posted_at TIMESTAMPTZ,
-  expires_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE job_listings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY admin_full_access_job_listings ON job_listings
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_job_listings_external ON job_listings (source, external_id);
-CREATE INDEX IF NOT EXISTS idx_job_listings_posted ON job_listings (posted_at DESC);
-CREATE INDEX IF NOT EXISTS idx_job_listings_skills ON job_listings USING GIN (skills);
-
 -- ── user_profiles (parsed CV data for matching) ────────────
 CREATE TABLE IF NOT EXISTS user_profiles (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL,
   email TEXT NOT NULL,
+  password TEXT,
   skills JSONB NOT NULL DEFAULT '[]',
   experience_level TEXT DEFAULT 'mid',
   target_roles JSONB NOT NULL DEFAULT '[]',
@@ -217,6 +206,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   remote_ok BOOLEAN DEFAULT true,
   cv_file_url TEXT,
   cv_text TEXT,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'banned')),
   last_scored_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -229,6 +219,13 @@ CREATE POLICY admin_full_access_user_profiles ON user_profiles
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_user ON user_profiles (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_skills ON user_profiles USING GIN (skills);
+
+-- add status column if missing (migration)
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+DO $$ BEGIN
+  ALTER TABLE user_profiles ADD CONSTRAINT chk_user_profiles_status CHECK (status IN ('active', 'banned'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ── daily_matches (cron output: user → matched jobs) ───────
 CREATE TABLE IF NOT EXISTS daily_matches (
@@ -282,6 +279,3 @@ CREATE POLICY admin_full_access_applications ON applications
 
 CREATE INDEX IF NOT EXISTS idx_applications_user ON applications (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_applications_job ON applications (job_id);
-
--- ── jobs: add apply_email for email-apply method ─────────────
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_email TEXT;

@@ -5,18 +5,20 @@ import { useState, useEffect, useRef } from "react";
 interface Title {
   id: number;
   name: string;
+  jobs_size: number;
 }
 
 interface Props {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
+  allowCreate?: boolean;
 }
 
 const inputClasses =
   "w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-primary dark:focus:bg-zinc-800";
 
-export default function TitleSelector({ value, onChange, required }: Props) {
+export default function TitleSelector({ value, onChange, required, allowCreate = true }: Props) {
   const [titles, setTitles] = useState<Title[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -24,14 +26,15 @@ export default function TitleSelector({ value, onChange, required }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/admin/titles")
+    const endpoint = allowCreate ? "/api/admin/titles" : "/api/titles";
+    fetch(endpoint)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setTitles(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [allowCreate]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -45,6 +48,7 @@ export default function TitleSelector({ value, onChange, required }: Props) {
 
   const filtered = titles
     .filter((t) => t.name.toLowerCase().includes(value.toLowerCase()))
+    .sort((a, b) => b.jobs_size - a.jobs_size)
     .slice(0, 50);
 
   const exactMatch = titles.find(
@@ -133,13 +137,16 @@ export default function TitleSelector({ value, onChange, required }: Props) {
                   key={t.id}
                   type="button"
                   onClick={() => selectTitle(t.name)}
-                  className={`w-full px-4 py-2.5 text-left text-sm font-medium transition-colors ${
+                  className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                     value === t.name
                       ? "bg-primary/10 text-primary-dark dark:bg-primary/20 dark:text-primary/70"
                       : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-700"
                   }`}
                 >
-                  {t.name}
+                  <span className="font-medium">{t.name}</span>
+                  <span className="text-xs text-zinc-400 tabular-nums">
+                    {t.jobs_size} {t.jobs_size === 1 ? "job" : "jobs"}
+                  </span>
                 </button>
               ))}
             </div>
@@ -149,7 +156,7 @@ export default function TitleSelector({ value, onChange, required }: Props) {
             </div>
           )}
 
-          {value.trim() && !exactMatch && (
+          {value.trim() && !exactMatch && allowCreate && (
             <div className="border-t border-zinc-100 dark:border-zinc-700">
               <button
                 type="button"

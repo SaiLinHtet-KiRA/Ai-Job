@@ -2,14 +2,12 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import {
   formatZodError,
-  jobQuerySchema,
   applySchema,
   loginSchema,
   titleSchema,
-  jobCreateSchema,
-  jobUpdateSchema,
   adminCreateSchema,
   adminUpdateSchema,
+  jobListingCreateSchema,
 } from "@/lib/validations";
 
 describe("formatZodError", () => {
@@ -27,26 +25,6 @@ describe("formatZodError", () => {
       error: new z.ZodError([]),
     };
     expect(formatZodError(mock)).toBe("Validation failed.");
-  });
-});
-
-describe("jobQuerySchema", () => {
-  it("accepts a valid title query", () => {
-    const result = jobQuerySchema.safeParse({ title: "Engineer" });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.title).toBe("Engineer");
-    }
-  });
-
-  it("accepts undefined title", () => {
-    const result = jobQuerySchema.safeParse({});
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts empty title object", () => {
-    const result = jobQuerySchema.safeParse({ title: undefined });
-    expect(result.success).toBe(true);
   });
 });
 
@@ -213,95 +191,6 @@ describe("titleSchema", () => {
   });
 });
 
-describe("jobCreateSchema", () => {
-  it("accepts a job with only title", () => {
-    const result = jobCreateSchema.safeParse({ title: "Software Engineer" });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.title).toBe("Software Engineer");
-      expect(result.data.type).toBe("On-site");
-    }
-  });
-
-  it("accepts a job with all fields", () => {
-    const result = jobCreateSchema.safeParse({
-      title: "Software Engineer",
-      company: "Acme Corp",
-      email: "hr@acme.com",
-      location: "New York",
-      type: "Remote",
-      salary: "$120k",
-      description: "A great job",
-      image_url: "https://example.com/img.png",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects missing title", () => {
-    const result = jobCreateSchema.safeParse({ company: "Acme" });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(formatZodError(result)).toBe("Title is required.");
-    }
-  });
-
-  it("rejects empty title", () => {
-    const result = jobCreateSchema.safeParse({ title: "" });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(formatZodError(result)).toBe("Title is required.");
-    }
-  });
-
-  it("applies default values for omitted optional fields", () => {
-    const result = jobCreateSchema.safeParse({ title: "Engineer" });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.company).toBe("");
-      expect(result.data.email).toBe("");
-      expect(result.data.location).toBe("");
-      expect(result.data.type).toBe("On-site");
-      expect(result.data.salary).toBe("");
-      expect(result.data.description).toBe("");
-      expect(result.data.image_url).toBe("");
-    }
-  });
-});
-
-describe("jobUpdateSchema", () => {
-  it("accepts updating a single field", () => {
-    const result = jobUpdateSchema.safeParse({ title: "Updated Title" });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.title).toBe("Updated Title");
-    }
-  });
-
-  it("accepts updating multiple fields", () => {
-    const result = jobUpdateSchema.safeParse({
-      title: "Updated Title",
-      company: "New Corp",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects an empty object", () => {
-    const result = jobUpdateSchema.safeParse({});
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(formatZodError(result)).toBe("Nothing to update.");
-    }
-  });
-
-  it("rejects empty title string", () => {
-    const result = jobUpdateSchema.safeParse({ title: "" });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(formatZodError(result)).toContain("Too small");
-    }
-  });
-});
-
 describe("adminCreateSchema", () => {
   it("accepts valid admin data", () => {
     const result = adminCreateSchema.safeParse({
@@ -372,5 +261,115 @@ describe("adminUpdateSchema", () => {
     if (!result.success) {
       expect(formatZodError(result)).toContain("Too small");
     }
+  });
+});
+
+describe("jobListingCreateSchema", () => {
+  it("accepts a minimal job listing with title and company", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Frontend Developer",
+      company: "Acme Corp",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.title).toBe("Frontend Developer");
+      expect(result.data.company).toBe("Acme Corp");
+    }
+  });
+
+  it("accepts a full job listing", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Frontend Developer",
+      company: "Acme Corp",
+      location: "Remote",
+      job_type: "full-time",
+      salary_range: "$80k-$120k",
+      skills: ["React", "TypeScript"],
+      description: "A great role",
+      apply_url: "https://example.com",
+      apply_email: "jobs@acme.com",
+      source: "manual",
+      expires_in_days: 30,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing title", () => {
+    const result = jobListingCreateSchema.safeParse({ company: "Acme" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toBe("Title is required.");
+    }
+  });
+
+  it("rejects missing company", () => {
+    const result = jobListingCreateSchema.safeParse({ title: "Dev" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toBe("Company is required.");
+    }
+  });
+
+  it("rejects empty title", () => {
+    const result = jobListingCreateSchema.safeParse({ title: "", company: "Acme" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toBe("Title is required.");
+    }
+  });
+
+  it("applies default values", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Engineer",
+      company: "Acme",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.location).toBe("");
+      expect(result.data.job_type).toBe("full-time");
+      expect(result.data.salary_range).toBe("");
+      expect(result.data.skills).toEqual([]);
+      expect(result.data.description).toBe("");
+      expect(result.data.apply_url).toBe("");
+      expect(result.data.apply_email).toBe("");
+      expect(result.data.source).toBe("manual");
+      expect(result.data.expires_in_days).toBe(30);
+    }
+  });
+
+  it("rejects expires_in_days below 1", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Dev",
+      company: "Acme",
+      expires_in_days: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects expires_in_days above 365", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Dev",
+      company: "Acme",
+      expires_in_days: 400,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts expires_in_days of 1", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Dev",
+      company: "Acme",
+      expires_in_days: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts expires_in_days of 365", () => {
+    const result = jobListingCreateSchema.safeParse({
+      title: "Dev",
+      company: "Acme",
+      expires_in_days: 365,
+    });
+    expect(result.success).toBe(true);
   });
 });

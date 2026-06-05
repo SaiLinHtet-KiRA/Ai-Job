@@ -1,17 +1,55 @@
 import { Resend } from "resend";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM = "easy2apply <noreply@easy2apply.work>";
+
+export async function sendVerificationEmail(to: string, code: string): Promise<boolean> {
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to,
+      subject: "Your verification code",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #0a2540;">Verify your email</h2>
+          <p>Use the code below to complete your sign up. This code expires in 5 minutes.</p>
+          <div style="
+            background: #f4f6f8;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 24px 0;
+          ">
+            <span style="
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 8px;
+              color: #0a2540;
+            ">${code}</span>
+          </div>
+          <p style="color: #666; font-size: 13px;">
+            If you didn't request this, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+    return false;
+  }
+}
+
 export interface Job {
   id: number;
   title: string;
   company: string;
-  email: string;
+  apply_email: string;
   location: string;
-  type: string;
-  salary: string;
+  job_type: string;
+  salary_range: string;
   description: string;
 }
-
-const FROM = "easy2apply@easy2apply.work";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -25,24 +63,22 @@ export async function sendApplicationEmails(params: {
   jobs: Job[];
 }) {
   const { name, email, position, type, salary, resumeUrl, jobs } = params;
-  const key = process.env.RESEND_API_KEY;
-  if (!key || jobs.length === 0) return;
+  if (jobs.length === 0) return;
 
-  const resend = new Resend(key);
   const sent = new Set<string>();
 
   for (const job of jobs) {
-    if (!job.email || sent.has(job.email)) continue;
-    sent.add(job.email);
+    if (!job.apply_email || sent.has(job.apply_email)) continue;
+    sent.add(job.apply_email);
 
     await resend.emails
       .send({
         from: FROM,
-        to: job.email,
+        to: job.apply_email,
         subject: `New Job Application: ${position}`,
         html: employerTemplate({ name, email, position, type, salary, resumeUrl, job }),
       })
-      .catch((err) => console.error(`Failed to send to ${job.email}:`, err));
+      .catch((err) => console.error(`Failed to send to ${job.apply_email}:`, err));
 
     await sleep(1000);
   }
@@ -109,7 +145,7 @@ function applicantTemplate(p: { name: string; position: string; jobs: Job[] }) {
   const cards = jobs
     .map(
       (j) =>
-        `<div style="border:1px solid #e4e4e7;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px;color:#18181b">${j.title}</h3><p style="margin:0 0 4px;font-size:14px;color:#3f3f46">${companyIcon}${j.company}</p><p style="margin:0 0 4px;font-size:13px;color:#71717a">${mailIcon}${j.email}</p><p style="margin:0;font-size:13px;color:#71717a">${j.location || ""}${j.location && j.salary ? " &middot; " : ""}${j.salary || ""}</p></div>`,
+        `<div style="border:1px solid #e4e4e7;border-radius:12px;padding:16px;margin-bottom:12px"><h3 style="margin:0 0 4px;font-size:16px;color:#18181b">${j.title}</h3><p style="margin:0 0 4px;font-size:14px;color:#3f3f46">${companyIcon}${j.company}</p><p style="margin:0 0 4px;font-size:13px;color:#71717a">${mailIcon}${j.apply_email}</p><p style="margin:0;font-size:13px;color:#71717a">${j.location || ""}${j.location && j.salary_range ? " &middot; " : ""}${j.salary_range || ""}</p></div>`,
     )
     .join("");
 

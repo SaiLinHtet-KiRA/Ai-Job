@@ -4,10 +4,10 @@ import userEvent from "@testing-library/user-event";
 import TitleSelector from "@/components/TitleSelector";
 
 const mockTitles = [
-  { id: 1, name: "Software Engineer" },
-  { id: 2, name: "Frontend Developer" },
-  { id: 3, name: "Backend Engineer" },
-  { id: 4, name: "Full Stack Developer" },
+  { id: 1, name: "Software Engineer", jobs_size: 4 },
+  { id: 2, name: "Frontend Developer", jobs_size: 6 },
+  { id: 3, name: "Backend Engineer", jobs_size: 2 },
+  { id: 4, name: "Full Stack Developer", jobs_size: 1 },
 ];
 
 describe("TitleSelector", () => {
@@ -170,6 +170,74 @@ describe("TitleSelector", () => {
       expect(
         screen.queryByText("Frontend Developer"),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  it("shows jobs_size count in each dropdown option", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      json: () => Promise.resolve(mockTitles),
+    } as Response);
+
+    render(<TitleSelector value="" onChange={vi.fn()} />);
+    const input = screen.getByPlaceholderText("Search job title...");
+    (input as HTMLInputElement).focus();
+
+    await waitFor(() => {
+      expect(screen.getByText("6 jobs")).toBeInTheDocument();
+      expect(screen.getByText("4 jobs")).toBeInTheDocument();
+      expect(screen.getByText("1 job")).toBeInTheDocument();
+    });
+  });
+
+  it("sorts by jobs_size descending (most jobs first)", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      json: () => Promise.resolve(mockTitles),
+    } as Response);
+
+    render(<TitleSelector value="" onChange={vi.fn()} />);
+    const input = screen.getByPlaceholderText("Search job title...");
+    (input as HTMLInputElement).focus();
+
+    await waitFor(() => {
+      const buttons = screen.getAllByRole("button");
+      const textButtons = buttons.filter((b) => b.textContent?.includes("job"));
+      expect(textButtons[0].textContent).toContain("Frontend Developer");
+      expect(textButtons[0].textContent).toContain("6 jobs");
+      expect(textButtons[1].textContent).toContain("Software Engineer");
+      expect(textButtons[1].textContent).toContain("4 jobs");
+      expect(textButtons[2].textContent).toContain("Backend Engineer");
+      expect(textButtons[2].textContent).toContain("2 jobs");
+      expect(textButtons[3].textContent).toContain("Full Stack Developer");
+      expect(textButtons[3].textContent).toContain("1 job");
+    });
+  });
+
+  it("does not show create button when allowCreate is false", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      json: () => Promise.resolve(mockTitles),
+    } as Response);
+
+    render(<TitleSelector value="Unknown" onChange={vi.fn()} allowCreate={false} />);
+    const input = screen.getByPlaceholderText("Search job title...");
+    (input as HTMLInputElement).focus();
+
+    await waitFor(() => {
+      expect(screen.getByText("No titles found.")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Create/)).toBeNull();
+  });
+
+  it("shows create button when allowCreate is true (default)", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      json: () => Promise.resolve(mockTitles),
+    } as Response);
+
+    render(<TitleSelector value="Unknown" onChange={vi.fn()} />);
+    const input = screen.getByPlaceholderText("Search job title...");
+    (input as HTMLInputElement).focus();
+
+    await waitFor(() => {
+      expect(screen.getByText('Create "Unknown"')).toBeInTheDocument();
     });
   });
 });

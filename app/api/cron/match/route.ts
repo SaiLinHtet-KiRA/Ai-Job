@@ -19,6 +19,8 @@ type UserProfile = {
   target_roles: string[];
   preferred_locations: string[];
   remote_ok: boolean;
+  password?: string | null;
+  status?: string;
 };
 
 function computeMatchScore(user: UserProfile, job: JobListing): { score: number; missing: string[] } {
@@ -75,10 +77,11 @@ export async function POST(req: NextRequest) {
 
   const supabase = getSupabaseAdmin();
 
-  // 1. Get all user profiles
+  // 1. Get all active user profiles
   const { data: profiles, error: profileError } = await supabase
     .from("user_profiles")
-    .select("*");
+    .select("*")
+    .neq("status", "banned");
 
   if (profileError || !profiles?.length) {
     return NextResponse.json({
@@ -93,8 +96,8 @@ export async function POST(req: NextRequest) {
   const { data: jobs, error: jobError } = await supabase
     .from("job_listings")
     .select("*")
-    .gte("posted_at", weekAgo)
-    .order("posted_at", { ascending: false });
+    .gte("created_at", weekAgo)
+    .order("created_at", { ascending: false });
 
   if (jobError || !jobs?.length) {
     return NextResponse.json({

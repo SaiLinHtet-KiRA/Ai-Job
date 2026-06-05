@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
+import { scoreCV } from "@/lib/cv-scorer";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -98,6 +99,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to save CV record" }, { status: 500 });
     }
 
+    // Score CV
+    const scoreResult = await scoreCV({
+      buffer,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      email: session.user.email ?? "",
+    }).catch((err) => {
+      console.error("CV scoring failed:", err);
+      return null;
+    });
+
     return NextResponse.json({
       success: true,
       cv: {
@@ -106,6 +119,7 @@ export async function POST(req: NextRequest) {
         url: publicUrl,
         parsedText: parsedText.substring(0, 500) + (parsedText.length > 500 ? "..." : ""),
       },
+      score: scoreResult ?? undefined,
     });
 
   } catch (error) {
@@ -142,6 +156,14 @@ export async function GET(_req: NextRequest) {
 
     const { data: { publicUrl } } = supabase.storage.from("cvs").getPublicUrl(cv.storage_path);
 
+    const { data: latestScore } = await supabase
+      .from("cv_scores")
+      .select("score")
+      .eq("email", session.user.email ?? "")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     return NextResponse.json({
       cv: {
         id: cv.id,
@@ -150,6 +172,7 @@ export async function GET(_req: NextRequest) {
         uploadedAt: cv.uploaded_at,
         parsedText: cv.parsed_text?.substring(0, 500) + (cv.parsed_text?.length > 500 ? "..." : ""),
       },
+      score: latestScore ? { score: latestScore.score } : undefined,
     });
 
   } catch (error) {

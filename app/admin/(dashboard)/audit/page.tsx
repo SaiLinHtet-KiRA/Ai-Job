@@ -17,9 +17,9 @@ const actionLabels: Record<string, string> = {
   user_activated: "User Activated",
   email_verified: "Email Verified",
   password_reset_sent: "Password Reset Sent",
-  job_created: "Job Created",
-  job_updated: "Job Updated",
-  job_deleted: "Job Deleted",
+  job_listing_created: "Job Listing Created",
+  job_listing_updated: "Job Listing Updated",
+  job_listing_deleted: "Job Listing Deleted",
 };
 
 const actionColors: Record<string, string> = {
@@ -27,9 +27,9 @@ const actionColors: Record<string, string> = {
   user_activated: "bg-emerald-500/10 text-emerald-600",
   email_verified: "bg-blue-500/10 text-blue-600",
   password_reset_sent: "bg-amber-500/10 text-amber-600",
-  job_created: "bg-purple-500/10 text-purple-600",
-  job_updated: "bg-primary/10 text-primary",
-  job_deleted: "bg-zinc-500/10 text-zinc-600",
+  job_listing_created: "bg-purple-500/10 text-purple-600",
+  job_listing_updated: "bg-primary/10 text-primary",
+  job_listing_deleted: "bg-zinc-500/10 text-zinc-600",
 };
 
 export default function AuditLogPage() {
@@ -97,7 +97,7 @@ export default function AuditLogPage() {
 
       {/* Filters */}
       <div className="mt-6 flex flex-wrap gap-2">
-        {["all", "user_banned", "user_activated", "email_verified", "password_reset_sent", "job_created"].map(
+        {["all", "user_banned", "user_activated", "email_verified", "password_reset_sent", "job_listing_created"].map(
           (f) => (
             <button
               key={f}

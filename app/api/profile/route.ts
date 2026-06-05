@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { getUserProfile } from "@/lib/user-profile";
 
 // GET /api/profile — get current user's profile
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -32,7 +33,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
   const userId = session.user.id;
-  const email = session.user.email;
+  const profile = await getUserProfile(userId);
+  const email = profile?.email;
+
+  if (!email) {
+    return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+  }
 
   const body = await req.json();
   const {
@@ -42,6 +48,7 @@ export async function POST(req: NextRequest) {
     preferred_locations,
     remote_ok,
     cv_text,
+    password,
   } = body;
 
   const supabase = getSupabaseAdmin();
@@ -56,6 +63,7 @@ export async function POST(req: NextRequest) {
       preferred_locations: preferred_locations ?? [],
       remote_ok: remote_ok ?? true,
       cv_text: cv_text ?? null,
+      password: password ?? null,
       last_scored_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },

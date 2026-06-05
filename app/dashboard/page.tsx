@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
+import { getUserProfile } from "@/lib/user-profile";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import Link from "next/link";
 import TopNav from "../components/TopNav";
 import MatchesFeed from "./MatchesFeed";
@@ -8,17 +10,70 @@ import { Suspense } from "react";
 
 async function getUser() {
   const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
+
+  const profile = await getUserProfile(session.user.id);
+  if (!profile) return null;
+
+  if (profile.status === "banned") {
+    throw new Error("banned");
+  }
+
   return {
-    id: session.user.id ?? session.user.email ?? "user",
-    email: session.user.email ?? "",
+    id: profile.user_id,
+    email: profile.email,
+    status: profile.status,
   };
 }
 
-async function hasCV(): Promise<boolean> {
-  // For demo: check if user has a CV uploaded
-  // In production, query the user_cvs table
-  return true; // Assume has CV for now
+async function hasCV(userId: string): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("user_cvs")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return !!data;
+}
+
+async function getDashboardStats(userId: string, email: string) {
+  const supabase = getSupabaseAdmin();
+
+  const { count: newMatches } = await supabase
+    .from("daily_matches")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "pending");
+
+  const { count: applicationsSent } = await supabase
+    .from("applications_sent")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  const { count: responded } = await supabase
+    .from("applications_sent")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .not("response_status", "is", null);
+
+  const responseRate = applicationsSent && applicationsSent > 0
+    ? Math.round((responded ?? 0) / applicationsSent * 100)
+    : 0;
+
+  const { data: cvScore } = await supabase
+    .from("cv_scores")
+    .select("score")
+    .eq("email", email)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return {
+    newMatches: newMatches ?? 0,
+    applicationsSent: applicationsSent ?? 0,
+    responseRate,
+    profileScore: cvScore?.score ?? 0,
+  };
 }
 
 export default async function DashboardPage() {
@@ -28,7 +83,8 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const userHasCV = await hasCV();
+  const userHasCV = await hasCV(user.id);
+  const stats = userHasCV ? await getDashboardStats(user.id, user.email) : null;
 
   return (
     <div className="min-h-screen bg-[#0a2540]">
@@ -50,22 +106,22 @@ export default async function DashboardPage() {
           <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-[12px] font-medium text-[#8898aa] uppercase">New Matches</p>
-              <p className="mt-2 text-3xl font-bold text-white">3</p>
-              <p className="mt-1 text-[12px] text-emerald-400">+2 since yesterday</p>
+              <p className="mt-2 text-3xl font-bold text-white">{stats?.newMatches ?? 0}</p>
+              <p className="mt-1 text-[12px] text-[#8898aa]">Pending review</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-[12px] font-medium text-[#8898aa] uppercase">Applications Sent</p>
-              <p className="mt-2 text-3xl font-bold text-white">12</p>
-              <p className="mt-1 text-[12px] text-[#8898aa]">This month</p>
+              <p className="mt-2 text-3xl font-bold text-white">{stats?.applicationsSent ?? 0}</p>
+              <p className="mt-1 text-[12px] text-[#8898aa]">Total sent</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-[12px] font-medium text-[#8898aa] uppercase">Response Rate</p>
-              <p className="mt-2 text-3xl font-bold text-white">25%</p>
-              <p className="mt-1 text-[12px] text-emerald-400">Above average</p>
+              <p className="mt-2 text-3xl font-bold text-white">{stats?.responseRate ?? 0}%</p>
+              <p className="mt-1 text-[12px] text-[#8898aa]">Of applications sent</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-[12px] font-medium text-[#8898aa] uppercase">Profile Score</p>
-              <p className="mt-2 text-3xl font-bold text-white">85</p>
+              <p className="text-[12px] font-medium text-[#8898aa] uppercase">CV Score</p>
+              <p className="mt-2 text-3xl font-bold text-white">{stats?.profileScore ?? 0}</p>
               <p className="mt-1 text-[12px] text-[#8898aa]">Out of 100</p>
             </div>
           </div>

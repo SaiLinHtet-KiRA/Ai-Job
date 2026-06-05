@@ -30,7 +30,8 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer" },
-          "name": { "type": "string" }
+          "name": { "type": "string" },
+          "jobs_size": { "type": "integer" }
         }
       },
       "Job": {
@@ -48,6 +49,44 @@
           "image_url": { "type": "string" },
           "created_at": { "type": "string" },
           "updated_at": { "type": "string" }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "jobs_size": { "type": "integer" },
+          "created_at": { "type": "string" }
+        }
+      },
+      "JobListing": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "external_id": { "type": "string" },
+          "title": { "type": "string" },
+          "company": { "type": "string" },
+          "location": { "type": "string" },
+          "job_type": { "type": "string" },
+          "salary_range": { "type": "string" },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "description": { "type": "string" },
+          "apply_url": { "type": "string" },
+          "apply_email": { "type": "string" },
+          "source": { "type": "string" },
+          "expires_at": { "type": "string" },
+          "created_at": { "type": "string" }
+        }
+      },
+      "JobListingsPage": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/JobListing" } },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "totalPages": { "type": "integer" }
         }
       },
       "Admin": {
@@ -100,6 +139,30 @@
         "properties": {
           "email": { "type": "string" },
           "password": { "type": "string" }
+        }
+      },
+      "LocationCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 }
+        }
+      },
+      "JobListingCreateRequest": {
+        "type": "object",
+        "required": ["title", "company"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "company": { "type": "string", "minLength": 1 },
+          "location": { "type": "string" },
+          "job_type": { "type": "string" },
+          "salary_range": { "type": "string" },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "description": { "type": "string" },
+          "apply_url": { "type": "string" },
+          "apply_email": { "type": "string" },
+          "source": { "type": "string" },
+          "expires_in_days": { "type": "integer", "minimum": 1, "maximum": 365 }
         }
       },
       "SuccessResponse": {
@@ -295,114 +358,6 @@
         }
       }
     },
-    "/admin/jobs": {
-      "get": {
-        "summary": "List all jobs (admin)",
-        "tags": ["Admin - Jobs"],
-        "security": [{ "cookieAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Array of all jobs",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Job" }
-                }
-              }
-            }
-          },
-          "401": { "description": "Unauthorized" },
-          "429": { "description": "Too many requests" }
-        }
-      },
-      "post": {
-        "summary": "Create a new job",
-        "tags": ["Admin - Jobs"],
-        "security": [{ "cookieAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/JobCreateRequest" }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Job created",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Job" }
-              }
-            }
-          },
-          "400": { "description": "Validation error" },
-          "401": { "description": "Unauthorized" },
-          "429": { "description": "Too many requests" }
-        }
-      }
-    },
-    "/admin/jobs/{id}": {
-      "put": {
-        "summary": "Update a job",
-        "tags": ["Admin - Jobs"],
-        "security": [{ "cookieAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/JobCreateRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Job updated",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Job" }
-              }
-            }
-          },
-          "400": { "description": "Validation error" },
-          "401": { "description": "Unauthorized" },
-          "429": { "description": "Too many requests" }
-        }
-      },
-      "delete": {
-        "summary": "Delete a job",
-        "tags": ["Admin - Jobs"],
-        "security": [{ "cookieAuth": [] }],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Job deleted",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-              }
-            }
-          },
-          "401": { "description": "Unauthorized" },
-          "429": { "description": "Too many requests" }
-        }
-      }
-    },
     "/admin/admins": {
       "get": {
         "summary": "List all admins",
@@ -511,6 +466,166 @@
           },
           "401": { "description": "Unauthorized" },
           "403": { "description": "Cannot delete own account" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/locations": {
+      "get": {
+        "summary": "List all locations",
+        "tags": ["Public"],
+        "responses": {
+          "200": {
+            "description": "Array of locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Location" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/job-listings": {
+      "get": {
+        "summary": "Browse job listings with pagination",
+        "tags": ["Public"],
+        "parameters": [
+          { "name": "search", "in": "query", "required": false, "description": "Search by title or company", "schema": { "type": "string" } },
+          { "name": "location", "in": "query", "required": false, "description": "Filter by location", "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "required": false, "description": "Filter by job type", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "required": false, "description": "Page number (default 1)", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "required": false, "description": "Results per page (default 10, max 50)", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated job listings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobListingsPage" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/locations": {
+      "get": {
+        "summary": "List all locations (admin)",
+        "tags": ["Admin - Locations"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Location" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "post": {
+        "summary": "Create a new location",
+        "tags": ["Admin - Locations"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LocationCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Location created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Location" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Location already exists" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/admin/job-listings": {
+      "get": {
+        "summary": "List all job listings (admin)",
+        "tags": ["Admin - Job Listings"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Array of job listings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/JobListing" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "post": {
+        "summary": "Create a new job listing",
+        "tags": ["Admin - Job Listings"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JobListingCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job listing created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JobListing" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "429": { "description": "Too many requests" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a job listing",
+        "tags": ["Admin - Job Listings"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "query", "required": true, "description": "Job listing ID", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job listing deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": { "description": "Missing id parameter" },
+          "401": { "description": "Unauthorized" },
           "429": { "description": "Too many requests" }
         }
       }

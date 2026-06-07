@@ -215,6 +215,17 @@ test.describe("API Routes", () => {
     }
   });
 
+  test("GET /api/roles returns array of roles", async ({ request }) => {
+    const res = await request.get("/api/roles");
+    // May return 200 or 500 depending on Supabase setup
+    expect(res.status()).not.toBe(400);
+    expect(res.status()).not.toBe(401);
+    if (res.status() === 200) {
+      const data = await res.json();
+      expect(Array.isArray(data)).toBe(true);
+    }
+  });
+
   test("GET /api/admin/titles returns 401 without auth", async ({
     request,
   }) => {

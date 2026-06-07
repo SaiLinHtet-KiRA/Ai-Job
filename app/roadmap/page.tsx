@@ -30,7 +30,7 @@ export default function RoadmapPage() {
 
   const fetchRoles = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/roles");
+      const res = await fetch("/api/roles");
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) {

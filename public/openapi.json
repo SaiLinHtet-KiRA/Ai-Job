@@ -2627,7 +2627,41 @@
                                                                          }
                                                              }
                                            }
-                              }
+                              },
+                  "/roles":  {
+                                 "get":  {
+                                             "description":  "",
+                                             "tags":  [
+                                                          "Roles"
+                                                      ],
+                                             "summary":  "GET /api/roles — list all roles",
+                                             "operationId":  "get-roles",
+                                             "parameters":  [
+
+                                                            ],
+                                             "responses":  {
+                                                               "200":  {
+                                                                           "content":  {
+                                                                                           "application/json":  {
+                                                                                                                    "schema":  {
+                                                                                                                                   "items":  {
+                                                                                                                                                 "properties":  {
+                                                                                                                                                                    "name":  "System.Collections.Hashtable"
+                                                                                                                                                                },
+                                                                                                                                                 "type":  "object"
+                                                                                                                                             },
+                                                                                                                                   "type":  "array"
+                                                                                                                               }
+                                                                                                                }
+                                                                                       },
+                                                                           "description":  "Successful response"
+                                                                       },
+                                                               "500":  {
+                                                                           "$ref":  "#/components/responses/500"
+                                                                       }
+                                                           }
+                                         }
+                             }
               },
     "tags":  [
                  {

@@ -11,8 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     const limited = await rateLimit(`jobs:${getClientIp(req)}`, { limit: 30, duration: 10 });
     if (limited) return limited;
-    const { searchParams } = new URL(req.url);
-    const title = searchParams.get("title");
+    const title = req.nextUrl.searchParams.get("title");
 
     const supabase = getSupabaseAdmin();
     let query = supabase

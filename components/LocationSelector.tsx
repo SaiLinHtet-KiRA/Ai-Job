@@ -34,7 +34,7 @@ export default function LocationSelector({ value, onChange, required, allowCreat
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [allowCreate]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

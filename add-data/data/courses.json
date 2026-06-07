@@ -1,0 +1,806 @@
+[
+  {
+    "title": "React - The Complete Guide",
+    "url": "https://udemy.com/react-complete-guide",
+    "platform": "Udemy",
+    "duration": "48h",
+    "level": "beginner",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "Advanced React Patterns",
+    "url": "https://frontendmasters.com/advanced-react",
+    "platform": "Frontend Masters",
+    "duration": "8h",
+    "level": "advanced",
+    "roles": ["frontend developer"]
+  },
+  {
+    "title": "Next.js & React - The Full Stack Framework",
+    "url": "https://udemy.com/nextjs-react",
+    "platform": "Udemy",
+    "duration": "36h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "TypeScript Deep Dive",
+    "url": "https://frontendmasters.com/typescript-deep-dive",
+    "platform": "Frontend Masters",
+    "duration": "12h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "backend developer"]
+  },
+  {
+    "title": "CSS Mastery: Modern Layouts",
+    "url": "https://frontendmasters.com/css-mastery",
+    "platform": "Frontend Masters",
+    "duration": "6h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "ux designer"]
+  },
+  {
+    "title": "Vue 3 Composition API",
+    "url": "https://udemy.com/vue3-composition",
+    "platform": "Udemy",
+    "duration": "28h",
+    "level": "beginner",
+    "roles": ["frontend developer"]
+  },
+  {
+    "title": "Angular 17 Full Course",
+    "url": "https://udemy.com/angular-17",
+    "platform": "Udemy",
+    "duration": "42h",
+    "level": "beginner",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "Svelte & SvelteKit Masterclass",
+    "url": "https://frontendmasters.com/svelte",
+    "platform": "Frontend Masters",
+    "duration": "10h",
+    "level": "intermediate",
+    "roles": ["frontend developer"]
+  },
+  {
+    "title": "Tailwind CSS from Scratch",
+    "url": "https://udemy.com/tailwind-css",
+    "platform": "Udemy",
+    "duration": "16h",
+    "level": "beginner",
+    "roles": ["frontend developer", "ux designer"]
+  },
+  {
+    "title": "Figma UI Design Masterclass",
+    "url": "https://youtube.com/playlist?list=figma-masterclass",
+    "platform": "YouTube",
+    "duration": "8h",
+    "level": "beginner",
+    "roles": ["ux designer"]
+  },
+  {
+    "title": "UX Research Methods",
+    "url": "https://coursera.org/ux-research",
+    "platform": "Coursera",
+    "duration": "20h",
+    "level": "intermediate",
+    "roles": ["ux designer", "product manager"]
+  },
+  {
+    "title": "Design Systems at Scale",
+    "url": "https://frontendmasters.com/design-systems",
+    "platform": "Frontend Masters",
+    "duration": "7h",
+    "level": "advanced",
+    "roles": ["ux designer", "frontend developer"]
+  },
+  {
+    "title": "JavaScript: The Hard Parts",
+    "url": "https://frontendmasters.com/js-hard-parts",
+    "platform": "Frontend Masters",
+    "duration": "14h",
+    "level": "advanced",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "Node.js Design Patterns",
+    "url": "https://udemy.com/nodejs-design-patterns",
+    "platform": "Udemy",
+    "duration": "24h",
+    "level": "intermediate",
+    "roles": ["backend developer", "full stack developer"]
+  },
+  {
+    "title": "Express.js API Development",
+    "url": "https://udemy.com/express-api",
+    "platform": "Udemy",
+    "duration": "18h",
+    "level": "beginner",
+    "roles": ["backend developer"]
+  },
+  {
+    "title": "NestJS Zero to Hero",
+    "url": "https://udemy.com/nestjs-zero-hero",
+    "platform": "Udemy",
+    "duration": "32h",
+    "level": "intermediate",
+    "roles": ["backend developer", "full stack developer"]
+  },
+  {
+    "title": "Python Django Full Stack",
+    "url": "https://udemy.com/python-django",
+    "platform": "Udemy",
+    "duration": "40h",
+    "level": "beginner",
+    "roles": ["backend developer", "full stack developer"]
+  },
+  {
+    "title": "FastAPI Modern Python APIs",
+    "url": "https://udemy.com/fastapi",
+    "platform": "Udemy",
+    "duration": "22h",
+    "level": "intermediate",
+    "roles": ["backend developer", "data engineer"]
+  },
+  {
+    "title": "Go Programming Language",
+    "url": "https://udemy.com/go-programming",
+    "platform": "Udemy",
+    "duration": "20h",
+    "level": "beginner",
+    "roles": ["backend developer", "devops engineer"]
+  },
+  {
+    "title": "Rust for Systems Programming",
+    "url": "https://udemy.com/rust-systems",
+    "platform": "Udemy",
+    "duration": "30h",
+    "level": "intermediate",
+    "roles": ["backend developer", "security engineer"]
+  },
+  {
+    "title": "Java Spring Boot Microservices",
+    "url": "https://udemy.com/spring-boot-microservices",
+    "platform": "Udemy",
+    "duration": "38h",
+    "level": "intermediate",
+    "roles": ["backend developer", "cloud architect"]
+  },
+  {
+    "title": "GraphQL API Design",
+    "url": "https://frontendmasters.com/graphql",
+    "platform": "Frontend Masters",
+    "duration": "8h",
+    "level": "intermediate",
+    "roles": ["backend developer", "frontend developer"]
+  },
+  {
+    "title": "PostgreSQL Performance Tuning",
+    "url": "https://udemy.com/postgresql-performance",
+    "platform": "Udemy",
+    "duration": "14h",
+    "level": "advanced",
+    "roles": ["backend developer", "data engineer"]
+  },
+  {
+    "title": "MongoDB Complete Guide",
+    "url": "https://udemy.com/mongodb",
+    "platform": "Udemy",
+    "duration": "18h",
+    "level": "beginner",
+    "roles": ["backend developer", "full stack developer"]
+  },
+  {
+    "title": "Redis Caching Strategies",
+    "url": "https://pluralsight.com/redis-caching",
+    "platform": "Pluralsight",
+    "duration": "6h",
+    "level": "intermediate",
+    "roles": ["backend developer", "devops engineer"]
+  },
+  {
+    "title": "SQL for Data Analysis",
+    "url": "https://coursera.org/sql-analysis",
+    "platform": "Coursera",
+    "duration": "20h",
+    "level": "beginner",
+    "roles": ["data analyst", "data engineer"]
+  },
+  {
+    "title": "Advanced SQL Window Functions",
+    "url": "https://udemy.com/sql-window-functions",
+    "platform": "Udemy",
+    "duration": "10h",
+    "level": "advanced",
+    "roles": ["data analyst", "data engineer"]
+  },
+  {
+    "title": "Tableau Desktop Specialist",
+    "url": "https://udemy.com/tableau-specialist",
+    "platform": "Udemy",
+    "duration": "12h",
+    "level": "beginner",
+    "roles": ["data analyst"]
+  },
+  {
+    "title": "Power BI Data Visualization",
+    "url": "https://coursera.org/power-bi",
+    "platform": "Coursera",
+    "duration": "16h",
+    "level": "beginner",
+    "roles": ["data analyst"]
+  },
+  {
+    "title": "Python Pandas & NumPy",
+    "url": "https://udemy.com/python-pandas-numpy",
+    "platform": "Udemy",
+    "duration": "22h",
+    "level": "beginner",
+    "roles": ["data analyst", "data scientist"]
+  },
+  {
+    "title": "Statistics for Data Science",
+    "url": "https://coursera.org/statistics-data-science",
+    "platform": "Coursera",
+    "duration": "30h",
+    "level": "intermediate",
+    "roles": ["data scientist", "data analyst"]
+  },
+  {
+    "title": "Machine Learning A-Z",
+    "url": "https://udemy.com/machine-learning",
+    "platform": "Udemy",
+    "duration": "44h",
+    "level": "beginner",
+    "roles": ["machine learning engineer", "data scientist"]
+  },
+  {
+    "title": "Deep Learning with TensorFlow",
+    "url": "https://coursera.org/deep-learning-tensorflow",
+    "platform": "Coursera",
+    "duration": "36h",
+    "level": "intermediate",
+    "roles": ["machine learning engineer", "data scientist"]
+  },
+  {
+    "title": "Natural Language Processing",
+    "url": "https://coursera.org/nlp",
+    "platform": "Coursera",
+    "duration": "28h",
+    "level": "advanced",
+    "roles": ["machine learning engineer", "data scientist"]
+  },
+  {
+    "title": "Computer Vision with PyTorch",
+    "url": "https://udemy.com/computer-vision-pytorch",
+    "platform": "Udemy",
+    "duration": "24h",
+    "level": "intermediate",
+    "roles": ["machine learning engineer"]
+  },
+  {
+    "title": "MLOps: Deploying ML Models",
+    "url": "https://coursera.org/mlops",
+    "platform": "Coursera",
+    "duration": "18h",
+    "level": "advanced",
+    "roles": ["machine learning engineer", "devops engineer"]
+  },
+  {
+    "title": "Apache Spark & Big Data",
+    "url": "https://udemy.com/apache-spark",
+    "platform": "Udemy",
+    "duration": "20h",
+    "level": "intermediate",
+    "roles": ["data engineer", "data scientist"]
+  },
+  {
+    "title": "Airflow Data Pipeline Orchestration",
+    "url": "https://udemy.com/airflow-pipelines",
+    "platform": "Udemy",
+    "duration": "14h",
+    "level": "intermediate",
+    "roles": ["data engineer"]
+  },
+  {
+    "title": "Kafka Stream Processing",
+    "url": "https://udemy.com/kafka-streams",
+    "platform": "Udemy",
+    "duration": "16h",
+    "level": "advanced",
+    "roles": ["data engineer", "backend developer"]
+  },
+  {
+    "title": "Snowflake Cloud Data Warehouse",
+    "url": "https://udemy.com/snowflake-dwh",
+    "platform": "Udemy",
+    "duration": "12h",
+    "level": "beginner",
+    "roles": ["data engineer", "data analyst"]
+  },
+  {
+    "title": "dbt Analytics Engineering",
+    "url": "https://coursera.org/dbt-analytics",
+    "platform": "Coursera",
+    "duration": "10h",
+    "level": "intermediate",
+    "roles": ["data engineer", "data analyst"]
+  },
+  {
+    "title": "Docker & Kubernetes Masterclass",
+    "url": "https://udemy.com/docker-kubernetes",
+    "platform": "Udemy",
+    "duration": "36h",
+    "level": "intermediate",
+    "roles": ["devops engineer", "backend developer"]
+  },
+  {
+    "title": "Terraform Infrastructure as Code",
+    "url": "https://udemy.com/terraform-iac",
+    "platform": "Udemy",
+    "duration": "16h",
+    "level": "intermediate",
+    "roles": ["devops engineer", "cloud architect"]
+  },
+  {
+    "title": "AWS Solutions Architect Associate",
+    "url": "https://udemy.com/aws-solutions-architect",
+    "platform": "Udemy",
+    "duration": "28h",
+    "level": "intermediate",
+    "roles": ["cloud architect", "devops engineer"]
+  },
+  {
+    "title": "Google Cloud Professional Engineer",
+    "url": "https://coursera.org/gcp-engineer",
+    "platform": "Coursera",
+    "duration": "32h",
+    "level": "advanced",
+    "roles": ["cloud architect"]
+  },
+  {
+    "title": "Azure Administrator AZ-104",
+    "url": "https://udemy.com/azure-az104",
+    "platform": "Udemy",
+    "duration": "26h",
+    "level": "intermediate",
+    "roles": ["cloud architect", "devops engineer"]
+  },
+  {
+    "title": "CI/CD with GitHub Actions",
+    "url": "https://frontendmasters.com/github-actions",
+    "platform": "Frontend Masters",
+    "duration": "6h",
+    "level": "intermediate",
+    "roles": ["devops engineer", "backend developer"]
+  },
+  {
+    "title": "Linux Administration Bootcamp",
+    "url": "https://udemy.com/linux-admin",
+    "platform": "Udemy",
+    "duration": "24h",
+    "level": "beginner",
+    "roles": ["devops engineer", "site reliability engineer"]
+  },
+  {
+    "title": "Ansible Automation",
+    "url": "https://udemy.com/ansible",
+    "platform": "Udemy",
+    "duration": "12h",
+    "level": "intermediate",
+    "roles": ["devops engineer"]
+  },
+  {
+    "title": "Site Reliability Engineering Foundations",
+    "url": "https://coursera.org/sre-foundations",
+    "platform": "Coursera",
+    "duration": "16h",
+    "level": "intermediate",
+    "roles": ["site reliability engineer", "devops engineer"]
+  },
+  {
+    "title": "Prometheus & Grafana Monitoring",
+    "url": "https://udemy.com/prometheus-grafana",
+    "platform": "Udemy",
+    "duration": "10h",
+    "level": "intermediate",
+    "roles": ["site reliability engineer", "devops engineer"]
+  },
+  {
+    "title": "Kubernetes in Production",
+    "url": "https://pluralsight.com/k8s-production",
+    "platform": "Pluralsight",
+    "duration": "18h",
+    "level": "advanced",
+    "roles": ["site reliability engineer", "devops engineer"]
+  },
+  {
+    "title": "React Native Mobile Development",
+    "url": "https://udemy.com/react-native",
+    "platform": "Udemy",
+    "duration": "38h",
+    "level": "beginner",
+    "roles": ["mobile developer", "frontend developer"]
+  },
+  {
+    "title": "Flutter & Dart Complete Guide",
+    "url": "https://udemy.com/flutter-dart",
+    "platform": "Udemy",
+    "duration": "42h",
+    "level": "beginner",
+    "roles": ["mobile developer"]
+  },
+  {
+    "title": "iOS Development with SwiftUI",
+    "url": "https://udemy.com/swiftui-ios",
+    "platform": "Udemy",
+    "duration": "36h",
+    "level": "beginner",
+    "roles": ["mobile developer"]
+  },
+  {
+    "title": "Android Kotlin Masterclass",
+    "url": "https://udemy.com/kotlin-android",
+    "platform": "Udemy",
+    "duration": "34h",
+    "level": "beginner",
+    "roles": ["mobile developer"]
+  },
+  {
+    "title": "Ethical Hacking Complete Course",
+    "url": "https://udemy.com/ethical-hacking",
+    "platform": "Udemy",
+    "duration": "40h",
+    "level": "beginner",
+    "roles": ["security engineer"]
+  },
+  {
+    "title": "Web Security & OWASP Top 10",
+    "url": "https://frontendmasters.com/web-security",
+    "platform": "Frontend Masters",
+    "duration": "7h",
+    "level": "intermediate",
+    "roles": ["security engineer", "backend developer"]
+  },
+  {
+    "title": "CompTIA Security+ SY0-701",
+    "url": "https://udemy.com/comptia-security-plus",
+    "platform": "Udemy",
+    "duration": "30h",
+    "level": "beginner",
+    "roles": ["security engineer"]
+  },
+  {
+    "title": "Cloud Security Architecture",
+    "url": "https://coursera.org/cloud-security",
+    "platform": "Coursera",
+    "duration": "20h",
+    "level": "advanced",
+    "roles": ["security engineer", "cloud architect"]
+  },
+  {
+    "title": "Penetration Testing with Kali Linux",
+    "url": "https://udemy.com/kali-pentest",
+    "platform": "Udemy",
+    "duration": "28h",
+    "level": "intermediate",
+    "roles": ["security engineer"]
+  },
+  {
+    "title": "System Design Fundamentals",
+    "url": "https://udemy.com/system-design",
+    "platform": "Udemy",
+    "duration": "10h",
+    "level": "intermediate",
+    "roles": [
+      "backend developer",
+      "cloud architect",
+      "site reliability engineer"
+    ]
+  },
+  {
+    "title": "Microservices Architecture",
+    "url": "https://udemy.com/microservices-architecture",
+    "platform": "Udemy",
+    "duration": "18h",
+    "level": "advanced",
+    "roles": ["backend developer", "cloud architect"]
+  },
+  {
+    "title": "REST API Design Best Practices",
+    "url": "https://pluralsight.com/rest-api-design",
+    "platform": "Pluralsight",
+    "duration": "5h",
+    "level": "intermediate",
+    "roles": ["backend developer", "full stack developer"]
+  },
+  {
+    "title": "gRPC & Protocol Buffers",
+    "url": "https://udemy.com/grpc-protobuf",
+    "platform": "Udemy",
+    "duration": "8h",
+    "level": "advanced",
+    "roles": ["backend developer", "devops engineer"]
+  },
+  {
+    "title": "Authentication & OAuth 2.0",
+    "url": "https://frontendmasters.com/oauth",
+    "platform": "Frontend Masters",
+    "duration": "5h",
+    "level": "intermediate",
+    "roles": ["backend developer", "security engineer"]
+  },
+  {
+    "title": "Product Management 101",
+    "url": "https://coursera.org/product-management",
+    "platform": "Coursera",
+    "duration": "24h",
+    "level": "beginner",
+    "roles": ["product manager"]
+  },
+  {
+    "title": "Agile & Scrum Master Certification",
+    "url": "https://udemy.com/scrum-master",
+    "platform": "Udemy",
+    "duration": "12h",
+    "level": "beginner",
+    "roles": ["product manager", "qa engineer"]
+  },
+  {
+    "title": "Data-Driven Product Decisions",
+    "url": "https://coursera.org/data-driven-product",
+    "platform": "Coursera",
+    "duration": "16h",
+    "level": "intermediate",
+    "roles": ["product manager", "data analyst"]
+  },
+  {
+    "title": "Technical Writing for Developers",
+    "url": "https://udemy.com/technical-writing",
+    "platform": "Udemy",
+    "duration": "6h",
+    "level": "beginner",
+    "roles": ["product manager", "backend developer"]
+  },
+  {
+    "title": "OKR Goal Setting Framework",
+    "url": "https://coursera.org/okr-framework",
+    "platform": "Coursera",
+    "duration": "8h",
+    "level": "beginner",
+    "roles": ["product manager"]
+  },
+  {
+    "title": "Software Testing & QA Fundamentals",
+    "url": "https://udemy.com/software-testing",
+    "platform": "Udemy",
+    "duration": "20h",
+    "level": "beginner",
+    "roles": ["qa engineer"]
+  },
+  {
+    "title": "Automated Testing with Cypress",
+    "url": "https://udemy.com/cypress-testing",
+    "platform": "Udemy",
+    "duration": "14h",
+    "level": "intermediate",
+    "roles": ["qa engineer", "frontend developer"]
+  },
+  {
+    "title": "Selenium WebDriver Java",
+    "url": "https://udemy.com/selenium-webdriver",
+    "platform": "Udemy",
+    "duration": "26h",
+    "level": "intermediate",
+    "roles": ["qa engineer"]
+  },
+  {
+    "title": "Playwright End-to-End Testing",
+    "url": "https://frontendmasters.com/playwright",
+    "platform": "Frontend Masters",
+    "duration": "7h",
+    "level": "intermediate",
+    "roles": ["qa engineer", "frontend developer"]
+  },
+  {
+    "title": "Performance Testing with k6",
+    "url": "https://udemy.com/k6-performance",
+    "platform": "Udemy",
+    "duration": "8h",
+    "level": "intermediate",
+    "roles": ["qa engineer", "site reliability engineer"]
+  },
+  {
+    "title": "JavaScript Algorithms & Data Structures",
+    "url": "https://udemy.com/js-algorithms",
+    "platform": "Udemy",
+    "duration": "22h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "Cracking the Coding Interview",
+    "url": "https://udemy.com/coding-interview",
+    "platform": "Udemy",
+    "duration": "30h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "backend developer"]
+  },
+  {
+    "title": "Git & GitHub Complete Guide",
+    "url": "https://udemy.com/git-github",
+    "platform": "Udemy",
+    "duration": "8h",
+    "level": "beginner",
+    "roles": ["frontend developer", "backend developer", "devops engineer"]
+  },
+  {
+    "title": "WebAssembly Fundamentals",
+    "url": "https://frontendmasters.com/webassembly",
+    "platform": "Frontend Masters",
+    "duration": "6h",
+    "level": "advanced",
+    "roles": ["frontend developer", "backend developer"]
+  },
+  {
+    "title": "Deno Runtime Deep Dive",
+    "url": "https://frontendmasters.com/deno",
+    "platform": "Frontend Masters",
+    "duration": "5h",
+    "level": "intermediate",
+    "roles": ["backend developer"]
+  },
+  {
+    "title": "Bash Scripting & Automation",
+    "url": "https://udemy.com/bash-scripting",
+    "platform": "Udemy",
+    "duration": "10h",
+    "level": "beginner",
+    "roles": ["devops engineer", "backend developer"]
+  },
+  {
+    "title": "Nginx Web Server Administration",
+    "url": "https://udemy.com/nginx-admin",
+    "platform": "Udemy",
+    "duration": "8h",
+    "level": "intermediate",
+    "roles": ["devops engineer", "site reliability engineer"]
+  },
+  {
+    "title": "Datadog Observability",
+    "url": "https://udemy.com/datadog",
+    "platform": "Udemy",
+    "duration": "6h",
+    "level": "intermediate",
+    "roles": ["site reliability engineer", "devops engineer"]
+  },
+  {
+    "title": "Blockchain & Smart Contracts",
+    "url": "https://udemy.com/blockchain-smart-contracts",
+    "platform": "Udemy",
+    "duration": "24h",
+    "level": "intermediate",
+    "roles": ["backend developer", "security engineer"]
+  },
+  {
+    "title": "Three.js 3D Web Graphics",
+    "url": "https://udemy.com/threejs",
+    "platform": "Udemy",
+    "duration": "18h",
+    "level": "intermediate",
+    "roles": ["frontend developer"]
+  },
+  {
+    "title": "WebRTC Real-Time Communication",
+    "url": "https://udemy.com/webrtc",
+    "platform": "Udemy",
+    "duration": "12h",
+    "level": "advanced",
+    "roles": ["frontend developer", "backend developer"]
+  },
+  {
+    "title": "Elasticsearch Full-Text Search",
+    "url": "https://udemy.com/elasticsearch",
+    "platform": "Udemy",
+    "duration": "16h",
+    "level": "intermediate",
+    "roles": ["backend developer", "data engineer"]
+  },
+  {
+    "title": "RabbitMQ Message Brokers",
+    "url": "https://udemy.com/rabbitmq",
+    "platform": "Udemy",
+    "duration": "8h",
+    "level": "intermediate",
+    "roles": ["backend developer", "devops engineer"]
+  },
+  {
+    "title": "Electron Desktop App Development",
+    "url": "https://udemy.com/electron-js",
+    "platform": "Udemy",
+    "duration": "16h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "Temporal Workflow Engine",
+    "url": "https://pluralsight.com/temporal",
+    "platform": "Pluralsight",
+    "duration": "6h",
+    "level": "advanced",
+    "roles": ["backend developer", "devops engineer"]
+  },
+  {
+    "title": "Data Warehousing Fundamentals",
+    "url": "https://coursera.org/data-warehousing",
+    "platform": "Coursera",
+    "duration": "14h",
+    "level": "beginner",
+    "roles": ["data engineer", "data analyst"]
+  },
+  {
+    "title": "Storybook Component Library",
+    "url": "https://frontendmasters.com/storybook",
+    "platform": "Frontend Masters",
+    "duration": "5h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "ux designer"]
+  },
+  {
+    "title": "AWS Lambda Serverless",
+    "url": "https://udemy.com/aws-lambda",
+    "platform": "Udemy",
+    "duration": "12h",
+    "level": "intermediate",
+    "roles": ["backend developer", "cloud architect"]
+  },
+  {
+    "title": "Progressive Web Apps (PWA)",
+    "url": "https://udemy.com/pwa",
+    "platform": "Udemy",
+    "duration": "14h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "mobile developer"]
+  },
+  {
+    "title": "CAD & 3D Modeling for UX",
+    "url": "https://coursera.org/cad-ux",
+    "platform": "Coursera",
+    "duration": "16h",
+    "level": "beginner",
+    "roles": ["ux designer"]
+  },
+  {
+    "title": "Accessibility & WCAG Compliance",
+    "url": "https://frontendmasters.com/accessibility",
+    "platform": "Frontend Masters",
+    "duration": "6h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "ux designer"]
+  },
+  {
+    "title": "GDPR & Data Privacy Compliance",
+    "url": "https://coursera.org/gdpr",
+    "platform": "Coursera",
+    "duration": "10h",
+    "level": "beginner",
+    "roles": ["security engineer", "product manager"]
+  },
+  {
+    "title": "Remix Run Full Stack Framework",
+    "url": "https://frontendmasters.com/remix",
+    "platform": "Frontend Masters",
+    "duration": "7h",
+    "level": "intermediate",
+    "roles": ["frontend developer", "full stack developer"]
+  },
+  {
+    "title": "MySQL Database Administration",
+    "url": "https://udemy.com/mysql-admin",
+    "platform": "Udemy",
+    "duration": "18h",
+    "level": "beginner",
+    "roles": ["backend developer", "data engineer"]
+  }
+]

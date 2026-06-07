@@ -8,12 +8,11 @@ import { getSupabaseAdmin } from "@/lib/supabase";
  */
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") ?? "10", 10)));
-    const search = searchParams.get("search")?.trim() ?? "";
-    const location = searchParams.get("location")?.trim() ?? "";
-    const jobType = searchParams.get("type")?.trim() ?? "";
+    const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10));
+    const limit = Math.min(50, Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") ?? "10", 10)));
+    const search = req.nextUrl.searchParams.get("search")?.trim() ?? "";
+    const location = req.nextUrl.searchParams.get("location")?.trim() ?? "";
+    const jobType = req.nextUrl.searchParams.get("type")?.trim() ?? "";
 
     const supabase = getSupabaseAdmin();
     const offset = (page - 1) * limit;

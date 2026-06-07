@@ -1,28 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
-// GET /api/admin/courses — list all courses (with optional role filter)
+// GET /api/admin/courses — list all courses (with optional role filter & pagination)
 export async function GET(req: NextRequest) {
   const role = req.nextUrl.searchParams.get("role");
+  const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") ?? "20", 10)));
+  const offset = (page - 1) * limit;
+
   const supabase = getSupabaseAdmin();
 
-  let query = supabase.from("courses").select("*, role_courses(role, sort_order)");
-
   if (role) {
-    query = supabase
+    const { data, error, count } = await supabase
       .from("role_courses")
-      .select("sort_order, courses(*)")
+      .select("sort_order, courses(*)", { count: "exact", head: false })
       .eq("role", role)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const courses = (data ?? []).map((item) => ({
+      ...item.courses,
+      sort_order: item.sort_order,
+    }));
+
+    return NextResponse.json({
+      data: courses,
+      total: count ?? 0,
+      page,
+      limit,
+      totalPages: Math.ceil((count ?? 0) / limit),
+    });
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await supabase
+    .from("courses")
+    .select("*, role_courses(role, sort_order)", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({
+    data,
+    total: count ?? 0,
+    page,
+    limit,
+    totalPages: Math.ceil((count ?? 0) / limit),
+  });
 }
 
 // POST /api/admin/courses — create a new course + optionally link to roles

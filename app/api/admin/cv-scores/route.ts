@@ -13,8 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const url = new URL(req.url);
-    const params = Object.fromEntries(url.searchParams.entries());
+    const params = Object.fromEntries(req.nextUrl.searchParams.entries());
     const parsed = cvScoresQuerySchema.safeParse(params);
 
     if (!parsed.success) {

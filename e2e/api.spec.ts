@@ -200,10 +200,19 @@ test.describe("API Routes", () => {
     expect(data.error).toBeDefined();
   });
 
-  test("GET /api/courses?role=X returns response", async ({ request }) => {
+  test("GET /api/courses?role=X returns paginated response", async ({ request }) => {
     const res = await request.get("/api/courses?role=frontend+developer");
     // May return 200 or 500 depending on Supabase setup, but not 400
     expect(res.status()).not.toBe(400);
+    if (res.status() === 200) {
+      const data = await res.json();
+      expect(data.role).toBeDefined();
+      expect(Array.isArray(data.data)).toBe(true);
+      expect(typeof data.total).toBe("number");
+      expect(typeof data.page).toBe("number");
+      expect(typeof data.limit).toBe("number");
+      expect(typeof data.totalPages).toBe("number");
+    }
   });
 
   test("GET /api/admin/titles returns 401 without auth", async ({

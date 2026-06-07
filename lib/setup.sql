@@ -176,6 +176,18 @@ ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
 CREATE POLICY admin_full_access_courses ON courses
   FOR ALL USING (true) WITH CHECK (true);
 
+-- ── roles (reference lookup) ────────────────────────────────
+CREATE TABLE IF NOT EXISTS roles (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_roles ON roles
+  FOR ALL USING (true) WITH CHECK (true);
+
 -- ── role_courses (many-to-many: role → courses) ────────────
 CREATE TABLE IF NOT EXISTS role_courses (
   id BIGSERIAL PRIMARY KEY,

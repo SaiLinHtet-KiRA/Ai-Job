@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       {
         cookies: {
           getAll() { return request.cookies.getAll(); },
-          setAll(_cookiesToSet) {
+          setAll() {
             // will be set on the response below
           },
         },

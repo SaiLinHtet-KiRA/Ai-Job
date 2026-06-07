@@ -45,7 +45,9 @@ function chunk(arr, size) {
   return chunks;
 }
 
-async function seed() {
+// ── Jobs seeding ────────────────────────────────────────────
+
+async function seedJobs() {
   const jobPath = path.resolve(__dirname, "data", "jobs.json");
   const raw = JSON.parse(fs.readFileSync(jobPath, "utf8"));
 
@@ -71,7 +73,7 @@ async function seed() {
         .upsert(toCreate.map((name) => ({ name })), { onConflict: "name", ignoreDuplicates: true });
       if (error) {
         console.error("Error upserting titles:", error.message);
-        process.exit(1);
+        return false;
       }
       titlesCreated += toCreate.length;
     }
@@ -98,7 +100,7 @@ async function seed() {
         .upsert(toCreate.map((name) => ({ name })), { onConflict: "name", ignoreDuplicates: true });
       if (error) {
         console.error("Error upserting locations:", error.message);
-        process.exit(1);
+        return false;
       }
       locationsCreated += toCreate.length;
     }
@@ -129,7 +131,7 @@ async function seed() {
     const { error } = await supabase.from("job_listings").insert(batch);
     if (error) {
       console.error("Error inserting job listings:", error.message);
-      process.exit(1);
+      return false;
     }
     inserted += batch.length;
   }
@@ -145,14 +147,12 @@ async function seed() {
   }
 
   for (const [title, count] of Object.entries(titleCounts)) {
-    // Try RPC first
     const { error: rpcErr } = await supabase.rpc("increment_title_jobs_size", {
       title_name: title,
       increment_by: count,
     });
 
     if (rpcErr) {
-      // Fallback: get current count and update
       const { data: row } = await supabase
         .from("titles")
         .select("id, jobs_size")
@@ -203,7 +203,97 @@ async function seed() {
   }
 
   console.log(`Updated jobs_size for ${Object.keys(locationCounts).length} locations`);
-  console.log("\nDone!");
+  return true;
+}
+
+// ── Courses seeding ─────────────────────────────────────────
+
+async function ensureRole(roleName) {
+  const name = roleName.toLowerCase().trim();
+
+  const { data: existing } = await supabase
+    .from("roles")
+    .select("id")
+    .eq("name", name)
+    .maybeSingle();
+
+  if (existing) return;
+
+  const { error } = await supabase
+    .from("roles")
+    .insert({ name });
+
+  if (error && error.code !== "23505") {
+    throw new Error(`Failed to create role "${name}": ${error.message}`);
+  }
+
+  console.log(`  + Created role: ${name}`);
+}
+
+async function seedCourses() {
+  const coursesPath = path.resolve(__dirname, "data", "courses.json");
+  const coursesData = JSON.parse(fs.readFileSync(coursesPath, "utf8"));
+
+  console.log(`Seeding ${coursesData.length} courses to Supabase...`);
+
+  for (let i = 0; i < coursesData.length; i++) {
+    const { title, url, platform, duration, level, roles } = coursesData[i];
+
+    const { data: inserted, error: courseError } = await supabase
+      .from("courses")
+      .insert({ title, url, platform: platform.toLowerCase(), duration, level })
+      .select("id")
+      .single();
+
+    if (courseError) {
+      console.error(`  [${i + 1}/${coursesData.length}] ERROR "${title}": ${courseError.message}`);
+      continue;
+    }
+
+    if (roles && Array.isArray(roles) && roles.length > 0) {
+      for (const roleName of roles) {
+        await ensureRole(roleName);
+      }
+
+      const roleLinks = roles.map((roleName) => ({
+        role: roleName.toLowerCase().trim(),
+        course_id: inserted.id,
+        sort_order: 0,
+      }));
+
+      const { error: linkError } = await supabase
+        .from("role_courses")
+        .insert(roleLinks);
+
+      if (linkError) {
+        console.error(`  [${i + 1}/${coursesData.length}] WARN role link for "${title}": ${linkError.message}`);
+      }
+    }
+
+    console.log(`  [${i + 1}/${coursesData.length}] OK  "${title}"`);
+  }
+
+  return true;
+}
+
+// ── Main ────────────────────────────────────────────────────
+
+async function seed() {
+  console.log("=== Seeding jobs ===\n");
+  const jobsOk = await seedJobs();
+  if (!jobsOk) {
+    console.error("\nJobs seeding failed. Aborting.");
+    process.exit(1);
+  }
+
+  console.log("\n=== Seeding courses ===\n");
+  const coursesOk = await seedCourses();
+  if (!coursesOk) {
+    console.error("\nCourses seeding failed.");
+    process.exit(1);
+  }
+
+  console.log("\nDone.");
 }
 
 seed().catch((err) => {

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const {
-    skills,
+    suitable_title,
     experience_level,
     target_roles,
     preferred_locations,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     {
       user_id: userId,
       email,
-      skills: skills ?? [],
+      suitable_title: suitable_title ?? [],
       experience_level: experience_level ?? "mid",
       target_roles: target_roles ?? [],
       preferred_locations: preferred_locations ?? [],

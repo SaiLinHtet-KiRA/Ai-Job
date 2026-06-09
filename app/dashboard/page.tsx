@@ -8,6 +8,21 @@ import TopNav from "../components/TopNav";
 import MatchesFeed from "./MatchesFeed";
 import { Suspense } from "react";
 
+type JobListing = {
+  id: number;
+  title: string;
+  company: string;
+  location: string;
+  skills: string[];
+  apply_email: string | null;
+  apply_url: string | null;
+};
+
+type MatchResult = {
+  job_listings: JobListing;
+  match_score: number;
+};
+
 async function getUser() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return null;
@@ -23,6 +38,7 @@ async function getUser() {
     id: profile.user_id,
     email: profile.email,
     status: profile.status,
+    suitable_title: profile.suitable_title ?? [],
   };
 }
 
@@ -36,29 +52,54 @@ async function hasCV(userId: string): Promise<boolean> {
   return !!data;
 }
 
+function computeMatchScore(
+  suitableTitle: string[],
+  job: { title: string; location: string },
+): number {
+  const userTitles = suitableTitle.map((s) => s.toLowerCase());
+  const jobTitle = (job.title ?? "").toLowerCase();
+
+  if (userTitles.length === 0) return 50;
+
+  const jobTokens = jobTitle.split(/[\s,/-]+/).filter((t) => t.length > 2);
+  const matched = userTitles.filter((ut) =>
+    jobTokens.some((jt) => jt.includes(ut) || ut.includes(jt)),
+  );
+  const titleScore = (matched.length / userTitles.length) * 100;
+
+  return Math.min(100, Math.round(titleScore * 0.8 + Math.random() * 5));
+}
+
+async function getJobMatches(
+  suitableTitle: string[],
+): Promise<MatchResult[]> {
+  const supabase = getSupabaseAdmin();
+
+  const { data: jobs } = await supabase
+    .from("job_listings")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (!jobs?.length) return [];
+
+  const scored = jobs.map((job) => ({
+    job_listings: job,
+    match_score: computeMatchScore(suitableTitle, job),
+  }));
+
+  return scored
+    .filter((m) => m.match_score >= 40)
+    .sort((a, b) => b.match_score - a.match_score)
+    .slice(0, 10);
+}
+
 async function getDashboardStats(userId: string, email: string) {
   const supabase = getSupabaseAdmin();
 
-  const { count: newMatches } = await supabase
-    .from("daily_matches")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "pending");
-
   const { count: applicationsSent } = await supabase
-    .from("applications_sent")
+    .from("applications")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId);
-
-  const { count: responded } = await supabase
-    .from("applications_sent")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .not("response_status", "is", null);
-
-  const responseRate = applicationsSent && applicationsSent > 0
-    ? Math.round((responded ?? 0) / applicationsSent * 100)
-    : 0;
 
   const { data: cvScore } = await supabase
     .from("cv_scores")
@@ -69,9 +110,7 @@ async function getDashboardStats(userId: string, email: string) {
     .maybeSingle();
 
   return {
-    newMatches: newMatches ?? 0,
     applicationsSent: applicationsSent ?? 0,
-    responseRate,
     profileScore: cvScore?.score ?? 0,
   };
 }
@@ -85,11 +124,14 @@ export default async function DashboardPage() {
 
   const userHasCV = await hasCV(user.id);
   const stats = userHasCV ? await getDashboardStats(user.id, user.email) : null;
+  const matches = userHasCV && user.suitable_title.length > 0
+    ? await getJobMatches(user.suitable_title)
+    : [];
 
   return (
     <div className="min-h-screen bg-[#0a2540]">
       <TopNav />
-      
+
       <main className="px-6 py-8">
         <div className="mx-auto max-w-6xl">
           {/* Welcome Section */}
@@ -103,33 +145,29 @@ export default async function DashboardPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-[12px] font-medium text-[#8898aa] uppercase">New Matches</p>
-              <p className="mt-2 text-3xl font-bold text-white">{stats?.newMatches ?? 0}</p>
-              <p className="mt-1 text-[12px] text-[#8898aa]">Pending review</p>
-            </div>
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-[12px] font-medium text-[#8898aa] uppercase">Applications Sent</p>
               <p className="mt-2 text-3xl font-bold text-white">{stats?.applicationsSent ?? 0}</p>
               <p className="mt-1 text-[12px] text-[#8898aa]">Total sent</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-[12px] font-medium text-[#8898aa] uppercase">Response Rate</p>
-              <p className="mt-2 text-3xl font-bold text-white">{stats?.responseRate ?? 0}%</p>
-              <p className="mt-1 text-[12px] text-[#8898aa]">Of applications sent</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-[12px] font-medium text-[#8898aa] uppercase">CV Score</p>
               <p className="mt-2 text-3xl font-bold text-white">{stats?.profileScore ?? 0}</p>
               <p className="mt-1 text-[12px] text-[#8898aa]">Out of 100</p>
             </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-[12px] font-medium text-[#8898aa] uppercase">Suitable Title</p>
+              <p className="mt-2 text-lg font-bold text-white truncate">
+                {user.suitable_title.length > 0 ? user.suitable_title[0] : "N/A"}
+              </p>
+              <p className="mt-1 text-[12px] text-[#8898aa]">Top match title</p>
+            </div>
           </div>
 
-          {/* Main Content: B+C Hybrid Layout */}
+          {/* Main Content */}
           {userHasCV ? (
             <>
-              {/* Option B: Has CV - Show Matches */}
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-white">Your Top Matches</h2>
@@ -144,12 +182,29 @@ export default async function DashboardPage() {
                   Browse All Jobs
                 </Link>
               </div>
+
+              {user.suitable_title.length > 0 && (
+                <div className="mb-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[12px] font-medium uppercase text-[#8898aa]">Your skills from CV</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {user.suitable_title.map((title) => (
+                      <span
+                        key={title}
+                        className="rounded-md bg-primary/15 px-2.5 py-1 text-[13px] font-medium text-primary"
+                      >
+                        {title}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-white/[0.03]" />}>
-                <MatchesFeed />
+                <MatchesFeed serverMatches={matches} />
               </Suspense>
             </>
           ) : (
-            /* Option C: No CV - Show Upload Prompt */
+            /* No CV - Show Upload Prompt */
             <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] py-16 px-6 text-center">
               <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">

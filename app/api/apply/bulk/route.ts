@@ -3,11 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { Resend } from "resend";
+import { applicantTemplate, employerTemplate } from "@/lib/email";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const FROM = "easy2apply@easy2apply.work";
 
-// Demo mode - no actual emails sent
 const DEMO_MODE = !resendApiKey;
 
 export async function POST(req: NextRequest) {
@@ -17,9 +18,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const userId = session.user.id;
+    const userEmail = session.user.email ?? "";
+    const userName = session.user.name ?? userEmail.split("@")[0];
     const supabase = getSupabaseAdmin();
 
-    // Get user's CV
     const { data: userCV, error: cvError } = await supabase
       .from("user_cvs")
       .select("*")
@@ -30,15 +32,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No CV found. Please upload your CV first." }, { status: 400 });
     }
 
-    // Parse request body
+    const cvUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cvs/${userCV.storage_path}`;
+
     const body = await req.json();
-    const { applications } = body;
+    const { applications, job_type, expected_salary } = body;
 
     if (!Array.isArray(applications) || applications.length === 0) {
       return NextResponse.json({ error: "No applications provided" }, { status: 400 });
     }
 
-    // Filter to only email-apply jobs
     const emailApplications = applications.filter((app: Record<string, unknown>) => app.apply_email);
 
     if (emailApplications.length === 0) {
@@ -51,16 +53,22 @@ export async function POST(req: NextRequest) {
       details: [] as { job_id: number; status: string; error?: string }[],
     };
 
-    // Process each application
+    const appliedJobs: { title: string; company: string; email: string; location?: string }[] = [];
+
     for (const app of emailApplications) {
       try {
-        // Record application in database
         const { data: appRecord, error: dbError } = await supabase
           .from("applications")
           .insert({
             user_id: userId,
+            name: userName,
+            email: userEmail,
             job_id: app.job_id,
+            cv_url: cvUrl,
             cv_id: userCV.id,
+            position: app.job_title || "",
+            type: job_type || "full-time",
+            salary: expected_salary || "",
             cover_letter: app.cover_letter,
             method: "email",
             status: DEMO_MODE ? "pending" : "sent",
@@ -76,49 +84,95 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        // Send email via Resend (if not in demo mode)
         if (!DEMO_MODE && resend) {
+          const sentAt = new Date().toISOString();
+          const employerHtml = employerTemplate({
+            name: userName,
+            email: userEmail,
+            position: app.job_title || "",
+            type: job_type || "full-time",
+            salary: expected_salary || "",
+            resumeUrl: cvUrl,
+            coverLetter: app.cover_letter || undefined,
+            sentAt,
+            job: {
+              title: app.job_title || "",
+              company: app.company || "",
+              location: app.location || "",
+              apply_email: app.apply_email || "",
+            },
+          });
+
           const { error: emailError } = await resend.emails.send({
-            from: "easy2apply <applications@easy2apply.com>",
+            from: `easy2apply <${FROM}>`,
             to: app.apply_email,
-            subject: `Application: ${app.job_title || "Job Application"}`,
-            text: app.cover_letter,
-            attachments: userCV.storage_path ? [
-              {
-                filename: userCV.file_name,
-                path: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cvs/${userCV.storage_path}`,
-              },
-            ] : undefined,
+            subject: `New Application: ${app.job_title || "Job Application"} — ${userName}`,
+            html: employerHtml,
           });
 
           if (emailError) {
             console.error("Email error:", emailError);
-            // Update application status to failed
             await supabase
               .from("applications")
               .update({ status: "failed" })
               .eq("id", appRecord.id);
-            
+
             results.failed++;
             results.details.push({ job_id: app.job_id, status: "failed", error: emailError.message });
             continue;
           }
         }
 
-        // Update match status to applied
-        await supabase
-          .from("daily_matches")
-          .update({ status: "applied" })
-          .eq("id", app.match_id);
+        await supabase.from("applications_sent").insert({
+          user_id: userId,
+          job_id: app.job_id,
+          method: "email",
+          sent_to: app.apply_email,
+          status: DEMO_MODE ? "mock_sent" : "sent",
+        });
 
         results.successful++;
         results.details.push({ job_id: app.job_id, status: "success" });
 
+        appliedJobs.push({
+          title: app.job_title || "",
+          company: app.company || "",
+          email: app.apply_email || "",
+        });
       } catch (error) {
         console.error("Application error:", error);
         results.failed++;
         results.details.push({ job_id: app.job_id, status: "failed", error: "Unexpected error" });
       }
+    }
+
+    // Send confirmation email to user with list of applied jobs
+    if (!DEMO_MODE && resend && appliedJobs.length > 0 && userEmail) {
+      const position = appliedJobs[0]?.title || "various positions";
+
+      const html = applicantTemplate({
+        name: userName,
+        position,
+        jobs: appliedJobs.map((j) => ({
+          id: 0,
+          title: j.title,
+          company: j.company,
+          apply_email: j.email,
+          location: j.location || "",
+          job_type: job_type || "full-time",
+          salary_range: expected_salary || "",
+          description: "",
+        })),
+      });
+
+      await resend.emails
+        .send({
+          from: FROM,
+          to: userEmail,
+          subject: `Applications Sent — ${appliedJobs.length} job${appliedJobs.length !== 1 ? "s" : ""}`,
+          html,
+        })
+        .catch((err) => console.error("Failed to send user confirmation email:", err));
     }
 
     return NextResponse.json({
@@ -128,7 +182,6 @@ export async function POST(req: NextRequest) {
       failed: results.failed,
       details: results.details,
     });
-
   } catch (error) {
     console.error("Bulk apply error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

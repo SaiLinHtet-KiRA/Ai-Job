@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
 import { extractCVText } from "@/lib/extract-cv-text";
 import { scoreCV } from "@/lib/cv-scorer";
+import { updateUserSuitableTitle } from "@/lib/user-profile";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -107,6 +108,12 @@ export async function POST(req: NextRequest) {
       console.error("CV scoring failed:", err);
       return null;
     });
+
+    if (scoreResult?.recommended_job_titles?.length) {
+      await updateUserSuitableTitle(userId, scoreResult.recommended_job_titles).catch((err) => {
+        console.error("Failed to update user suitable title:", err);
+      });
+    }
 
     return NextResponse.json({
       success: true,

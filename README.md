@@ -23,12 +23,12 @@ CV scoring — free, no signup, instant ATS feedback powered by Gemini 2.5 Flash
 
 ## Features
 
-- **CV scoring** — Upload a PDF/DOCX CV and get an AI-generated score, strengths, weaknesses, and missing keywords via Gemini 2.5 Flash
-- **One-click apply** — Submit your resume to all matching employers via a single form
-- **Employer matching** — Auto-matches your target position with relevant job listings
-- **Email notifications** — Branded emails to applicants and employers on submission
+- **CV scoring** — Upload a PDF/DOCX CV and get an AI-generated score, strengths, weaknesses, recommended job titles via Gemini 2.5 Flash
+- **Real-time job matching** — Dashboard matches your CV's extracted job titles against job listings on page load
+- **Bulk apply** — Select matching jobs, enter job type and expected salary, then send your CV to multiple employers at once
+- **Email notifications** — Beautiful HTML emails to applicants (applied jobs summary) and employers (candidate details + CV link)
 - **Study roadmap** — Personalized learning path with curated courses and time estimates
-- **Admin dashboard** — Full CRUD for job listings, titles, and admin users behind session auth
+- **Admin dashboard** — Full CRUD for job listings, titles, courses, and admin users behind session auth
 - **Rate limiting** — Per-endpoint rate limits with graceful Redis-failure fallback
 - **Input validation** — Zod schemas on all API endpoints with descriptive error messages
 - **API documentation** — Interactive Scalar reference at `/api-docs`, auto-generated from JSDoc
@@ -76,7 +76,7 @@ npm run dev         # http://localhost:3000
 
 ## API
 
-12 endpoints across 10 route handlers. All inputs validated with shared Zod schemas (`lib/validations.ts`).
+14 endpoints across 12 route handlers. All inputs validated with shared Zod schemas (`lib/validations.ts`).
 
 ### Public
 
@@ -87,6 +87,15 @@ npm run dev         # http://localhost:3000
 | `POST` | `/api/apply` | Submit application (multipart) | 5 / 60s |
 | `POST` | `/api/score` | Score a CV (multipart: file + email) | 10 / hour |
 | `POST` | `/api/leads` | Save email for CV score follow-up | — |
+
+### Authenticated (requires NextAuth session)
+
+| Method | Path | Description | Rate limit |
+|--------|------|-------------|------------|
+| `POST` `GET` | `/api/cv/upload` | Upload / get user CV | — |
+| `DELETE` | `/api/cv/delete` | Delete user CV | — |
+| `GET` `POST` | `/api/profile` | Get / update user profile | — |
+| `POST` | `/api/apply/bulk` | Bulk apply to selected jobs | — |
 
 ### Admin (requires `admin_session` cookie)
 
@@ -172,14 +181,17 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   │   ├── titles/         #   CRUD
 │   │   │   ├── login/          #   auth
 │   │   │   └── logout/         #   session clear
-│   │   ├── apply/              # job application
+│   │   ├── apply/              # job application (form + bulk)
 │   │   ├── cv/                 # CV upload + delete (authenticated)
 │   │   ├── jobs/               # job search
 │   │   ├── leads/              # email lead capture
+│   │   ├── profile/            # user profile CRUD
 │   │   ├── score/              # public CV scoring
 │   │   └── titles/             # title listing
 │   ├── api-docs/               # Scalar API docs page
-│   ├── results/                # matches + roadmap
+│   ├── dashboard/               # user dashboard (matches + bulk apply)
+│   ├── cv-check/               # public CV scoring page
+│   ├── profile/                # user profile page
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
@@ -192,13 +204,13 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   ├── auth.ts                  # HMAC session cookie auth
 │   ├── cv-scorer.ts             # Gemini 2.5 Flash CV scoring
 │   ├── extract-cv-text.ts       # PDF/DOCX text extraction
-│   ├── email.ts                 # Resend templates
+│   ├── email.ts                 # Resend HTML email templates
 │   ├── rate-limit.ts            # Upstash rate limit helper
 │   ├── seed-admin.ts            # bootstrap first admin
 │   ├── setup.sql                # DB schema + RLS policies
 │   ├── supabase.ts              # Supabase client
+│   ├── user-profile.ts          # User profile helpers
 │   └── validations.ts           # Zod schemas
-├── patches/                     # patch-package fixes
 ├── add-data/                    # batch job listing data
 ├── middleware.ts                 # auth guard (admin routes + API)
 ├── next.config.ts               # withNextOpenApi wrapper

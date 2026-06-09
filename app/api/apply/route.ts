@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       position,
       type,
       salary,
-      resume_url: publicUrl,
+      cv_url: publicUrl,
     });
 
     if (insertError) {

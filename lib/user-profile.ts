@@ -11,7 +11,7 @@ export interface UserProfile {
   user_id: string;
   email: string;
   status: string;
-  skills: string[];
+  suitable_title: string[];
   experience_level: string;
   target_roles: string[];
   preferred_locations: string[];
@@ -52,7 +52,7 @@ export async function ensureUserProfile(
     user_id: userId,
     email,
     status: "active",
-    skills: [],
+    suitable_title: [],
     target_roles: [],
     preferred_locations: [],
     experience_level: name ? "mid" : "mid",
@@ -68,4 +68,18 @@ export async function isUserBanned(userId: string): Promise<boolean> {
     .eq("user_id", userId)
     .maybeSingle();
   return data?.status === "banned";
+}
+
+export async function updateUserSuitableTitle(
+  userId: string,
+  suitableTitle: string[],
+): Promise<void> {
+  const supabase = supabaseAdmin();
+  await supabase
+    .from("user_profiles")
+    .update({
+      suitable_title: suitableTitle,
+      last_scored_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
 }

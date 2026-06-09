@@ -3,8 +3,8 @@ import { extractText } from "unpdf";
 
 async function extractPdfText(buffer: Buffer): Promise<string> {
   const data = new Uint8Array(buffer);
-  const text = await extractText(data);
-  return text || "";
+  const result = await extractText(data);
+  return result.text.join("\n\n") || "";
 }
 
 export async function extractCVText({

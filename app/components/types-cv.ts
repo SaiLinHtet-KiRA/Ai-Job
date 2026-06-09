@@ -11,6 +11,7 @@ interface CVScore {
   strengths?: string[];
   weaknesses?: string[];
   keywords_missing?: string[];
+  skills?: string[];
   summary?: string;
 }
 

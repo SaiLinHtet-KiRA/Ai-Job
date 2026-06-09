@@ -1,4 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import type { Match } from "./types";
+
+const JOB_TYPES = [
+  "full-time",
+  "part-time",
+  "contract",
+  "freelance",
+  "internship",
+];
 
 export default function ReviewModal({
   open,
@@ -13,8 +24,11 @@ export default function ReviewModal({
   applying: boolean;
   applyResult: { success: number; failed: number } | null;
   onClose: () => void;
-  onApply: () => void;
+  onApply: (jobType: string, expectedSalary: string) => void;
 }) {
+  const [jobType, setJobType] = useState("full-time");
+  const [expectedSalary, setExpectedSalary] = useState("");
+
   if (!open) return null;
 
   const canBulkApply = selectedMatches.every((m) => m.job_listings.apply_email);
@@ -52,47 +66,88 @@ export default function ReviewModal({
                 </svg>
               </div>
               <p className="text-lg font-semibold text-emerald-400">
-                {applyResult.success} application{applyResult.success !== 1 ? 's' : ''} sent!
+                {applyResult.success} application{applyResult.success !== 1 ? "s" : ""} sent!
               </p>
               {applyResult.failed > 0 && (
                 <p className="mt-1 text-[13px] text-amber-400">{applyResult.failed} failed</p>
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {selectedMatches.map((match) => (
-                <div key={match.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium text-white">{match.job_listings.title}</h4>
-                      <p className="text-[13px] text-[#8898aa]">{match.job_listings.company}</p>
+            <>
+              <div className="space-y-4">
+                {selectedMatches.map((match) => (
+                  <div key={match.job_listings.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-medium text-white">{match.job_listings.title}</h4>
+                        <p className="text-[13px] text-[#8898aa]">{match.job_listings.company}</p>
+                      </div>
+                      {match.job_listings.apply_email ? (
+                        <span className="rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-400">
+                          {match.job_listings.apply_email}
+                        </span>
+                      ) : (
+                        <span className="rounded bg-amber-500/10 px-2 py-1 text-[11px] text-amber-400">
+                          Manual apply
+                        </span>
+                      )}
                     </div>
-                    {match.job_listings.apply_email ? (
-                      <span className="rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-400">
-                        {match.job_listings.apply_email}
+                    <div className="mt-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          match.match_score >= 70
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : match.match_score >= 50
+                              ? "bg-amber-500/10 text-amber-400"
+                              : "bg-rose-500/10 text-rose-400"
+                        }`}
+                      >
+                        {match.match_score}% match
                       </span>
-                    ) : (
-                      <span className="rounded bg-amber-500/10 px-2 py-1 text-[11px] text-amber-400">
-                        Manual apply
-                      </span>
-                    )}
+                    </div>
                   </div>
-                  <div className="mt-3 rounded-lg bg-white/[0.02] p-3">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-[#8898aa]">Cover Letter</p>
-                    <p className="mt-1 line-clamp-3 text-[12px] text-white/70">{match.cover_letter}</p>
-                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[12px] font-medium uppercase text-[#8898aa]">Application Details</p>
+
+                <div>
+                  <label className="mb-1 block text-[13px] text-[#8898aa]">Job Type</label>
+                  <select
+                    value={jobType}
+                    onChange={(e) => setJobType(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-[#0a2540] px-3 py-2.5 text-[14px] text-white outline-none focus:border-primary/50"
+                  >
+                    {JOB_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              ))}
-            </div>
+
+                <div>
+                  <label className="mb-1 block text-[13px] text-[#8898aa]">Expected Salary</label>
+                  <input
+                    type="text"
+                    value={expectedSalary}
+                    onChange={(e) => setExpectedSalary(e.target.value)}
+                    placeholder="e.g. $80,000 - $100,000"
+                    className="w-full rounded-lg border border-white/10 bg-[#0a2540] px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-[#8898aa]/50 focus:border-primary/50"
+                  />
+                </div>
+              </div>
+            </>
           )}
         </div>
 
         {!applyResult && (
           <div className="border-t border-white/10 px-6 py-4">
             <button
-              onClick={onApply}
+              onClick={() => onApply(jobType, expectedSalary)}
               disabled={applying || selectedMatches.length === 0}
-              className="w-full rounded-xl bg-primary py-3 text-[14px] font-semibold text-white transition-all hover:bg-primary-dark disabled:opacity-50"
+              className="w-full rounded-xl bg-primary px-6 py-3 text-[14px] font-semibold text-white transition-all hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {applying ? (
                 <span className="flex items-center justify-center gap-2">
@@ -100,7 +155,7 @@ export default function ReviewModal({
                   Sending applications...
                 </span>
               ) : (
-                `Send ${selectedMatches.length} Application${selectedMatches.length !== 1 ? 's' : ''}`
+                `Send ${selectedMatches.length} Application${selectedMatches.length !== 1 ? "s" : ""}`
               )}
             </button>
           </div>

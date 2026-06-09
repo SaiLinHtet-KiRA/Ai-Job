@@ -15,11 +15,8 @@ type Email = {
 };
 
 const MOCK_EMAILS: Email[] = [
-  { id: 1, type: "digest", to: "sarah@gmail.com", subject: "Your Daily Job Digest - 3 New Matches", status: "sent", sent_at: "2025-05-30T08:00:00Z", opened: true, clicked: true },
-  { id: 2, type: "digest", to: "mike.dev@outlook.com", subject: "Your Daily Job Digest - 2 New Matches", status: "sent", sent_at: "2025-05-30T08:00:00Z", opened: true, clicked: false },
-  { id: 3, type: "application", to: "jobs@cloudbase.io", subject: "Application: Frontend Developer - Sarah", status: "sent", sent_at: "2025-05-30T10:30:00Z", opened: false, clicked: false },
-  { id: 4, type: "welcome", to: "anna.chen@yahoo.com", subject: "Welcome to easy2apply", status: "sent", sent_at: "2025-05-29T14:20:00Z", opened: true, clicked: true },
-  { id: 5, type: "digest", to: "priya.s@gmail.com", subject: "Your Daily Job Digest - 1 New Match", status: "failed", sent_at: null, opened: false, clicked: false, error: "Invalid recipient" },
+  { id: 1, type: "application", to: "jobs@cloudbase.io", subject: "Application: Frontend Developer - Sarah", status: "sent", sent_at: "2025-05-30T10:30:00Z", opened: false, clicked: false },
+  { id: 2, type: "welcome", to: "anna.chen@yahoo.com", subject: "Welcome to easy2apply", status: "sent", sent_at: "2025-05-29T14:20:00Z", opened: true, clicked: true },
 ];
 
 const thClass = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400";
@@ -32,7 +29,6 @@ const statusColors: Record<string, string> = {
 };
 
 const typeLabels: Record<string, string> = {
-  digest: "Daily Digest",
   application: "Application",
   welcome: "Welcome",
   notification: "Notification",
@@ -67,16 +63,6 @@ export default function EmailsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Emails</h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{emails.length} total emails</p>
         </div>
-        <button
-          onClick={() => setPreviewOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/25"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Preview Digest
-        </button>
       </div>
 
       {/* Stats */}
@@ -176,8 +162,8 @@ export default function EmailsPage() {
           <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                {previewEmail ? "Email Preview" : "Digest Preview"}
-              </h3>
+              Email Preview
+            </h3>
               <button onClick={() => setPreviewOpen(false)} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
@@ -191,20 +177,7 @@ export default function EmailsPage() {
                   <hr className="border-zinc-200 dark:border-zinc-700" />
                   <p className="text-zinc-500">[Email body would render here]</p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <h4 className="font-medium text-zinc-900 dark:text-white">Daily Digest Preview</h4>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Good morning! Here are your 3 job matches for today:</p>
-                  <div className="space-y-2">
-                    {["Frontend Developer at CloudBase (85% match)", "Backend Engineer at DataFlow (72% match)", "Full Stack at StartupHub (68% match)"].map((job, i) => (
-                      <div key={i} className="rounded-lg bg-white p-3 dark:bg-zinc-900">
-                        <p className="text-sm font-medium text-zinc-900 dark:text-white">{job}</p>
-                        <button className="mt-2 text-xs text-primary hover:underline">View Details →</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

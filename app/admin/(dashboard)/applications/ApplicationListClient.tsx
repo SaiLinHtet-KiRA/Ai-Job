@@ -9,7 +9,7 @@ interface Application {
   position: string;
   type: string;
   salary: number;
-  resume_url: string;
+  cv_url: string;
   created_at: string;
 }
 
@@ -91,7 +91,7 @@ export function ApplicationListClient({ initial }: { initial: PaginatedResponse 
                   </td>
                   <td className="px-6 py-4 text-right">
                     <a
-                      href={app.resume_url}
+                      href={app.cv_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-semibold text-zinc-600 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary/80"

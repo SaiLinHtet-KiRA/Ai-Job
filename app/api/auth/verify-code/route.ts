@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         user_id: data.user.id,
         email: normalizedEmail,
         status: "active",
-        skills: [],
+        suitable_title: [],
         target_roles: [],
         preferred_locations: [],
         experience_level: "mid",

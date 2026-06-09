@@ -94,12 +94,13 @@ CREATE INDEX IF NOT EXISTS idx_user_cvs_user ON user_cvs (user_id);
 -- ── applications (legacy – apply form) ────────────────────────
 CREATE TABLE IF NOT EXISTS applications (
   id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
+  name TEXT,
   email TEXT NOT NULL DEFAULT '',
   position TEXT NOT NULL,
   type TEXT NOT NULL,
   salary TEXT NOT NULL,
-  resume_url TEXT NOT NULL,
+  cv_url TEXT,
+  job_id BIGINT REFERENCES job_listings(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -111,6 +112,8 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS cover_letter TEXT;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS method TEXT DEFAULT 'email';
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
+
+ALTER TABLE applications ALTER COLUMN name DROP NOT NULL;
 
 ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 
@@ -127,6 +130,8 @@ CREATE TABLE IF NOT EXISTS cv_scores (
   strengths JSONB NOT NULL DEFAULT '[]',
   weaknesses JSONB NOT NULL DEFAULT '[]',
   keywords_missing JSONB NOT NULL DEFAULT '[]',
+  skills JSONB NOT NULL DEFAULT '[]',
+  recommended_job_titles JSONB NOT NULL DEFAULT '[]',
   summary TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -135,6 +140,10 @@ ALTER TABLE cv_scores ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY admin_full_access_cv_scores ON cv_scores
   FOR ALL USING (true) WITH CHECK (true);
+
+ALTER TABLE cv_scores ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE cv_scores ADD COLUMN IF NOT EXISTS skills JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE cv_scores ADD COLUMN IF NOT EXISTS recommended_job_titles JSONB NOT NULL DEFAULT '[]';
 
 CREATE INDEX IF NOT EXISTS idx_cv_scores_ip ON cv_scores (ip_address);
 CREATE INDEX IF NOT EXISTS idx_cv_scores_email ON cv_scores (email);
@@ -210,7 +219,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   user_id UUID NOT NULL,
   email TEXT NOT NULL,
   password TEXT,
-  skills JSONB NOT NULL DEFAULT '[]',
+  suitable_title JSONB NOT NULL DEFAULT '[]',
   experience_level TEXT DEFAULT 'mid',
   target_roles JSONB NOT NULL DEFAULT '[]',
   preferred_locations JSONB NOT NULL DEFAULT '[]',
@@ -229,7 +238,7 @@ CREATE POLICY admin_full_access_user_profiles ON user_profiles
   FOR ALL USING (true) WITH CHECK (true);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_profiles_user ON user_profiles (user_id);
-CREATE INDEX IF NOT EXISTS idx_user_profiles_skills ON user_profiles USING GIN (skills);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_suitable_title ON user_profiles USING GIN (suitable_title);
 
 -- add status column if missing (migration)
 ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
@@ -238,33 +247,10 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- ── daily_matches (cron output: user → matched jobs) ───────
-CREATE TABLE IF NOT EXISTS daily_matches (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL,
-  job_id BIGINT NOT NULL REFERENCES job_listings(id) ON DELETE CASCADE,
-  match_score INTEGER NOT NULL,
-  missing_skills JSONB NOT NULL DEFAULT '[]',
-  tailored_cv_url TEXT,
-  cover_letter TEXT,
-  status TEXT NOT NULL DEFAULT 'pending',
-  matched_at TIMESTAMPTZ DEFAULT NOW(),
-  acted_at TIMESTAMPTZ
-);
-
-ALTER TABLE daily_matches ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY admin_full_access_daily_matches ON daily_matches
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE INDEX IF NOT EXISTS idx_daily_matches_user ON daily_matches (user_id, matched_at DESC);
-CREATE INDEX IF NOT EXISTS idx_daily_matches_status ON daily_matches (user_id, status);
-
 -- ── applications_sent (audit log) ─────────────────────────
 CREATE TABLE IF NOT EXISTS applications_sent (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL,
-  match_id BIGINT NOT NULL REFERENCES daily_matches(id),
   job_id BIGINT NOT NULL REFERENCES job_listings(id),
   method TEXT NOT NULL DEFAULT 'email',
   sent_to TEXT,

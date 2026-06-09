@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
     // Parse PDF text (dynamic import for ES module compatibility)
     let parsedText = "";
     try {
-      const pdfParseModule = await import("pdf-parse");
-      const pdfParse = (pdfParseModule as { default?: (buf: Buffer) => Promise<{ text: string }> }).default || pdfParseModule as unknown as (buf: Buffer) => Promise<{ text: string }>;
-      const parsed = await pdfParse(buffer);
+      const { PDFParse } = await import("pdf-parse");
+      const parser = new PDFParse({ data: buffer });
+      const parsed = await parser.getText();
       parsedText = parsed.text || "";
     } catch (parseError) {
       console.error("PDF parse error:", parseError);

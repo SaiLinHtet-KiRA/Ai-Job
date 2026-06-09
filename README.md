@@ -2,6 +2,8 @@
 
 AI-powered job matching platform — one form, hundreds of applications, personalized study roadmap.
 
+CV scoring — free, no signup, instant ATS feedback powered by Gemini 2.5 Flash.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -11,6 +13,7 @@ AI-powered job matching platform — one form, hundreds of applications, persona
 | Database | Supabase (PostgreSQL) |
 | Auth | HMAC-signed session cookies |
 | Rate limiting | Upstash Redis (sliding window) |
+| AI | Gemini 2.5 Flash (via @ai-sdk/google) |
 | Email | Resend |
 | Validation | Zod 4 |
 | API docs | Scalar (next-openapi-gen) |
@@ -20,6 +23,7 @@ AI-powered job matching platform — one form, hundreds of applications, persona
 
 ## Features
 
+- **CV scoring** — Upload a PDF/DOCX CV and get an AI-generated score, strengths, weaknesses, and missing keywords via Gemini 2.5 Flash
 - **One-click apply** — Submit your resume to all matching employers via a single form
 - **Employer matching** — Auto-matches your target position with relevant job listings
 - **Email notifications** — Branded emails to applicants and employers on submission
@@ -54,6 +58,7 @@ cp .env.example .env.local
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only) |
 | `ADMIN_EMAIL` | Bootstrap admin email |
 | `ADMIN_PASSWORD` | Bootstrap admin password |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google Gemini API key for CV scoring |
 | `RESEND_API_KEY` | Resend API key |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
@@ -80,6 +85,8 @@ npm run dev         # http://localhost:3000
 | `GET` | `/api/titles` | List all job titles | 30 / 10s |
 | `GET` | `/api/jobs?title=` | Search job listings by keyword | 30 / 10s |
 | `POST` | `/api/apply` | Submit application (multipart) | 5 / 60s |
+| `POST` | `/api/score` | Score a CV (multipart: file + email) | 10 / hour |
+| `POST` | `/api/leads` | Save email for CV score follow-up | — |
 
 ### Admin (requires `admin_session` cookie)
 
@@ -92,6 +99,8 @@ npm run dev         # http://localhost:3000
 | `DELETE` | `/api/admin/job-listings?id=` | Delete job listing | 30 / 10s |
 | `GET` `POST` | `/api/admin/admins` | List / create admins | 30 / 10s |
 | `PUT` `DELETE` | `/api/admin/admins/:id` | Update / delete admin | 30 / 10s |
+| `GET` | `/api/admin/cv-scores` | List CV scores (paginated) | 30 / 10s |
+| `GET` | `/api/admin/cv-scores/:id` | Get CV score detail | 30 / 10s |
 
 ### API Docs
 
@@ -156,14 +165,18 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   ├── (auth)/             #   login page
 │   │   └── (dashboard)/        #   dashboard, job listings CRUD, admins CRUD
 │   ├── api/
-│   │   ├── admin/              # admin API routes
+│   │   ├── admin/
 │   │   │   ├── admins/         #   [id] CRUD
+│   │   │   ├── cv-scores/      #   CV score listings + detail
 │   │   │   ├── job-listings/   #   CRUD
 │   │   │   ├── titles/         #   CRUD
 │   │   │   ├── login/          #   auth
 │   │   │   └── logout/         #   session clear
 │   │   ├── apply/              # job application
+│   │   ├── cv/                 # CV upload + delete (authenticated)
 │   │   ├── jobs/               # job search
+│   │   ├── leads/              # email lead capture
+│   │   ├── score/              # public CV scoring
 │   │   └── titles/             # title listing
 │   ├── api-docs/               # Scalar API docs page
 │   ├── results/                # matches + roadmap
@@ -177,6 +190,8 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 ├── lib/
 │   ├── __tests__/
 │   ├── auth.ts                  # HMAC session cookie auth
+│   ├── cv-scorer.ts             # Gemini 2.5 Flash CV scoring
+│   ├── extract-cv-text.ts       # PDF/DOCX text extraction
 │   ├── email.ts                 # Resend templates
 │   ├── rate-limit.ts            # Upstash rate limit helper
 │   ├── seed-admin.ts            # bootstrap first admin

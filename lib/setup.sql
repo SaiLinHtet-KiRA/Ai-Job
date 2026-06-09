@@ -120,7 +120,6 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS email TEXT NOT NULL DEFAULT ''
 -- ── cv_scores ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS cv_scores (
   id BIGSERIAL PRIMARY KEY,
-  ip_address TEXT NOT NULL,
   email TEXT NOT NULL,
   file_name TEXT NOT NULL,
   file_size_kb INTEGER NOT NULL,

@@ -1,5 +1,24 @@
 import mammoth from "mammoth";
 
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const data = new Uint8Array(buffer);
+  const doc = await pdfjs.getDocument({ data }).promise;
+  const pages: string[] = [];
+
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = (textContent.items as Array<{ str?: string }>)
+      .filter((item) => "str" in item)
+      .map((item) => item.str!)
+      .join(" ");
+    pages.push(pageText);
+  }
+
+  return pages.join("\n\n");
+}
+
 export async function extractCVText({
   buffer,
   fileType,
@@ -8,10 +27,7 @@ export async function extractCVText({
   fileType: string;
 }): Promise<string> {
   if (fileType === "application/pdf") {
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
-    return result.text || "";
+    return extractPdfText(buffer);
   }
 
   if (

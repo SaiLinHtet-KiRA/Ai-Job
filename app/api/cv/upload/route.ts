@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
+import { extractCVText } from "@/lib/extract-cv-text";
 import { scoreCV } from "@/lib/cv-scorer";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -37,13 +38,9 @@ export async function POST(req: NextRequest) {
     // Parse PDF text (dynamic import for ES module compatibility)
     let parsedText = "";
     try {
-      const { PDFParse } = await import("pdf-parse");
-      const parser = new PDFParse({ data: buffer });
-      const parsed = await parser.getText();
-      parsedText = parsed.text || "";
+      parsedText = await extractCVText({ buffer, fileType: file.type });
     } catch (parseError) {
       console.error("PDF parse error:", parseError);
-      // Continue even if parsing fails - we still store the file
     }
 
     // Generate unique filename

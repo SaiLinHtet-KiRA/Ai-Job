@@ -15,6 +15,7 @@
     "openapi:generate": "next-openapi-gen generate"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.80",
     "@anthropic-ai/sdk": "^0.100.1",
     "@auth0/auth0-react": "^2.17.0",
     "@scalar/api-reference-react": "^0.9.41",
@@ -22,6 +23,7 @@
     "@supabase/supabase-js": "^2.106.1",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
+    "ai": "^6.0.198",
     "mammoth": "^1.12.0",
     "next": "16.2.6",
     "next-auth": "^4.24.14",

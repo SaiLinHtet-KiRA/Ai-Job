@@ -144,7 +144,7 @@ No hard walls on the initial experience. The value is shown first, then we ask f
 
 ### External integrations
 - **TheirStack API** — job posting data (crawl + match)
-- **Anthropic API** — CV scoring, CV rewriting
+- **Gemini 2.5 Flash** — CV scoring, CV rewriting
 - **Supabase Storage** — CV file storage (after email gate)
 - **Resend** — transactional emails
 - **Supabase Auth** — user accounts (Phase 2+)

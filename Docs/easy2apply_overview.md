@@ -137,7 +137,7 @@ Phase 2:  users, job_matches, courses, role_courses
 Phase 3:  job_snapshots, cv_drafts
 ```
 
-**Integrations:** TheirStack (jobs) · Anthropic (AI) · Supabase (DB + auth + storage) · Resend (email)
+**Integrations:** TheirStack (jobs) · Gemini 2.5 Flash (AI) · Supabase (DB + auth + storage) · Resend (email)
 
 ---
 

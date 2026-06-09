@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import { withNextOpenApi } from "next-openapi-gen/next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  serverExternalPackages: ["pdfjs-dist"],
 };
 
 export default withNextOpenApi(nextConfig);

@@ -26,8 +26,11 @@ CV scoring — free, no signup, instant ATS feedback powered by Gemini 2.5 Flash
 - **CV scoring** — Upload a PDF/DOCX CV and get an AI-generated score, strengths, weaknesses, recommended job titles via Gemini 2.5 Flash
 - **Real-time job matching** — Dashboard matches your CV's extracted job titles against job listings on page load
 - **Bulk apply** — Select matching jobs, enter job type and expected salary, then send your CV to multiple employers at once
-- **Email notifications** — Beautiful HTML emails to applicants (applied jobs summary) and employers (candidate details + CV link)
+- **Email notifications** — Welcome emails, verification codes, score results, application confirmations. All emails logged to `email_logs` table
 - **Study roadmap** — Personalized learning path with curated courses and time estimates
+- **Notification bell** — Real-time notification center for job matches, application status, and system updates
+- **Admin audit log** — All admin actions (user bans, job CRUD, data operations) tracked in `audit_logs`
+- **Admin actions** — Manual triggers: ingest jobs, run matching, send digests, re-score CVs, cleanup old data, export database
 - **Admin dashboard** — Full CRUD for job listings, titles, courses, and admin users behind session auth
 - **Rate limiting** — Per-endpoint rate limits with graceful Redis-failure fallback
 - **Input validation** — Zod schemas on all API endpoints with descriptive error messages
@@ -76,7 +79,7 @@ npm run dev         # http://localhost:3000
 
 ## API
 
-14 endpoints across 12 route handlers. All inputs validated with shared Zod schemas (`lib/validations.ts`).
+25+ endpoints. All inputs validated with shared Zod schemas (`lib/validations.ts`).
 
 ### Public
 
@@ -96,6 +99,7 @@ npm run dev         # http://localhost:3000
 | `DELETE` | `/api/cv/delete` | Delete user CV | — |
 | `GET` `POST` | `/api/profile` | Get / update user profile | — |
 | `POST` | `/api/apply/bulk` | Bulk apply to selected jobs | — |
+| `GET` `PATCH` | `/api/notifications` | List / mark read user notifications | — |
 
 ### Admin (requires `admin_session` cookie)
 
@@ -110,6 +114,11 @@ npm run dev         # http://localhost:3000
 | `PUT` `DELETE` | `/api/admin/admins/:id` | Update / delete admin | 30 / 10s |
 | `GET` | `/api/admin/cv-scores` | List CV scores (paginated) | 30 / 10s |
 | `GET` | `/api/admin/cv-scores/:id` | Get CV score detail | 30 / 10s |
+| `GET` | `/api/admin/users` | List users (paginated, status filter) | — |
+| `PATCH` | `/api/admin/users/:id` | Ban / unban user | — |
+| `GET` | `/api/admin/audit` | Audit log (paginated, action filter) | — |
+| `GET` | `/api/admin/emails` | Email log (paginated, type/status filter) | — |
+| `POST` | `/api/admin/actions` | Run admin actions (ingest, match, digest, rescore, cleanup, export) | — |
 
 ### API Docs
 
@@ -135,23 +144,31 @@ npm run openapi:generate    # regenerate manually
 
 ## Testing
 
-### Unit (Vitest)
+### Unit (Vitest) — 15 test files, 175+ tests
 
 ```
-lib/__tests__/validations.test.ts   — 50 tests for Zod schemas
+lib/__tests__/validations.test.ts   — 47 tests for all Zod schemas
 lib/__tests__/auth.test.ts          — password hashing, session tokens
-components/__tests__/               — ApplyModal rendering, validation
+lib/__tests__/rate-limit.test.ts    — IP parsing from headers
+lib/__tests__/audit.test.ts         — logAuditAction helper
+components/__tests__/               — NotificationCenter, ApplyModal, TitleSelector, LocationSelector, CVScoreCard, SignOutButton
+app/components/__tests__/           — TopNav (auth states), CVManager (upload flow)
+app/admin/__tests__/                — Admin login, CV scores (pagination + detail), job listings form
 ```
 
 ```bash
 npm test
 ```
 
-### E2E (Playwright)
+### E2E (Playwright) — 6 test files
 
 ```
-e2e/home.spec.ts    — landing page, modal, validation
-e2e/api.spec.ts     — API response shapes, status codes
+e2e/home.spec.ts    — landing page, navigation
+e2e/api.spec.ts     — API response shapes, status codes, auth guards
+e2e/cv-check.spec.ts — CV check page sections
+e2e/auth-flow.spec.ts — login, signup, admin login, redirects
+e2e/pages.spec.ts   — protected page redirects
+e2e/admin-cv-scores.spec.ts — admin API auth guards
 ```
 
 ```bash
@@ -175,44 +192,57 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   └── (dashboard)/        #   dashboard, job listings CRUD, admins CRUD
 │   ├── api/
 │   │   ├── admin/
+│   │   │   ├── actions/         #   admin actions (ingest, match, digest, etc.)
 │   │   │   ├── admins/         #   [id] CRUD
+│   │   │   ├── audit/          #   audit log viewer
 │   │   │   ├── cv-scores/      #   CV score listings + detail
+│   │   │   ├── emails/         #   email log viewer
 │   │   │   ├── job-listings/   #   CRUD
+│   │   │   ├── leads/          #   leads management
 │   │   │   ├── titles/         #   CRUD
+│   │   │   ├── users/          #   user management + ban/unban
 │   │   │   ├── login/          #   auth
 │   │   │   └── logout/         #   session clear
 │   │   ├── apply/              # job application (form + bulk)
 │   │   ├── cv/                 # CV upload + delete (authenticated)
 │   │   ├── jobs/               # job search
-│   │   ├── leads/              # email lead capture
+│   │   ├── leads/              # email lead capture (public)
+│   │   ├── notifications/      # user notifications CRUD
 │   │   ├── profile/            # user profile CRUD
 │   │   ├── score/              # public CV scoring
 │   │   └── titles/             # title listing
 │   ├── api-docs/               # Scalar API docs page
-│   ├── dashboard/               # user dashboard (matches + bulk apply)
-│   ├── cv-check/               # public CV scoring page
+│   ├── auth/                   # OAuth callback handler
+│   ├── dashboard/              # user dashboard (matches + bulk apply)
+│   ├── cv-check/               # authenticated CV scoring page
 │   ├── profile/                # user profile page
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
 │   ├── __tests__/
+│   ├── NotificationCenter.tsx   # notification bell + dropdown
+│   ├── NotificationBell.tsx     # bell icon with unread badge
+│   ├── NotificationDropdown.tsx # notification list
 │   ├── ApplyModal.tsx           # multi-step application form
 │   └── TitleSelector.tsx        # searchable title dropdown
 ├── e2e/                         # Playwright tests
 ├── lib/
 │   ├── __tests__/
+│   ├── audit.ts                 # audit log insertion helper
 │   ├── auth.ts                  # HMAC session cookie auth
 │   ├── cv-scorer.ts             # Gemini 2.5 Flash CV scoring
 │   ├── extract-cv-text.ts       # PDF/DOCX text extraction
-│   ├── email.ts                 # Resend HTML email templates
+│   ├── email.ts                 # Resend HTML email templates + welcome email
+│   ├── next-auth.ts             # NextAuth config (credentials + OAuth)
 │   ├── rate-limit.ts            # Upstash rate limit helper
+│   ├── score-email-template.ts  # CV score result email HTML
 │   ├── seed-admin.ts            # bootstrap first admin
 │   ├── setup.sql                # DB schema + RLS policies
 │   ├── supabase.ts              # Supabase client
 │   ├── user-profile.ts          # User profile helpers
-│   └── validations.ts           # Zod schemas
+│   └── validations.ts           # Zod schemas (15 schemas)
 ├── add-data/                    # batch job listing data
-├── middleware.ts                 # auth guard (admin routes + API)
+├── middleware.ts                 # auth guard (admin routes + API + cv-check)
 ├── next.config.ts               # withNextOpenApi wrapper
 ├── next.openapi.json            # OpenAPI spec + generation config
 └── vitest.config.ts
@@ -225,4 +255,10 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 - **Dashboard** — overview + quick stats
 - **Job Titles** — manage the title taxonomy
 - **Job Listings** — create, edit, delete job listings
+- **CV Scores** — view all scored CVs with detail modal
+- **Users** — manage users, ban/unban with audit logging
+- **Applications** — view all job applications
+- **Emails** — email log viewer (type/status filters, detail modal)
+- **Audit Log** — view all admin actions (timeline with filters)
+- **Actions** — manual triggers: ingest jobs, run matching, send digests, re-score CVs, cleanup, data export
 - **Admins** — manage admin accounts (cannot self-delete)

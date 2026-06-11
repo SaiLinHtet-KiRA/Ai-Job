@@ -61,3 +61,16 @@ export const jobListingCreateSchema = z.object({
   source: z.string().optional().default("manual"),
   expires_in_days: z.number().int().min(1).max(365).optional().default(30),
 });
+
+export const emailsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).optional().default(10),
+  type: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export const auditQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).optional().default(10),
+  action: z.string().optional(),
+});

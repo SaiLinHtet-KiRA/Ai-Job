@@ -23,8 +23,12 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
-    if (!file || file.type !== "application/pdf") {
-      return NextResponse.json({ error: "Only PDF files allowed" }, { status: 400 });
+    const validTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!file || !validTypes.includes(file.type)) {
+      return NextResponse.json({ error: "Only PDF and Word files are allowed" }, { status: 400 });
     }
 
     // Check file size (max 5MB)
@@ -52,7 +56,7 @@ export async function POST(req: NextRequest) {
     const { error: uploadError } = await supabase.storage
       .from("cvs")
       .upload(fileName, buffer, {
-        contentType: "application/pdf",
+        contentType: file.type,
         upsert: true,
       });
 

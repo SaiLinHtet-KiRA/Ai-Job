@@ -8,7 +8,7 @@ const btnSecondary = "inline-flex items-center gap-2 rounded-xl border border-zi
 
 export default function ActionsPage() {
   const [running, setRunning] = useState<string | null>(null);
-  const [lastRun, setLastRun] = useState<Record<string, string>>({});
+  const [lastResult, setLastResult] = useState<Record<string, string>>({});
   const [logs, setLogs] = useState<string[]>([]);
 
   const addLog = (message: string) => {
@@ -18,13 +18,76 @@ export default function ActionsPage() {
   const runAction = async (action: string, label: string) => {
     setRunning(action);
     addLog(`Starting: ${label}...`);
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    setLastRun((prev) => ({ ...prev, [action]: new Date().toISOString() }));
-    addLog(`Completed: ${label}`);
-    setRunning(null);
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        addLog(`Failed: ${label} — ${data.error || "Unknown error"}`);
+      } else {
+        const summary = formatResult(action, data);
+        addLog(`Completed: ${label} — ${summary}`);
+        setLastResult((prev) => ({ ...prev, [action]: summary }));
+      }
+    } catch (err) {
+      addLog(`Error: ${label} — ${err instanceof Error ? err.message : "Network error"}`);
+    } finally {
+      setRunning(null);
+    }
+  };
+
+  const formatResult = (action: string, data: Record<string, unknown>) => {
+    switch (action) {
+      case "ingest": return `${data.inserted ?? 0} inserted, ${data.skipped ?? 0} skipped`;
+      case "matching": return `${data.matched_users ?? 0} users matched, ${data.matches_created ?? 0} notifications`;
+      case "digest": return `${data.digest_sent ?? 0} digests sent to ${data.users_with_matches ?? 0} users`;
+      case "rescore": return `${data.rescored ?? 0}/${data.total ?? 0} CVs rescored, ${data.failed ?? 0} failed`;
+      case "cleanup": return `${data.deleted ?? 0} records deleted`;
+      case "export": return `Exported ${Object.keys(data).length - 3} tables`; // subtract success, action, stats keys
+      default: return "Done";
+    }
+  };
+
+  const handleExportDownload = async () => {
+    setRunning("export");
+    addLog("Starting: Data Export...");
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "export" }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        addLog(`Failed: Export — ${data.error || "Unknown error"}`);
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `easy2apply-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      const tableCount = Object.keys(data).filter((k) => !["success", "action"].includes(k)).length;
+      addLog(`Completed: Export — Downloaded ${tableCount} tables`);
+      setLastResult((prev) => ({ ...prev, export: `${tableCount} tables exported` }));
+    } catch (err) {
+      addLog(`Error: Export — ${err instanceof Error ? err.message : "Network error"}`);
+    } finally {
+      setRunning(null);
+    }
   };
 
   return (
@@ -43,11 +106,11 @@ export default function ActionsPage() {
               </svg>
             </div>
             <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Run Matching</h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Match users to jobs and generate daily matches</p>
-            {lastRun.matching && (
-              <p className="mt-2 text-xs text-zinc-400">Last run: {new Date(lastRun.matching).toLocaleString()}</p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Match users to jobs and generate notifications</p>
+            {lastResult.matching && (
+              <p className="mt-2 text-xs text-emerald-600">{lastResult.matching}</p>
             )}
-            <button 
+            <button
               onClick={() => runAction("matching", "Daily Matching")}
               disabled={running === "matching"}
               className={`${btnPrimary} mt-4 w-full justify-center`}
@@ -63,11 +126,11 @@ export default function ActionsPage() {
               </svg>
             </div>
             <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Ingest Jobs</h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Fetch new jobs from RSS feeds (Remotive, etc.)</p>
-            {lastRun.ingest && (
-              <p className="mt-2 text-xs text-zinc-400">Last run: {new Date(lastRun.ingest).toLocaleString()}</p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Seed mock job listings into the database</p>
+            {lastResult.ingest && (
+              <p className="mt-2 text-xs text-emerald-600">{lastResult.ingest}</p>
             )}
-            <button 
+            <button
               onClick={() => runAction("ingest", "Job Ingestion")}
               disabled={running === "ingest"}
               className={`${btnSecondary} mt-4 w-full justify-center`}
@@ -83,11 +146,11 @@ export default function ActionsPage() {
               </svg>
             </div>
             <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Send Digests</h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Send daily digest emails to all users with matches</p>
-            {lastRun.digest && (
-              <p className="mt-2 text-xs text-zinc-400">Last run: {new Date(lastRun.digest).toLocaleString()}</p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Send digest notifications to users with unread matches</p>
+            {lastResult.digest && (
+              <p className="mt-2 text-xs text-emerald-600">{lastResult.digest}</p>
             )}
-            <button 
+            <button
               onClick={() => runAction("digest", "Send Digests")}
               disabled={running === "digest"}
               className={`${btnSecondary} mt-4 w-full justify-center`}
@@ -109,8 +172,11 @@ export default function ActionsPage() {
               </svg>
             </div>
             <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Re-score All CVs</h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Re-run CV scoring for all stored CVs</p>
-            <button 
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Re-run AI scoring for all stored CVs</p>
+            {lastResult.rescore && (
+              <p className="mt-2 text-xs text-emerald-600">{lastResult.rescore}</p>
+            )}
+            <button
               onClick={() => runAction("rescore", "CV Re-scoring")}
               disabled={running === "rescore"}
               className={`${btnSecondary} mt-4 w-full justify-center`}
@@ -125,10 +191,13 @@ export default function ActionsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
               </svg>
             </div>
-            <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Clear Old Matches</h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Delete matches older than 30 days</p>
-            <button 
-              onClick={() => runAction("cleanup", "Clear Old Matches")}
+            <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Clear Old Applications</h3>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Delete applications_sent older than 30 days</p>
+            {lastResult.cleanup && (
+              <p className="mt-2 text-xs text-emerald-600">{lastResult.cleanup}</p>
+            )}
+            <button
+              onClick={() => runAction("cleanup", "Clear Old Applications")}
               disabled={running === "cleanup"}
               className={`${btnSecondary} mt-4 w-full justify-center`}
             >
@@ -144,8 +213,11 @@ export default function ActionsPage() {
             </div>
             <h3 className="mt-3 font-semibold text-zinc-900 dark:text-white">Export All Data</h3>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Download full database backup as JSON</p>
-            <button 
-              onClick={() => runAction("export", "Data Export")}
+            {lastResult.export && (
+              <p className="mt-2 text-xs text-emerald-600">{lastResult.export}</p>
+            )}
+            <button
+              onClick={handleExportDownload}
               disabled={running === "export"}
               className={`${btnSecondary} mt-4 w-full justify-center`}
             >

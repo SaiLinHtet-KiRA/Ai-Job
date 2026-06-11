@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, getSessionEmail } from "@/lib/auth";
+import { logAuditAction } from "@/lib/audit";
 
+/**
+ * Ban or unban a user
+ * @description Send { action: "ban" } or { action: "unban" } to update the user's status. Logs the action to the audit log.
+ * @tags ["Admin - Users"]
+ */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -41,6 +47,14 @@ export async function PATCH(
           .eq("user_id", id);
       }
 
+      const adminEmail = (await getSessionEmail()) ?? "unknown";
+      logAuditAction({
+        adminEmail,
+        action: "user_banned",
+        targetUserId: id,
+        details: `Banned user ${id}`,
+      });
+
       return NextResponse.json({ success: true, banned: true });
     }
 
@@ -56,6 +70,14 @@ export async function PATCH(
         .from("user_profiles")
         .update({ status: "active" })
         .eq("user_id", id);
+
+      const adminEmail = (await getSessionEmail()) ?? "unknown";
+      logAuditAction({
+        adminEmail,
+        action: "user_activated",
+        targetUserId: id,
+        details: `Unbanned user ${id}`,
+      });
 
       return NextResponse.json({ success: true, banned: false });
     }

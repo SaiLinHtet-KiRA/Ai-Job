@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { encode } from "next-auth/jwt";
-import { ensureUserProfile } from "@/lib/user-profile";
+import { getUserProfile, ensureUserProfile } from "@/lib/user-profile";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -26,7 +27,17 @@ export async function GET(request: NextRequest) {
 
     if (!error && data.user) {
       const name = data.user.user_metadata?.name ?? data.user.user_metadata?.full_name ?? null;
+
+      const existingProfile = await getUserProfile(data.user.id);
+      const isNewUser = !existingProfile;
+
       await ensureUserProfile(data.user.id, data.user.email!, name);
+
+      if (isNewUser) {
+        sendWelcomeEmail(data.user.email!, name ?? undefined).catch((err) =>
+          console.error("sendWelcomeEmail failed (Google OAuth):", err)
+        );
+      }
 
       const response = NextResponse.redirect(`${origin}${next}`);
 

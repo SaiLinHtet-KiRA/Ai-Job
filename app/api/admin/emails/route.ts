@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
-import { auditQuerySchema, formatZodError } from "@/lib/validations";
+import { emailsQuerySchema, formatZodError } from "@/lib/validations";
 
 /**
- * List audit logs
- * @description Returns paginated audit log entries with optional ?action filter. Tracks admin actions like user bans, job CRUD, matching runs, etc.
- * @tags ["Admin - Audit"]
+ * List email logs
+ * @description Returns paginated email log entries with optional ?type and ?status filters. Tracks welcome, verification, application, and score emails.
+ * @tags ["Admin - Emails"]
  */
 export async function GET(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     }
 
     const params = Object.fromEntries(req.nextUrl.searchParams.entries());
-    const parsed = auditQuerySchema.safeParse(params);
+    const parsed = emailsQuerySchema.safeParse(params);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -24,33 +24,36 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { page, pageSize, action } = parsed.data;
+    const { page, pageSize, type, status: statusFilter } = parsed.data;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
     const supabase = getSupabaseAdmin();
 
     let query = supabase
-      .from("audit_logs")
+      .from("email_logs")
       .select("*", { count: "exact", head: false })
       .order("created_at", { ascending: false });
 
-    if (action) {
-      query = query.eq("action", action);
+    if (type) {
+      query = query.eq("type", type);
+    }
+    if (statusFilter) {
+      query = query.eq("status", statusFilter);
     }
 
-    const { data: auditLogs, error, count } = await query.range(from, to);
+    const { data: emails, error, count } = await query.range(from, to);
 
     if (error) {
-      console.error("Fetch audit_logs error:", error);
-      return NextResponse.json({ error: "Failed to fetch audit logs" }, { status: 500 });
+      console.error("Fetch email_logs error:", error);
+      return NextResponse.json({ error: "Failed to fetch emails" }, { status: 500 });
     }
 
     const total = count ?? 0;
     const totalPages = Math.ceil(total / pageSize);
 
     return NextResponse.json({
-      audit_logs: auditLogs || [],
+      emails: emails || [],
       page,
       pageSize,
       total,

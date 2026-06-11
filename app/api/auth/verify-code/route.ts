@@ -6,6 +6,7 @@ import {
   getPendingUser,
   deletePendingUser,
 } from "@/lib/verification-code";
+import { sendWelcomeEmail } from "@/lib/email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -60,6 +61,10 @@ export async function POST(req: NextRequest) {
         experience_level: "mid",
         remote_ok: true,
       });
+
+      sendWelcomeEmail(normalizedEmail, pending.name ?? undefined).catch((err) =>
+        console.error("sendWelcomeEmail failed:", err)
+      );
     }
 
     return NextResponse.json({ success: true, userId: data.user?.id });

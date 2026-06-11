@@ -3,6 +3,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
 import { isUserBanned } from "@/lib/user-profile";
+import { sendWelcomeEmail } from "@/lib/email";
 
 const supabaseAdmin = () =>
   createClient(
@@ -72,6 +73,15 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+  },
+  events: {
+    async signIn({ user, isNewUser }) {
+      if (isNewUser && user.email) {
+        sendWelcomeEmail(user.email, user.name ?? undefined).catch((err) =>
+          console.error("sendWelcomeEmail failed (OAuth):", err)
+        );
+      }
+    },
   },
 };
 

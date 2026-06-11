@@ -1,66 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import NotificationBell from "./NotificationBell";
 import NotificationDropdown from "./NotificationDropdown";
 
 interface Notification {
-  id: string;
-  type: "application_sent" | "match_found" | "application_opened" | "system";
+  id: number;
+  type: string;
   title: string;
   message: string;
   read: boolean;
   created_at: string;
-  data?: {
-    job_title?: string;
-    company?: string;
-    count?: number;
-  };
+  data?: Record<string, unknown>;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: "1",
-    type: "match_found",
-    title: "New job matches",
-    message: "We found 3 new jobs matching your profile",
-    read: false,
-    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    data: { count: 3 },
-  },
-  {
-    id: "2",
-    type: "application_sent",
-    title: "Application sent",
-    message: "Your application to CloudBase was sent successfully",
-    read: false,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    data: { job_title: "Frontend Developer", company: "CloudBase" },
-  },
-  {
-    id: "3",
-    type: "application_opened",
-    title: "Application viewed",
-    message: "DataFlow opened your application",
-    read: true,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    data: { company: "DataFlow" },
-  },
-];
-
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markAsRead = (id: string) => {
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications?limit=10&unread=false");
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data.notifications || []);
+      }
+    } catch {
+      // silent fail — bell still works, just no data
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const markAsRead = async (id: number) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mark_all: true }),
+    });
   };
 
   return (
@@ -71,9 +64,17 @@ export default function NotificationCenter() {
       />
       <NotificationDropdown
         open={open}
-        notifications={notifications}
+        notifications={notifications.map((n) => ({
+          id: String(n.id),
+          type: n.type as "application_sent" | "match_found" | "application_opened" | "system",
+          title: n.title,
+          message: n.message,
+          read: n.read,
+          created_at: n.created_at,
+          data: n.data as { job_title?: string; company?: string; count?: number } | undefined,
+        }))}
         onClose={() => setOpen(false)}
-        onMarkRead={markAsRead}
+        onMarkRead={(id) => markAsRead(Number(id))}
         onMarkAllRead={markAllAsRead}
       />
     </div>

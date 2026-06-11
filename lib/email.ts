@@ -1,14 +1,103 @@
 import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "easy2apply <noreply@easy2apply.work>";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+interface LogEmailParams {
+  type: string;
+  to: string;
+  subject: string;
+  status: string;
+  error?: string;
+  userId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function logEmail(params: LogEmailParams) {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { error } = await supabase.from("email_logs").insert({
+      type: params.type,
+      to: params.to,
+      subject: params.subject,
+      status: params.status,
+      sent_at: params.status === "sent" ? new Date().toISOString() : null,
+      error: params.error ?? null,
+      user_id: params.userId ?? null,
+      metadata: params.metadata ?? {},
+    });
+    if (error) {
+      console.error("Failed to insert email_log:", error.message, error.details);
+    }
+  } catch (err) {
+    console.error("Failed to log email (table may not exist):", err);
+  }
+}
+
+export async function sendWelcomeEmail(to: string, name?: string): Promise<boolean> {
+  if (!to) return false;
+  const displayName = name || to.split("@")[0];
+  const subject = "Welcome to easy2apply!";
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+      <div style="background: linear-gradient(135deg, #0ea5e9, #6366f1); padding: 40px 36px; text-align: center;">
+        <div style="display: inline-block; background: rgba(255,255,255,0.2); border-radius: 50%; width: 56px; height: 56px; line-height: 56px; margin-bottom: 16px;">
+          <svg style="width: 28px; height: 28px; vertical-align: middle;" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+        </div>
+        <h1 style="color: #fff; font-size: 24px; margin: 0; font-weight: 700;">Welcome to easy2apply!</h1>
+        <p style="color: rgba(255,255,255,0.85); font-size: 15px; margin: 8px 0 0;">Your account is ready</p>
+      </div>
+      <div style="padding: 32px 36px;">
+        <p style="font-size: 15px; color: #374151; line-height: 1.6; margin: 0 0 8px;">Hi <strong>${displayName}</strong>,</p>
+        <p style="font-size: 15px; color: #374151; line-height: 1.6; margin: 0 0 24px;">
+          Your easy2apply account has been created successfully. You can now upload your CV, get an AI-powered ATS score, and apply to jobs that match your profile.
+        </p>
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+          <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7280; margin: 0 0 14px; font-weight: 600;">Getting Started</h2>
+          <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px;">
+            <div style="background: #dbeafe; color: #1d4ed8; border-radius: 50%; width: 24px; height: 24px; line-height: 24px; text-align: center; font-size: 13px; font-weight: 600; flex-shrink: 0;">1</div>
+            <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.5;"><strong>Upload your CV</strong> — Go to your profile and upload your resume for AI scoring.</p>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px;">
+            <div style="background: #dbeafe; color: #1d4ed8; border-radius: 50%; width: 24px; height: 24px; line-height: 24px; text-align: center; font-size: 13px; font-weight: 600; flex-shrink: 0;">2</div>
+            <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.5;"><strong>Get your ATS score</strong> — Our AI analyzes your CV and gives you actionable feedback.</p>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="background: #dbeafe; color: #1d4ed8; border-radius: 50%; width: 24px; height: 24px; line-height: 24px; text-align: center; font-size: 13px; font-weight: 600; flex-shrink: 0;">3</div>
+            <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.5;"><strong>Apply to jobs</strong> — Browse matched jobs and apply with one click.</p>
+          </div>
+        </div>
+        <a href="https://easy2apply.work/dashboard" style="display: inline-block; background: linear-gradient(135deg, #0ea5e9, #6366f1); color: #fff; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 15px; text-align: center; width: 100%; box-sizing: border-box;">Go to Dashboard</a>
+      </div>
+      <div style="background: #f9fafb; border-top: 1px solid #e5e7eb; padding: 16px 36px; text-align: center; font-size: 12px; color: #9ca3af;">
+        Sent via <a style="color: #6366f1; text-decoration: none;" href="https://easy2apply.work">easy2apply</a>
+      </div>
+    </div>
+  `;
+
+  try {
+    await resend.emails.send({ from: FROM, to, subject, html });
+    await logEmail({ type: "welcome", to, subject, status: "sent" });
+    return true;
+  } catch (error) {
+    console.error("Failed to send welcome email:", error);
+    await logEmail({ type: "welcome", to, subject, status: "failed", error: String(error) });
+    return false;
+  }
+}
+
 export async function sendVerificationEmail(to: string, code: string): Promise<boolean> {
+  const subject = "Your verification code";
   try {
     await resend.emails.send({
       from: FROM,
       to,
-      subject: "Your verification code",
+      subject,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color: #0a2540;">Verify your email</h2>
@@ -33,9 +122,11 @@ export async function sendVerificationEmail(to: string, code: string): Promise<b
         </div>
       `,
     });
+    await logEmail({ type: "verification", to, subject, status: "sent" });
     return true;
   } catch (error) {
     console.error("Failed to send verification email:", error);
+    await logEmail({ type: "verification", to, subject, status: "failed", error: String(error) });
     return false;
   }
 }
@@ -71,26 +162,40 @@ export async function sendApplicationEmails(params: {
     if (!job.apply_email || sent.has(job.apply_email)) continue;
     sent.add(job.apply_email);
 
+    const subject = `New Application: ${position} \u2014 ${name}`;
     await resend.emails
       .send({
         from: FROM,
         to: job.apply_email,
-        subject: `New Application: ${position} — ${name}`,
+        subject,
         html: employerTemplate({ name, email, position, type, salary, resumeUrl, job }),
       })
-      .catch((err) => console.error(`Failed to send to ${job.apply_email}:`, err));
+      .then(() => {
+        logEmail({ type: "application", to: job.apply_email, subject, status: "sent", metadata: { job_id: job.id, candidate_email: email } });
+      })
+      .catch((err) => {
+        console.error(`Failed to send to ${job.apply_email}:`, err);
+        logEmail({ type: "application", to: job.apply_email, subject, status: "failed", error: String(err), metadata: { job_id: job.id, candidate_email: email } });
+      });
 
     await sleep(1000);
   }
 
+  const summarySubject = `Applications Sent \u2014 ${jobs.length} job${jobs.length !== 1 ? "s" : ""} for "${position}"`;
   await resend.emails
     .send({
       from: FROM,
       to: email,
-      subject: `Applications Sent — ${jobs.length} job${jobs.length !== 1 ? "s" : ""} for "${position}"`,
+      subject: summarySubject,
       html: applicantTemplate({ name, position, jobs }),
     })
-    .catch((err) => console.error("Failed to send summary to applicant:", err));
+    .then(() => {
+      logEmail({ type: "application_summary", to: email, subject: summarySubject, status: "sent", metadata: { position, job_count: jobs.length } });
+    })
+    .catch((err) => {
+      console.error("Failed to send summary to applicant:", err);
+      logEmail({ type: "application_summary", to: email, subject: summarySubject, status: "failed", error: String(err), metadata: { position, job_count: jobs.length } });
+    });
 }
 
 export interface EmployerEmailParams {

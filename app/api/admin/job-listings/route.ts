@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, getSessionEmail } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { jobListingCreateSchema, formatZodError } from "@/lib/validations";
 import { incrementLocationJobsSize, incrementTitleJobsSize } from "@/lib/location";
+import { logAuditAction } from "@/lib/audit";
 
 /**
  * List all job listings (admin)
@@ -85,6 +86,14 @@ export async function POST(req: NextRequest) {
       console.error("Failed to increment title jobs_size:", err)
     );
 
+    const adminEmail = (await getSessionEmail()) ?? "unknown";
+    logAuditAction({
+      adminEmail,
+      action: "job_listing_created",
+      targetJobId: data.id,
+      details: `Created job listing "${rest.title}" at ${rest.company || "Unknown"}`,
+    });
+
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
@@ -116,6 +125,14 @@ export async function DELETE(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    const adminEmail = (await getSessionEmail()) ?? "unknown";
+    logAuditAction({
+      adminEmail,
+      action: "job_listing_deleted",
+      targetJobId: parseInt(id, 10),
+      details: `Deleted job listing #${id}`,
+    });
 
     return NextResponse.json({ success: true });
   } catch {

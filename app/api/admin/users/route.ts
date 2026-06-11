@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isAuthenticated } from "@/lib/auth";
 
+/**
+ * List users
+ * @description Returns paginated user profiles with optional ?status filter (active/banned/all).
+ * @tags ["Admin - Users"]
+ */
 export async function GET(req: NextRequest) {
   try {
     if (!(await isAuthenticated())) {

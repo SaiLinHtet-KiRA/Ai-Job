@@ -8,6 +8,10 @@ import {
   adminCreateSchema,
   adminUpdateSchema,
   jobListingCreateSchema,
+  cvScoresQuerySchema,
+  cvScoresIdSchema,
+  emailsQuerySchema,
+  auditQuerySchema,
 } from "@/lib/validations";
 
 describe("formatZodError", () => {
@@ -371,5 +375,89 @@ describe("jobListingCreateSchema", () => {
       expires_in_days: 365,
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("cvScoresQuerySchema", () => {
+  it("accepts empty params (defaults)", () => {
+    const result = cvScoresQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(1);
+    expect(result.data?.pageSize).toBe(10);
+  });
+
+  it("coerces string params to numbers", () => {
+    const result = cvScoresQuerySchema.safeParse({ page: "3", pageSize: "25" });
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(3);
+    expect(result.data?.pageSize).toBe(25);
+  });
+
+  it("rejects pageSize over 50", () => {
+    const result = cvScoresQuerySchema.safeParse({ pageSize: "100" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("cvScoresIdSchema", () => {
+  it("accepts valid positive integer id", () => {
+    const result = cvScoresIdSchema.safeParse({ id: "5" });
+    expect(result.success).toBe(true);
+    expect(result.data?.id).toBe(5);
+  });
+
+  it("rejects zero", () => {
+    const result = cvScoresIdSchema.safeParse({ id: "0" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects negative", () => {
+    const result = cvScoresIdSchema.safeParse({ id: "-1" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("emailsQuerySchema", () => {
+  it("accepts empty params", () => {
+    const result = emailsQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(1);
+    expect(result.data?.pageSize).toBe(10);
+  });
+
+  it("accepts optional type and status filters", () => {
+    const result = emailsQuerySchema.safeParse({ type: "welcome", status: "sent" });
+    expect(result.success).toBe(true);
+    expect(result.data?.type).toBe("welcome");
+    expect(result.data?.status).toBe("sent");
+  });
+
+  it("accepts page and pageSize", () => {
+    const result = emailsQuerySchema.safeParse({ page: "2", pageSize: "20" });
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(2);
+    expect(result.data?.pageSize).toBe(20);
+  });
+});
+
+describe("auditQuerySchema", () => {
+  it("accepts empty params", () => {
+    const result = auditQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(1);
+    expect(result.data?.pageSize).toBe(10);
+  });
+
+  it("accepts optional action filter", () => {
+    const result = auditQuerySchema.safeParse({ action: "user_banned" });
+    expect(result.success).toBe(true);
+    expect(result.data?.action).toBe("user_banned");
+  });
+
+  it("accepts pagination params", () => {
+    const result = auditQuerySchema.safeParse({ page: "3", pageSize: "5" });
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(3);
+    expect(result.data?.pageSize).toBe(5);
   });
 });

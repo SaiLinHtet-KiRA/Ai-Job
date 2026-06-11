@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { Resend } from "resend";
-import { applicantTemplate, employerTemplate } from "@/lib/email";
+import { applicantTemplate, employerTemplate, logEmail } from "@/lib/email";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -103,15 +103,17 @@ export async function POST(req: NextRequest) {
             },
           });
 
+          const subject = `New Application: ${app.job_title || "Job Application"} \u2014 ${userName}`;
           const { error: emailError } = await resend.emails.send({
             from: `easy2apply <${FROM}>`,
             to: app.apply_email,
-            subject: `New Application: ${app.job_title || "Job Application"} — ${userName}`,
+            subject,
             html: employerHtml,
           });
 
           if (emailError) {
             console.error("Email error:", emailError);
+            logEmail({ type: "application", to: app.apply_email, subject, status: "failed", error: emailError.message, userId, metadata: { job_id: app.job_id } });
             await supabase
               .from("applications")
               .update({ status: "failed" })
@@ -121,6 +123,11 @@ export async function POST(req: NextRequest) {
             results.details.push({ job_id: app.job_id, status: "failed", error: emailError.message });
             continue;
           }
+
+          logEmail({ type: "application", to: app.apply_email, subject, status: "sent", userId, metadata: { job_id: app.job_id } });
+        } else if (DEMO_MODE) {
+          const subject = `New Application: ${app.job_title || "Job Application"} \u2014 ${userName}`;
+          logEmail({ type: "application", to: app.apply_email, subject, status: "pending", userId, metadata: { job_id: app.job_id } });
         }
 
         await supabase.from("applications_sent").insert({
@@ -165,14 +172,22 @@ export async function POST(req: NextRequest) {
         })),
       });
 
+      const summarySubject = `Applications Sent \u2014 ${appliedJobs.length} job${appliedJobs.length !== 1 ? "s" : ""}`;
+
       await resend.emails
         .send({
           from: FROM,
           to: userEmail,
-          subject: `Applications Sent — ${appliedJobs.length} job${appliedJobs.length !== 1 ? "s" : ""}`,
+          subject: summarySubject,
           html,
         })
-        .catch((err) => console.error("Failed to send user confirmation email:", err));
+        .then(() => {
+          logEmail({ type: "application_summary", to: userEmail, subject: summarySubject, status: "sent", userId, metadata: { job_count: appliedJobs.length } });
+        })
+        .catch((err) => {
+          console.error("Failed to send user confirmation email:", err);
+          logEmail({ type: "application_summary", to: userEmail, subject: summarySubject, status: "failed", error: String(err), userId, metadata: { job_count: appliedJobs.length } });
+        });
     }
 
     return NextResponse.json({

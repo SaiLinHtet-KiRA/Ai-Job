@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -27,7 +28,13 @@ export default function TopNav() {
           href={isAuthenticated ? "/dashboard" : "/"}
           className="flex items-center gap-2"
         >
-          <div className="h-7 w-7 rounded-lg bg-primary" />
+          <Image
+            src="/logo.avif"
+            alt="easy2apply"
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-lg"
+          />
           <span className="font-semibold text-white">easy2apply</span>
         </Link>
 
@@ -64,21 +71,18 @@ export default function TopNav() {
         {/* Right Side */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <>
+            <div className="flex items-center gap-3">
               <NotificationCenter />
-              <div className="h-4 w-px bg-white/10" />
-              <div className="flex items-center gap-3">
-                <span className="hidden text-[13px] text-[#8898aa] sm:block">
-                  {session?.user?.email?.split("@")[0]}
-                </span>
-                <button
-                  onClick={handleSignOut}
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-[13px] text-[#8898aa] transition-colors hover:border-white/20 hover:text-white"
-                >
-                  Sign out
-                </button>
-              </div>
-            </>
+              <span className="hidden text-[13px] text-[#8898aa] sm:block">
+                {session?.user?.email?.split("@")[0]}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="rounded-lg border border-white/10 px-3 py-1.5 text-[13px] text-[#8898aa] transition-colors hover:border-white/20 hover:text-white"
+              >
+                Sign out
+              </button>
+            </div>
           ) : (
             <>
               <Link

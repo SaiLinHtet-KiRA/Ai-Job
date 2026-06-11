@@ -276,3 +276,73 @@ CREATE POLICY admin_full_access_applications ON applications
 
 CREATE INDEX IF NOT EXISTS idx_applications_user ON applications (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_applications_job ON applications (job_id);
+
+-- ── email_logs ──────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS email_logs (
+  id BIGSERIAL PRIMARY KEY,
+  type TEXT NOT NULL,
+  "to" TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  sent_at TIMESTAMPTZ,
+  error TEXT,
+  user_id UUID,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_email_logs ON email_logs
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_email_logs_type ON email_logs (type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_logs_status ON email_logs (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_logs_to ON email_logs ("to", created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_logs_user ON email_logs (user_id, created_at DESC);
+
+-- ── audit_logs ─────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  admin_email TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target_user_id UUID,
+  target_job_id BIGINT,
+  details TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY admin_full_access_audit_logs ON audit_logs
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs (action, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_admin ON audit_logs (admin_email, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs (created_at DESC);
+
+-- ── notifications ──────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID NOT NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  read BOOLEAN NOT NULL DEFAULT false,
+  data JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY user_own_notifications ON notifications
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY admin_full_access_notifications ON notifications
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications (user_id, read, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications (type, created_at DESC);

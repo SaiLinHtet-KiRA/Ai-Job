@@ -4,29 +4,26 @@ import Link from "next/link";
 async function getStats() {
   try {
     const supabase = getSupabaseAdmin();
-    const [leads, cvScores, userProfiles, jobListings, applicationsSent] =
+    const [cvScores, userProfiles, jobListings, applicationsSent] =
       await Promise.all([
-        supabase.from("leads").select("*", { count: "exact", head: true }),
         supabase.from("cv_scores").select("*", { count: "exact", head: true }),
         supabase.from("user_profiles").select("*", { count: "exact", head: true }),
         supabase.from("job_listings").select("*", { count: "exact", head: true }),
         supabase.from("applications_sent").select("*", { count: "exact", head: true }),
       ]);
     return {
-      leads: leads.count ?? 0,
       cvScores: cvScores.count ?? 0,
       users: userProfiles.count ?? 0,
       jobListings: jobListings.count ?? 0,
       applications: applicationsSent.count ?? 0,
     };
   } catch {
-    return { leads: 23, cvScores: 47, users: 12, jobListings: 10, applications: 8 };
+    return { cvScores: 47, users: 12, jobListings: 10, applications: 8 };
   }
 }
 
 const statCards = [
   { key: "cvScores", label: "CV Scores", href: "/admin/cv-scores", color: "bg-primary/10 text-primary dark:bg-primary/20" },
-  { key: "leads", label: "Leads", href: "/admin/leads", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
   { key: "users", label: "Users", href: "/admin/users", color: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
   { key: "jobListings", label: "Job Listings", href: "/admin/job-listings", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
   { key: "applications", label: "Applications", href: "/admin/applications", color: "bg-rose-500/10 text-rose-600 dark:text-rose-400" },
@@ -83,12 +80,6 @@ export default async function DashboardPage() {
             className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary/80"
           >
             Manage Courses
-          </Link>
-          <Link
-            href="/admin/leads"
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-primary/40 dark:hover:bg-primary/20 dark:hover:text-primary/80"
-          >
-            View Leads
           </Link>
         </div>
       </div>

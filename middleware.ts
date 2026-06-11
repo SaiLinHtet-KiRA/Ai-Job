@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
 
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-  const protectedPaths = ["/dashboard", "/jobs", "/roadmap", "/applications", "/profile"];
+  const protectedPaths = ["/dashboard", "/jobs", "/roadmap", "/applications", "/profile", "/cv-check"];
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
 
   if (isProtected && !token) {

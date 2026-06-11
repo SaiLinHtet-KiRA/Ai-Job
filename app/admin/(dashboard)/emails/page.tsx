@@ -1,23 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-type Email = {
+type EmailLog = {
   id: number;
   type: string;
   to: string;
   subject: string;
   status: string;
   sent_at: string | null;
-  opened: boolean;
-  clicked: boolean;
-  error?: string;
+  error: string | null;
+  user_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
 };
 
-const MOCK_EMAILS: Email[] = [
-  { id: 1, type: "application", to: "jobs@cloudbase.io", subject: "Application: Frontend Developer - Sarah", status: "sent", sent_at: "2025-05-30T10:30:00Z", opened: false, clicked: false },
-  { id: 2, type: "welcome", to: "anna.chen@yahoo.com", subject: "Welcome to easy2apply", status: "sent", sent_at: "2025-05-29T14:20:00Z", opened: true, clicked: true },
-];
+const PAGE_SIZE = 10;
 
 const thClass = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400";
 const tdClass = "px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300";
@@ -30,48 +28,118 @@ const statusColors: Record<string, string> = {
 
 const typeLabels: Record<string, string> = {
   application: "Application",
+  application_summary: "App Summary",
   welcome: "Welcome",
-  notification: "Notification",
+  verification: "Verification",
+  score: "CV Score",
 };
 
+const EMAIL_TYPES = ["", "application", "application_summary", "welcome", "verification", "score"];
+const EMAIL_STATUSES = ["", "sent", "failed", "pending"];
+
 export default function EmailsPage() {
-  const [emails, setEmails] = useState(MOCK_EMAILS);
-  const [filter, setFilter] = useState("all");
+  const [emails, setEmails] = useState<EmailLog[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewEmail, setPreviewEmail] = useState<typeof MOCK_EMAILS[0] | null>(null);
+  const [previewEmail, setPreviewEmail] = useState<EmailLog | null>(null);
+  const [stats, setStats] = useState({ sent: 0, failed: 0, pending: 0, total: 0 });
 
-  const filtered = emails.filter((e) => {
-    if (filter !== "all" && e.status !== filter) return false;
-    if (search && !e.to.toLowerCase().includes(search.toLowerCase()) && !e.subject.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const fetchEmails = useCallback(async (p: number, type: string, status: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("page", String(p));
+      params.set("pageSize", String(PAGE_SIZE));
+      if (type) params.set("type", type);
+      if (status) params.set("status", status);
+      const res = await fetch(`/api/admin/emails?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setEmails(data.emails);
+      setPage(data.page);
+      setTotalPages(data.totalPages);
 
-  const handleResend = (id: number) => {
-    setEmails((prev) => prev.map((e) => e.id === id ? { ...e, status: "sent", sent_at: new Date().toISOString() } : e));
+      const countParams = new URLSearchParams();
+      countParams.set("page", "1");
+      countParams.set("pageSize", "1");
+      const [sentRes, failedRes, pendingRes, totalRes] = await Promise.all([
+        fetch(`/api/admin/emails?page=1&pageSize=1&status=sent`),
+        fetch(`/api/admin/emails?page=1&pageSize=1&status=failed`),
+        fetch(`/api/admin/emails?page=1&pageSize=1&status=pending`),
+        fetch(`/api/admin/emails?page=1&pageSize=1`),
+      ]);
+      const [sentData, failedData, pendingData, totalData] = await Promise.all([
+        sentRes.json().catch(() => ({ total: 0 })),
+        failedRes.json().catch(() => ({ total: 0 })),
+        pendingRes.json().catch(() => ({ total: 0 })),
+        totalRes.json().catch(() => ({ total: 0 })),
+      ]);
+      setStats({
+        sent: sentData.total || 0,
+        failed: failedData.total || 0,
+        pending: pendingData.total || 0,
+        total: totalData.total || 0,
+      });
+    } catch {
+      setEmails([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchEmails(1, typeFilter, statusFilter);
+  }, [fetchEmails, typeFilter, statusFilter]);
+
+  const goToPage = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    fetchEmails(p, typeFilter, statusFilter);
   };
 
-  const openPreview = (email: typeof MOCK_EMAILS[0]) => {
-    setPreviewEmail(email);
-    setPreviewOpen(true);
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push("...");
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+        pages.push(i);
+      }
+      if (page < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
   };
+
+  const filtered = search
+    ? emails.filter(
+        (e) =>
+          e.to.toLowerCase().includes(search.toLowerCase()) ||
+          e.subject.toLowerCase().includes(search.toLowerCase())
+      )
+    : emails;
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Emails</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{emails.length} total emails</p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{stats.total} total emails</p>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {[
-          { label: "Sent", value: emails.filter((e) => e.status === "sent").length, color: "text-blue-600" },
-          { label: "Opened", value: emails.filter((e) => e.opened).length, color: "text-purple-600" },
-          { label: "Clicked", value: emails.filter((e) => e.clicked).length, color: "text-emerald-600" },
-          { label: "Failed", value: emails.filter((e) => e.status === "failed").length, color: "text-rose-600" },
+          { label: "Sent", value: stats.sent, color: "text-blue-600" },
+          { label: "Failed", value: stats.failed, color: "text-rose-600" },
+          { label: "Pending", value: stats.pending, color: "text-amber-600" },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-zinc-200/60 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -80,18 +148,30 @@ export default function EmailsPage() {
         ))}
       </div>
 
-      {/* Filters */}
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2">
-          {["all", "sent", "failed"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-all ${filter === s ? "bg-primary/10 text-primary" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}
-            >
-              {s} {s === "all" ? `(${emails.length})` : `(${emails.filter((e) => e.status === s).length})`}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={typeFilter}
+            onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+            className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-600 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+          >
+            {EMAIL_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t ? typeLabels[t] || t : "All Types"}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-medium text-zinc-600 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+          >
+            {EMAIL_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s ? s.charAt(0).toUpperCase() + s.slice(1) : "All Status"}
+              </option>
+            ))}
+          </select>
         </div>
         <input
           type="text"
@@ -102,7 +182,6 @@ export default function EmailsPage() {
         />
       </div>
 
-      {/* Table */}
       <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-200/60 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
         <table className="w-full">
           <thead className="border-b border-zinc-200/60 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
@@ -111,73 +190,131 @@ export default function EmailsPage() {
               <th className={thClass}>To</th>
               <th className={thClass}>Subject</th>
               <th className={thClass}>Status</th>
-              <th className={thClass}>Engagement</th>
               <th className={thClass}>Date</th>
-              <th className={thClass}></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filtered.map((email) => (
-              <tr key={email.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                <td className={tdClass}>
-                  <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    {typeLabels[email.type] || email.type}
-                  </span>
-                </td>
-                <td className={`${tdClass} font-medium`}>{email.to}</td>
-                <td className={`${tdClass} max-w-xs truncate`}>{email.subject}</td>
-                <td className={tdClass}>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[email.status] || ""}`}>
-                    {email.status}
-                  </span>
-                  {email.error && <p className="mt-1 text-xs text-rose-500">{email.error}</p>}
-                </td>
-                <td className={tdClass}>
-                  <div className="flex gap-2 text-xs">
-                    {email.opened && <span className="text-purple-600">Opened</span>}
-                    {email.clicked && <span className="text-emerald-600">Clicked</span>}
-                    {!email.opened && !email.clicked && <span className="text-zinc-400">-</span>}
-                  </div>
-                </td>
-                <td className={`${tdClass} text-zinc-400 whitespace-nowrap`}>
-                  {email.sent_at ? new Date(email.sent_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
-                </td>
-                <td className={tdClass}>
-                  <div className="flex gap-2">
-                    <button onClick={() => openPreview(email)} className="text-xs text-primary hover:underline">Preview</button>
-                    {email.status === "failed" && (
-                      <button onClick={() => handleResend(email.id)} className="text-xs text-emerald-600 hover:text-emerald-700">Resend</button>
-                    )}
-                  </div>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-sm text-zinc-400">
+                  Loading...
                 </td>
               </tr>
-            ))}
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-sm text-zinc-400">
+                  No emails found.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((email) => (
+                <tr
+                  key={email.id}
+                  onClick={() => { setPreviewEmail(email); setPreviewOpen(true); }}
+                  className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                >
+                  <td className={tdClass}>
+                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                      {typeLabels[email.type] || email.type}
+                    </span>
+                  </td>
+                  <td className={`${tdClass} font-medium`}>{email.to}</td>
+                  <td className={`${tdClass} max-w-xs truncate`}>{email.subject}</td>
+                  <td className={tdClass}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[email.status] || ""}`}>
+                      {email.status}
+                    </span>
+                    {email.error && <p className="mt-1 text-xs text-rose-500 truncate max-w-[200px]">{email.error}</p>}
+                  </td>
+                  <td className={`${tdClass} whitespace-nowrap text-zinc-400`}>
+                    {email.created_at
+                      ? new Date(email.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                      : "-"}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Preview Modal */}
-      {previewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-1">
+          <button
+            onClick={() => goToPage(page - 1)}
+            disabled={page <= 1}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            Prev
+          </button>
+          {getPageNumbers().map((p, i) =>
+            typeof p === "string" ? (
+              <span key={`ellipsis-${i}`} className="px-2 text-sm text-zinc-400">...</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => goToPage(p)}
+                className={`min-w-[36px] rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                  p === page
+                    ? "bg-primary/10 text-primary dark:bg-primary/20"
+                    : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => goToPage(page + 1)}
+            disabled={page >= totalPages}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {previewOpen && previewEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setPreviewOpen(false)}
+          />
+          <div className="relative max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-zinc-200/60 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
-              Email Preview
-            </h3>
-              <button onClick={() => setPreviewOpen(false)} className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Email Details</h3>
+              <button
+                onClick={() => setPreviewOpen(false)}
+                className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              {previewEmail ? (
-                <div className="space-y-2 text-sm">
-                  <p><strong>To:</strong> {previewEmail.to}</p>
-                  <p><strong>Subject:</strong> {previewEmail.subject}</p>
-                  <p><strong>Type:</strong> {typeLabels[previewEmail.type]}</p>
-                  <hr className="border-zinc-200 dark:border-zinc-700" />
-                  <p className="text-zinc-500">[Email body would render here]</p>
-                </div>
-              ) : null}
+              <div className="space-y-2 text-sm">
+                <p><strong>To:</strong> {previewEmail.to}</p>
+                <p><strong>Subject:</strong> {previewEmail.subject}</p>
+                <p><strong>Type:</strong> {typeLabels[previewEmail.type] || previewEmail.type}</p>
+                <p><strong>Status:</strong> {previewEmail.status}</p>
+                {previewEmail.sent_at && (
+                  <p><strong>Sent at:</strong> {new Date(previewEmail.sent_at).toLocaleString()}</p>
+                )}
+                {previewEmail.user_id && (
+                  <p><strong>User ID:</strong> {previewEmail.user_id}</p>
+                )}
+                {previewEmail.error && (
+                  <div className="rounded border border-rose-200 bg-rose-50 p-2 dark:border-rose-800 dark:bg-rose-950">
+                    <p className="text-rose-600 dark:text-rose-400"><strong>Error:</strong> {previewEmail.error}</p>
+                  </div>
+                )}
+                {previewEmail.metadata && Object.keys(previewEmail.metadata).length > 0 && (
+                  <>
+                    <hr className="border-zinc-200 dark:border-zinc-700" />
+                    <p><strong>Metadata:</strong></p>
+                    <pre className="text-xs text-zinc-500 overflow-x-auto">{JSON.stringify(previewEmail.metadata, null, 2)}</pre>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

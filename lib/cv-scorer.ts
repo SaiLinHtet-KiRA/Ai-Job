@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import resultEmailTemplate from "@/lib/score-email-template";
 import { extractCVText } from "@/lib/extract-cv-text";
+import { logEmail } from "@/lib/email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -183,14 +184,21 @@ export async function scoreCV({
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);
+      const subject = `Your CV Score: ${scored.score}/100`;
       await resend.emails
         .send({
           from: FROM,
           to: email,
-          subject: `Your CV Score: ${scored.score}/100`,
+          subject,
           html: resultEmailTemplate(email, scored),
         })
-        .catch((err) => console.error("Failed to send score email:", err));
+        .then(() => {
+          logEmail({ type: "score", to: email, subject, status: "sent", metadata: { score: scored.score } });
+        })
+        .catch((err) => {
+          console.error("Failed to send score email:", err);
+          logEmail({ type: "score", to: email, subject, status: "failed", error: String(err), metadata: { score: scored.score } });
+        });
     }
   }
 

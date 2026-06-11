@@ -10,7 +10,6 @@ import HowItWorksSection from "./_components/HowItWorksSection";
 import FeaturesSection from "./_components/FeaturesSection";
 import TestimonialsSection from "./_components/TestimonialsSection";
 import CVCheckFAQ from "./_components/CVCheckFAQ";
-import EmailModal from "./_components/EmailModal";
 import { ScoreResult, MatchedJob } from "./_components/types";
 
 export default function Home() {
@@ -25,7 +24,6 @@ export default function Home() {
   const [emailLoading, setEmailLoading] = useState(false);
   const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
   const [matchLoading, setMatchLoading] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const MAX_SIZE = 5 * 1024 * 1024;
@@ -61,21 +59,20 @@ export default function Home() {
     [handleFile]
   );
 
-  const handleSubmit = async (submittedEmail: string) => {
+  const handleSubmit = async () => {
     if (!file) return;
     setLoading(true);
     setError(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("email", submittedEmail);
-      const res = await fetch("/api/score", { method: "POST", body: formData });
+      const res = await fetch("/api/cv/upload", { method: "POST", body: formData });
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error || `Something went wrong (${res.status})`);
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Something went wrong (${res.status})`);
       }
-      const data: ScoreResult = await res.json();
-      setResult(data);
+      const data = await res.json();
+      setResult(data.score ?? null);
       fetchMatches();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -115,7 +112,6 @@ export default function Home() {
     setEmailLoading(false);
     setMatchedJobs([]);
     setMatchLoading(false);
-    setShowEmailModal(false);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -149,12 +145,6 @@ export default function Home() {
     }
   };
 
-  const handleEmailContinue = (submittedEmail: string) => {
-    setEmail(submittedEmail);
-    setShowEmailModal(false);
-    handleSubmit(submittedEmail);
-  };
-
   return (
     <div className="min-h-screen">
       <CVCheckNav />
@@ -182,7 +172,7 @@ export default function Home() {
                   fileInputRef={inputRef}
                   onFileDrop={handleDrop}
                   onFileSelect={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
-                  onAnalyze={() => setShowEmailModal(true)}
+                  onAnalyze={handleSubmit}
                   onDragOver={() => setDragActive(true)}
                   onDragLeave={() => setDragActive(false)}
                 />
@@ -218,12 +208,6 @@ export default function Home() {
       )}
 
       <CVCheckFAQ />
-
-      <EmailModal
-        open={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
-        onContinue={handleEmailContinue}
-      />
     </div>
   );
 }

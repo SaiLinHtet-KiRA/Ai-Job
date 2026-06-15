@@ -335,7 +335,12 @@
       "JobApplicationsResponse": {
         "type": "object",
         "properties": {
-          "jobs": { "type": "array", "items": { "$ref": "#/components/schemas/JobWithApplications" } }
+          "jobs": { "type": "array", "items": { "$ref": "#/components/schemas/JobWithApplications" } },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "total": { "type": "integer" },
+          "totalPages": { "type": "integer" },
+          "totalApps": { "type": "integer" }
         }
       },
       "Application": {
@@ -1061,10 +1066,13 @@
     "/admin/job-applications": {
       "get": {
         "summary": "Get jobs with applications",
-        "description": "Returns all jobs that have applications, with counts and application IDs. Optionally get application detail for a specific job with ?job_id and ?ids.",
+        "description": "Returns paginated jobs that have applications, with counts and application IDs. Supports optional ?search for filtering by job title or company, and ?job_id/?ids for application detail.",
         "tags": ["Admin - Applications"],
         "security": [{ "cookieAuth": [] }],
         "parameters": [
+          { "name": "page", "in": "query", "required": false, "description": "Page number (default 1)", "schema": { "type": "integer" } },
+          { "name": "pageSize", "in": "query", "required": false, "description": "Items per page (default 10, max 50)", "schema": { "type": "integer" } },
+          { "name": "search", "in": "query", "required": false, "description": "Filter jobs by title or company", "schema": { "type": "string" } },
           { "name": "job_id", "in": "query", "required": false, "description": "Get application details for a specific job", "schema": { "type": "integer" } },
           { "name": "ids", "in": "query", "required": false, "description": "Comma-separated application IDs (required with job_id)", "schema": { "type": "string" } }
         ],

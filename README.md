@@ -117,7 +117,7 @@ npm run dev         # http://localhost:3000
 | `GET` | `/api/admin/users` | List users (paginated, status/email filter) | — |
 | `GET` | `/api/admin/users/stats` | Get user counts (total, active, banned) | — |
 | `PATCH` | `/api/admin/users/:id` | Ban / unban user | — |
-| `GET` | `/api/admin/job-applications` | List jobs with applications (with ?job_id and ?ids detail) | — |
+| `GET` | `/api/admin/job-applications` | List jobs with applications (paginated, ?search, ?job_id and ?ids detail) | — |
 | `GET` | `/api/admin/courses` | List courses (paginated, with ?role filter) | — |
 | `GET` | `/api/admin/courses/:id` | Get course detail with role links | — |
 | `POST` | `/api/admin/courses` | Create course with role links | — |

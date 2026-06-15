@@ -2,7 +2,9 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface JobWithApps {
   id: number;
@@ -31,6 +33,8 @@ interface AppDetail {
   user_id: string | null;
 }
 
+const PAGE_SIZE = 10;
+
 const thClass = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400";
 const tdClass = "px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300";
 
@@ -41,19 +45,35 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ApplicationsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchFromUrl = searchParams.get("search") ?? "";
+
   const [jobs, setJobs] = useState<JobWithApps[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [totalApps, setTotalApps] = useState(0);
+  const [search, setSearch] = useState(searchFromUrl);
   const [selectedJob, setSelectedJob] = useState<JobWithApps | null>(null);
   const [jobApps, setJobApps] = useState<AppDetail[]>([]);
   const [appsLoading, setAppsLoading] = useState(false);
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = useCallback(async (p: number, s: string) => {
     try {
-      const res = await fetch("/api/admin/job-applications");
+      const url = new URL("/api/admin/job-applications", window.location.origin);
+      url.searchParams.set("page", String(p));
+      url.searchParams.set("pageSize", String(PAGE_SIZE));
+      if (s) url.searchParams.set("search", s);
+      const res = await fetch(url.toString());
       if (res.ok) {
         const data = await res.json();
         setJobs(data.jobs || []);
+        setPage(data.page);
+        setTotalPages(data.totalPages);
+        setTotalJobs(data.total);
+        setTotalApps(data.totalApps);
       }
     } catch (err) {
       console.error("Failed to fetch job applications:", err);
@@ -63,21 +83,16 @@ export default function ApplicationsPage() {
   }, []);
 
   useEffect(() => {
-    void fetchJobs();
-  }, [fetchJobs]);
+    setSearch(searchFromUrl);
+    setPage(1);
+    fetchJobs(1, searchFromUrl);
+  }, [searchFromUrl, fetchJobs]);
 
-  const filtered = useMemo(() => {
-    if (!search) return jobs;
-    const q = search.toLowerCase();
-    return jobs.filter(
-      (j) =>
-        j.title.toLowerCase().includes(q) ||
-        j.company.toLowerCase().includes(q) ||
-        j.location?.toLowerCase().includes(q),
-    );
-  }, [jobs, search]);
-
-  const totalApps = jobs.reduce((sum, j) => sum + j.applicationCount, 0);
+  const handlePageChange = (p: number) => {
+    if (p < 1 || p > totalPages) return;
+    setLoading(true);
+    fetchJobs(p, search);
+  };
 
   const openJob = async (job: JobWithApps) => {
     setSelectedJob(job);
@@ -112,14 +127,14 @@ export default function ApplicationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Application Log</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{jobs.length} jobs with applications</p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{totalJobs} jobs with applications</p>
         </div>
       </div>
 
       {/* Summary cards */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {[
-          { label: "Jobs with Applications", value: jobs.length, color: "text-zinc-600" },
+          { label: "Jobs with Applications", value: totalJobs, color: "text-zinc-600" },
           { label: "Total Applications", value: totalApps, color: "text-primary" },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-zinc-200/60 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
@@ -134,7 +149,13 @@ export default function ApplicationsPage() {
           type="text"
           placeholder="Search by job title or company..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            const params = new URLSearchParams(searchParams.toString());
+            if (e.target.value) params.set("search", e.target.value);
+            else params.delete("search");
+            router.replace(`/admin/applications?${params.toString()}`, { scroll: false });
+          }}
           className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white sm:w-72"
         />
       </div>
@@ -150,14 +171,14 @@ export default function ApplicationsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filtered.length === 0 ? (
+            {jobs.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-4 py-8 text-center text-sm text-zinc-400">
                   No applications found.
                 </td>
               </tr>
             ) : (
-              filtered.map((job) => (
+              jobs.map((job) => (
                 <tr
                   key={job.id}
                   onClick={() => openJob(job)}
@@ -178,6 +199,18 @@ export default function ApplicationsPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <p className="text-zinc-500 dark:text-zinc-400">
+          Page {page} of {totalPages}
+        </p>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          disabled={loading}
+        />
       </div>
 
       {/* Applications popup */}

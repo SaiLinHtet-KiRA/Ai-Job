@@ -75,6 +75,11 @@ export const auditQuerySchema = z.object({
   action: z.string().optional(),
 });
 
+export const applicationsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+});
+
 export const usersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(50).optional().default(10),

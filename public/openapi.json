@@ -447,6 +447,21 @@
             "items": {
               "$ref": "#/components/schemas/JobWithApplications"
             }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          },
+          "totalApps": {
+            "type": "integer"
           }
         }
       },
@@ -969,7 +984,7 @@
     "/admin/applications": {
       "get": {
         "operationId": "get-admin-applications",
-        "summary": "GET - Fetch all applications (admin view)",
+        "summary": "",
         "description": "",
         "tags": [
           "Admin"
@@ -983,16 +998,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "applications": {
+                    "data": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {}
                       }
+                    },
+                    "page": {
+                      "type": "number"
+                    },
+                    "limit": {
+                      "type": "number"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "totalPages": {
+                      "type": "number"
                     }
                   },
                   "required": [
-                    "applications"
+                    "data",
+                    "page",
+                    "limit",
+                    "total",
+                    "totalPages"
                   ]
                 }
               }
@@ -2082,6 +2113,110 @@
           },
           "400": {
             "$ref": "#/components/responses/400"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/admin/job-applications": {
+      "get": {
+        "operationId": "get-admin-job-applications",
+        "summary": "",
+        "description": "",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "job_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "123"
+          },
+          {
+            "in": "query",
+            "name": "ids",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "example"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": 1
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "example"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "example"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "applications": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "required": [
+                    "applications"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -4672,66 +4807,6 @@
         }
       }
     },
-    "/admin/job-applications": {
-      "get": {
-        "operationId": "get-admin-job-applications",
-        "summary": "Get jobs with applications",
-        "description": "Returns jobs that have applications, with counts and application data.",
-        "tags": [
-          "s [\"Admin - Applications\"]",
-          "[\"Admin - Applications\"]"
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "job_id",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "example": "123"
-          },
-          {
-            "in": "query",
-            "name": "ids",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "example": "example"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "applications": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
-                    }
-                  },
-                  "required": [
-                    "applications"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
-          }
-        }
-      }
-    },
     "/admin/audit": {
       "get": {
         "operationId": "get-admin-audit",
@@ -6364,9 +6439,6 @@
     },
     {
       "name": "s [\"Admin - Admins\"]"
-    },
-    {
-      "name": "s [\"Admin - Applications\"]"
     },
     {
       "name": "s [\"Admin - Audit\"]"

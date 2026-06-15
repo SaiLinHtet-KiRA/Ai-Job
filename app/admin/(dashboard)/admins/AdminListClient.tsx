@@ -13,10 +13,10 @@ export function AdminListClient({ initialAdmins }: { initialAdmins: Admin[] }) {
   const [list, setList] = useState(initialAdmins);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<{ id: number; email: string } | null>(null);
 
   const handleDelete = useCallback(
     async (id: number) => {
-      if (!confirm("Are you sure you want to delete this admin?")) return;
       setDeleting(id);
       setError("");
       try {
@@ -31,6 +31,7 @@ export function AdminListClient({ initialAdmins }: { initialAdmins: Admin[] }) {
         setError("Network error.");
       }
       setDeleting(null);
+      setConfirmDelete(null);
     },
     [],
   );
@@ -85,7 +86,7 @@ export function AdminListClient({ initialAdmins }: { initialAdmins: Admin[] }) {
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDelete(admin.id)}
+                      onClick={() => setConfirmDelete({ id: admin.id, email: admin.email })}
                       disabled={deleting === admin.id}
                       className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 hover:text-red-700 disabled:opacity-50 dark:border-red-900 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
                     >
@@ -98,6 +99,32 @@ export function AdminListClient({ initialAdmins }: { initialAdmins: Admin[] }) {
           </tbody>
         </table>
       </div>
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Delete Admin</h3>
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              Are you sure you want to delete <span className="font-medium text-zinc-700 dark:text-zinc-300">{confirmDelete.email}</span>? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDelete.id)}
+                disabled={deleting === confirmDelete.id}
+                className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+              >
+                {deleting === confirmDelete.id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

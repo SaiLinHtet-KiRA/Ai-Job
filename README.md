@@ -114,8 +114,16 @@ npm run dev         # http://localhost:3000
 | `PUT` `DELETE` | `/api/admin/admins/:id` | Update / delete admin | 30 / 10s |
 | `GET` | `/api/admin/cv-scores` | List CV scores (paginated) | 30 / 10s |
 | `GET` | `/api/admin/cv-scores/:id` | Get CV score detail | 30 / 10s |
-| `GET` | `/api/admin/users` | List users (paginated, status filter) | — |
+| `GET` | `/api/admin/users` | List users (paginated, status/email filter) | — |
+| `GET` | `/api/admin/users/stats` | Get user counts (total, active, banned) | — |
 | `PATCH` | `/api/admin/users/:id` | Ban / unban user | — |
+| `GET` | `/api/admin/job-applications` | List jobs with applications (with ?job_id and ?ids detail) | — |
+| `GET` | `/api/admin/courses` | List courses (paginated, with ?role filter) | — |
+| `GET` | `/api/admin/courses/:id` | Get course detail with role links | — |
+| `POST` | `/api/admin/courses` | Create course with role links | — |
+| `PATCH` | `/api/admin/courses/:id` | Update course (fields + role links) | — |
+| `DELETE` | `/api/admin/courses/:id` | Delete course | — |
+| `POST` | `/api/admin/courses/bulk` | Bulk import courses (up to 500) | — |
 | `GET` | `/api/admin/audit` | Audit log (paginated, action filter) | — |
 | `GET` | `/api/admin/emails` | Email log (paginated, type/status filter) | — |
 | `POST` | `/api/admin/actions` | Run admin actions (ingest, match, digest, rescore, cleanup, export) | — |
@@ -144,14 +152,14 @@ npm run openapi:generate    # regenerate manually
 
 ## Testing
 
-### Unit (Vitest) — 15 test files, 175+ tests
+### Unit (Vitest) — 16 test files, 230+ tests
 
 ```
-lib/__tests__/validations.test.ts   — 47 tests for all Zod schemas
+lib/__tests__/validations.test.ts   — 85+ tests for all Zod schemas
 lib/__tests__/auth.test.ts          — password hashing, session tokens
 lib/__tests__/rate-limit.test.ts    — IP parsing from headers
 lib/__tests__/audit.test.ts         — logAuditAction helper
-components/__tests__/               — NotificationCenter, ApplyModal, TitleSelector, LocationSelector, CVScoreCard, SignOutButton
+components/__tests__/               — NotificationCenter, ApplyModal, TitleSelector, LocationSelector, CVScoreCard, SignOutButton, Pagination
 app/components/__tests__/           — TopNav (auth states), CVManager (upload flow)
 app/admin/__tests__/                — Admin login, CV scores (pagination + detail), job listings form
 ```
@@ -199,10 +207,18 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   │   ├── emails/         #   email log viewer
 │   │   │   ├── job-listings/   #   CRUD
 │   │   │   ├── leads/          #   leads management
-│   │   │   ├── titles/         #   CRUD
+│   │   │   ├── courses/        #   CRUD + bulk import
+│   │   │   │   ├── [id]/        #   GET/PATCH/DELETE
+│   │   │   │   └── bulk/        #   POST bulk import
 │   │   │   ├── users/          #   user management + ban/unban
 │   │   │   ├── login/          #   auth
 │   │   │   └── logout/         #   session clear
+│   │   │   ├── courses/        #   CRUD + bulk import
+│   │   │   │   ├── [id]/        #   GET/PATCH/DELETE
+│   │   │   │   └── bulk/        #   POST bulk import
+│   │   │   ├── job-applications/#  jobs with applications viewer
+│   │   │   └── users/
+│   │   │       └── stats/       #   user counts (total/active/banned)
 │   │   ├── apply/              # job application (form + bulk)
 │   │   ├── cv/                 # CV upload + delete (authenticated)
 │   │   ├── jobs/               # job search
@@ -225,7 +241,9 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   ├── NotificationDropdown.tsx # notification list
 │   ├── ApplyModal.tsx           # multi-step application form
 │   └── TitleSelector.tsx        # searchable title dropdown
-├── e2e/                         # Playwright tests
+│   └── ui/
+│       ├── index.ts             # UI component barrel export
+│       └── Pagination.tsx       # reusable pagination component
 ├── lib/
 │   ├── __tests__/
 │   ├── audit.ts                 # audit log insertion helper
@@ -240,7 +258,7 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   ├── setup.sql                # DB schema + RLS policies
 │   ├── supabase.ts              # Supabase client
 │   ├── user-profile.ts          # User profile helpers
-│   └── validations.ts           # Zod schemas (15 schemas)
+│   └── validations.ts           # Zod schemas (20+ schemas)
 ├── add-data/                    # batch job listing data
 ├── middleware.ts                 # auth guard (admin routes + API + cv-check)
 ├── next.config.ts               # withNextOpenApi wrapper
@@ -256,8 +274,9 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 - **Job Titles** — manage the title taxonomy
 - **Job Listings** — create, edit, delete job listings
 - **CV Scores** — view all scored CVs with detail modal
-- **Users** — manage users, ban/unban with audit logging
-- **Applications** — view all job applications
+- **Users** — manage users, ban/unban with audit logging; view total/active/banned counts
+- **Applications** — view all job applications with detail per job
+- **Courses** — manage learning courses with role associations; bulk import
 - **Emails** — email log viewer (type/status filters, detail modal)
 - **Audit Log** — view all admin actions (timeline with filters)
 - **Actions** — manual triggers: ingest jobs, run matching, send digests, re-score CVs, cleanup, data export

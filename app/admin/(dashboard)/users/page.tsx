@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface UserProfile {
   user_id: string;
   email: string;
-  skills: string[];
+  suitable_title: string[];
   experience_level: string;
   target_roles: string[];
   preferred_locations: string[];
   remote_ok: boolean;
+  cv_file_url: string | null;
+  cv_text: string | null;
   last_scored_at: string | null;
+  updated_at: string | null;
 }
 
 interface User {
@@ -30,19 +37,27 @@ const thClass =
 const tdClass = "px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300";
 
 export default function UsersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const statusFromUrl = searchParams.get("status") ?? "all";
+  const emailFromUrl = searchParams.get("email") ?? "";
+
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [bannedCount, setBannedCount] = useState(0);
+  const [statsTotal, setStatsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState(emailFromUrl);
+  const [statusFilter, setStatusFilter] = useState(statusFromUrl);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirmBan, setConfirmBan] = useState<{ userId: string; ban: boolean } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
 
-  const loadUsers = async (p: number, status: string) => {
+  const loadUsers = useCallback(async (p: number, status: string, email?: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -54,12 +69,14 @@ export default function UsersPage() {
       if (status !== "all") {
         url.searchParams.set("status", status);
       }
+      if (email) {
+        url.searchParams.set("email", email);
+      }
       const res = await fetch(url.toString(), { signal: controller.signal });
       const data = await res.json();
       if (res.ok) {
         setUsers(data.users);
         setPage(data.page);
-        setTotal(data.total);
         setTotalPages(data.totalPages);
       }
     } catch (err) {
@@ -67,26 +84,32 @@ export default function UsersPage() {
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadUsers(1, statusFilter);
-    return () => abortRef.current?.abort();
-  }, [statusFilter]);
+    fetch("/api/admin/users/stats")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.total !== undefined) {
+          setStatsTotal(d.total);
+          setActiveCount(d.activeCount ?? 0);
+          setBannedCount(d.bannedCount ?? 0);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  const filtered = useMemo(() => {
-    if (!search) return users;
-    const q = search.toLowerCase();
-    return users.filter((u) => u.email?.toLowerCase().includes(q));
-  }, [users, search]);
+  useEffect(() => {
+    setStatusFilter(statusFromUrl);
+    setSearch(emailFromUrl);
+    setPage(1);
+    loadUsers(1, statusFromUrl, emailFromUrl || undefined);
+  }, [statusFromUrl, emailFromUrl, loadUsers]);
 
-  const bannedCount = users.filter((u) => u.banned).length;
-  const activeCount = users.filter((u) => u.last_sign_in && !u.banned).length;
 
   const handlePageChange = (p: number) => {
     if (p < 1 || p > totalPages) return;
-    loadUsers(p, statusFilter);
+    loadUsers(p, statusFilter, search || undefined);
   };
 
   const handleBan = async (userId: string, ban: boolean) => {
@@ -123,7 +146,7 @@ export default function UsersPage() {
       "Created",
       "Last Sign In",
       "Experience",
-      "Skills",
+      "Titles",
     ];
     const rows = users.map((u) => [
       u.id,
@@ -133,7 +156,7 @@ export default function UsersPage() {
       u.created_at,
       u.last_sign_in ?? "",
       u.profile?.experience_level ?? "",
-      (u.profile?.skills ?? []).join(";"),
+      (u.profile?.suitable_title ?? []).join(";"),
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -151,9 +174,6 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
             Users
           </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {filtered.length} of {total} users &middot; {activeCount} active &middot; {bannedCount} banned
-          </p>
         </div>
         <button
           onClick={exportCSV}
@@ -166,11 +186,10 @@ export default function UsersPage() {
         </button>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {[
-          { label: "Total", value: total, color: "text-zinc-600" },
+          { label: "Total", value: statsTotal, color: "text-zinc-600" },
           { label: "Active", value: activeCount, color: "text-emerald-600" },
-          { label: "Unverified", value: users.filter((u) => !u.email_verified).length, color: "text-amber-600" },
           { label: "Banned", value: bannedCount, color: "text-rose-600" },
         ].map((stat) => (
           <div
@@ -184,26 +203,17 @@ export default function UsersPage() {
       </div>
 
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="flex gap-2">
-          {(["all", "active", "banned"] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-all ${
-                statusFilter === s
-                  ? "bg-primary/10 text-primary"
-                  : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              }`}
-            >
-              {s} ({s === "all" ? total : s === "banned" ? bannedCount : users.filter((u) => !u.banned).length})
-            </button>
-          ))}
-        </div>
         <input
           type="text"
           placeholder="Search by email..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            const params = new URLSearchParams(searchParams.toString());
+            if (e.target.value) params.set("email", e.target.value);
+            else params.delete("email");
+            router.replace(`/admin/users?${params.toString()}`, { scroll: false });
+          }}
           className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white sm:w-72"
         />
       </div>
@@ -225,15 +235,15 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {filtered.length === 0 ? (
+              {users.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-sm text-zinc-400">
                     No users found
                   </td>
                 </tr>
               ) : (
-                filtered.map((user) => (
-                  <tr key={user.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                users.map((user) => (
+                  <tr key={user.id} onClick={() => setSelectedUser(user)} className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                     <td className={tdClass}>
                       <div>
                         <p className="font-medium text-zinc-900 dark:text-white">{user.email}</p>
@@ -272,7 +282,7 @@ export default function UsersPage() {
                             <span className="font-medium">{user.profile.target_roles?.[0] ?? "-"}</span>
                           </p>
                           <div className="flex flex-wrap gap-1">
-                            {(user.profile.skills ?? []).slice(0, 3).map((s) => (
+                            {(user.profile.suitable_title ?? []).slice(0, 3).map((s) => (
                               <span
                                 key={s}
                                 className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
@@ -280,9 +290,9 @@ export default function UsersPage() {
                                 {s}
                               </span>
                             ))}
-                            {(user.profile.skills?.length ?? 0) > 3 && (
+                            {(user.profile.suitable_title?.length ?? 0) > 3 && (
                               <span className="text-xs text-zinc-400">
-                                +{user.profile.skills.length - 3}
+                                +{user.profile.suitable_title.length - 3}
                               </span>
                             )}
                           </div>
@@ -305,13 +315,13 @@ export default function UsersPage() {
                     <td className={tdClass}>
                       <div className="flex flex-col gap-1.5">
                         <button
-                          onClick={() => setSelectedUser(user)}
+                          onClick={(e) => { e.stopPropagation(); setSelectedUser(user); }}
                           className="text-left text-xs text-primary hover:underline"
                         >
                           View Details
                         </button>
                         <button
-                          onClick={() => handleBan(user.id, !user.banned)}
+                          onClick={(e) => { e.stopPropagation(); setConfirmBan({ userId: user.id, ban: !user.banned }); }}
                           disabled={actionLoading === user.id}
                           className={`text-left text-xs ${
                             user.banned
@@ -335,27 +345,51 @@ export default function UsersPage() {
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs text-zinc-400">
-          Page {page} of {totalPages}
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1}
-            className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= totalPages}
-            className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-all hover:bg-zinc-50 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400"
-          >
-            Next
-          </button>
-        </div>
+      <div className="mt-4">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          showInfo
+        />
       </div>
+
+      {confirmBan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
+              {confirmBan.ban ? "Ban User" : "Activate User"}
+            </h3>
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              {confirmBan.ban
+                ? "Are you sure you want to ban this user? They will no longer be able to sign in."
+                : "Are you sure you want to activate this user? Their account will be restored."}
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setConfirmBan(null)}
+                className="flex-1 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleBan(confirmBan.userId, confirmBan.ban);
+                  setConfirmBan(null);
+                }}
+                disabled={actionLoading === confirmBan.userId}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+                  confirmBan.ban
+                    ? "bg-rose-500 hover:bg-rose-600"
+                    : "bg-emerald-500 hover:bg-emerald-600"
+                }`}
+              >
+                {actionLoading === confirmBan.userId ? "..." : confirmBan.ban ? "Ban" : "Activate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -418,31 +452,30 @@ export default function UsersPage() {
                   <div className="mt-2 space-y-2 text-sm">
                     <p>
                       <span className="text-zinc-500">Experience:</span>{" "}
-                      <span className="capitalize font-medium">{selectedUser.profile.experience_level}</span>
+                      <span className="capitalize font-medium">{selectedUser.profile.experience_level || "—"}</span>
                     </p>
                     <p>
                       <span className="text-zinc-500">Remote:</span>{" "}
                       <span>{selectedUser.profile.remote_ok ? "Yes" : "No"}</span>
                     </p>
                     <div>
+                      <span className="text-zinc-500">Suitable Titles:</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {selectedUser.profile.suitable_title?.length > 0
+                          ? selectedUser.profile.suitable_title.map((t) => (
+                              <span key={t} className="rounded bg-blue-500/10 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400">
+                                {t}
+                              </span>
+                            ))
+                          : <span className="text-xs text-zinc-400">—</span>}
+                      </div>
+                    </div>
+                    <div>
                       <span className="text-zinc-500">Target Roles:</span>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {(selectedUser.profile.target_roles ?? []).map((r) => (
                           <span key={r} className="rounded bg-zinc-100 px-2 py-0.5 text-xs dark:bg-zinc-800">
                             {r}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500">Skills:</span>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {(selectedUser.profile.skills ?? []).map((s) => (
-                          <span
-                            key={s}
-                            className="rounded bg-blue-500/10 px-2 py-0.5 text-xs text-blue-600 dark:text-blue-400"
-                          >
-                            {s}
                           </span>
                         ))}
                       </div>
@@ -457,12 +490,32 @@ export default function UsersPage() {
                         ))}
                       </div>
                     </div>
+                    {selectedUser.profile.cv_file_url && (
+                      <p>
+                        <span className="text-zinc-500">CV:</span>{" "}
+                        <a href={selectedUser.profile.cv_file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          View CV
+                        </a>
+                      </p>
+                    )}
+                    {selectedUser.profile.cv_text && (
+                      <div>
+                        <span className="text-zinc-500">CV Text Preview:</span>
+                        <p className="mt-1 max-h-24 overflow-y-auto rounded border border-zinc-200 bg-zinc-50 p-2 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
+                          {selectedUser.profile.cv_text.slice(0, 300)}{selectedUser.profile.cv_text.length > 300 ? "..." : ""}
+                        </p>
+                      </div>
+                    )}
                     {selectedUser.profile.last_scored_at && (
                       <p>
                         <span className="text-zinc-500">Last Scored:</span>{" "}
                         <span>{new Date(selectedUser.profile.last_scored_at).toLocaleString()}</span>
                       </p>
                     )}
+                    <p>
+                      <span className="text-zinc-500">Updated:</span>{" "}
+                      <span>{selectedUser.profile.updated_at ? new Date(selectedUser.profile.updated_at).toLocaleString() : "—"}</span>
+                    </p>
                   </div>
                 </div>
               )}

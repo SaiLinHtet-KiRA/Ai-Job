@@ -1,22 +1,35 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 
-type Application = {
+interface JobWithApps {
   id: number;
-  user_id: string;
+  title: string;
+  company: string;
+  location: string;
+  job_type: string;
+  apply_email: string;
+  applicationCount: number;
+  applicationIds: number[];
+}
+
+interface AppDetail {
+  id: number;
+  name: string | null;
+  email: string;
+  position: string;
+  type: string;
+  salary: string;
+  cv_url: string | null;
+  cover_letter: string | null;
   method: string;
   status: string;
-  sent_at: string;
+  sent_at: string | null;
   created_at: string;
-  jobs: {
-    id: number;
-    title: string;
-    company: string;
-    location: string;
-    apply_email: string;
-  } | null;
-};
+  user_id: string | null;
+}
 
 const thClass = "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400";
 const tdClass = "px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300";
@@ -28,70 +41,65 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ApplicationsPage() {
-  const [apps, setApps] = useState<Application[]>([]);
+  const [jobs, setJobs] = useState<JobWithApps[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedJob, setSelectedJob] = useState<JobWithApps | null>(null);
+  const [jobApps, setJobApps] = useState<AppDetail[]>([]);
+  const [appsLoading, setAppsLoading] = useState(false);
 
-  const fetchApplications = useCallback(async () => {
+  const fetchJobs = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/applications");
+      const res = await fetch("/api/admin/job-applications");
       if (res.ok) {
         const data = await res.json();
-        setApps(data.applications || []);
+        setJobs(data.jobs || []);
       }
     } catch (err) {
-      console.error("Failed to fetch applications:", err);
+      console.error("Failed to fetch job applications:", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchApplications();
-  }, [fetchApplications]);
+    void fetchJobs();
+  }, [fetchJobs]);
 
   const filtered = useMemo(() => {
-    return apps.filter((app) => {
-      if (statusFilter !== "all" && app.status !== statusFilter) return false;
-      if (search) {
-        const searchLower = search.toLowerCase();
-        const jobTitle = app.jobs?.title?.toLowerCase() || "";
-        const company = app.jobs?.company?.toLowerCase() || "";
-        const userId = app.user_id?.toLowerCase() || "";
-        if (!jobTitle.includes(searchLower) && !company.includes(searchLower) && !userId.includes(searchLower)) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [apps, search, statusFilter]);
+    if (!search) return jobs;
+    const q = search.toLowerCase();
+    return jobs.filter(
+      (j) =>
+        j.title.toLowerCase().includes(q) ||
+        j.company.toLowerCase().includes(q) ||
+        j.location?.toLowerCase().includes(q),
+    );
+  }, [jobs, search]);
 
-  const exportCSV = () => {
-    const headers = ["ID", "User ID", "Job Title", "Company", "Method", "Status", "Sent At"];
-    const rows = filtered.map((a) => [
-      a.id,
-      a.user_id,
-      a.jobs?.title || "",
-      a.jobs?.company || "",
-      a.method,
-      a.status,
-      a.sent_at || a.created_at,
-    ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `applications-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
+  const totalApps = jobs.reduce((sum, j) => sum + j.applicationCount, 0);
+
+  const openJob = async (job: JobWithApps) => {
+    setSelectedJob(job);
+    setAppsLoading(true);
+    try {
+      const ids = job.applicationIds.join(",");
+      const res = await fetch(`/api/admin/job-applications?job_id=${job.id}&ids=${ids}`);
+      if (res.ok) {
+        const data = await res.json();
+        setJobApps(data.applications || []);
+      }
+    } catch {
+      setJobApps([]);
+    } finally {
+      setAppsLoading(false);
+    }
   };
 
   if (loading) {
     return (
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Applications</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Application Log</h1>
         <div className="mt-8 flex items-center justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
@@ -99,38 +107,20 @@ export default function ApplicationsPage() {
     );
   }
 
-  const stats = {
-    total: apps.length,
-    sent: apps.filter((a) => a.status === "sent").length,
-    pending: apps.filter((a) => a.status === "pending").length,
-    failed: apps.filter((a) => a.status === "failed").length,
-  };
-
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Applications</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{filtered.length} of {apps.length} applications</p>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Application Log</h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{jobs.length} jobs with applications</p>
         </div>
-        <button
-          onClick={exportCSV}
-          className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-          </svg>
-          Export CSV
-        </button>
       </div>
 
       {/* Summary cards */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {[
-          { label: "Total", value: stats.total, color: "text-zinc-600" },
-          { label: "Sent", value: stats.sent, color: "text-emerald-600" },
-          { label: "Pending", value: stats.pending, color: "text-amber-600" },
-          { label: "Failed", value: stats.failed, color: "text-rose-600" },
+          { label: "Jobs with Applications", value: jobs.length, color: "text-zinc-600" },
+          { label: "Total Applications", value: totalApps, color: "text-primary" },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-zinc-200/60 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -139,22 +129,10 @@ export default function ApplicationsPage() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="flex gap-2">
-          {["all", "sent", "pending", "failed"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-all ${statusFilter === s ? "bg-primary/10 text-primary" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"}`}
-            >
-              {s} {s === "all" ? `(${apps.length})` : `(${apps.filter((a) => a.status === s).length})`}
-            </button>
-          ))}
-        </div>
+      <div className="mt-6">
         <input
           type="text"
-          placeholder="Search job, company, or user..."
+          placeholder="Search by job title or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white sm:w-72"
@@ -165,42 +143,35 @@ export default function ApplicationsPage() {
         <table className="w-full">
           <thead className="border-b border-zinc-200/60 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
             <tr>
-              <th className={thClass}>User</th>
               <th className={thClass}>Job</th>
-              <th className={thClass}>Method</th>
-              <th className={thClass}>Sent To</th>
-              <th className={thClass}>Status</th>
-              <th className={thClass}>Date</th>
+              <th className={thClass}>Company</th>
+              <th className={thClass}>Type</th>
+              <th className={thClass}>Applications</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-zinc-400">
-                  {apps.length === 0 ? "No applications yet." : "No applications match the filter."}
+                <td colSpan={4} className="px-4 py-8 text-center text-sm text-zinc-400">
+                  No applications found.
                 </td>
               </tr>
             ) : (
-              filtered.map((app) => (
-                <tr key={app.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                  <td className={`${tdClass} font-mono text-xs text-zinc-500`}>{app.user_id?.slice(0, 8)}...</td>
+              filtered.map((job) => (
+                <tr
+                  key={job.id}
+                  onClick={() => openJob(job)}
+                  className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                >
+                  <td className={`${tdClass} font-medium text-primary`}>{job.title}</td>
+                  <td className={tdClass}>{job.company}</td>
                   <td className={tdClass}>
-                    <p className="font-medium">{app.jobs?.title || "Unknown Job"}</p>
-                    <p className="text-xs text-zinc-400">{app.jobs?.company || "Unknown Company"}</p>
+                    <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">{job.job_type}</span>
                   </td>
                   <td className={tdClass}>
-                    <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${app.method === "email" ? "bg-primary/10 text-primary" : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800"}`}>
-                      {app.method}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary dark:bg-primary/20">
+                      {job.applicationCount}
                     </span>
-                  </td>
-                  <td className={`${tdClass} font-mono text-xs text-zinc-400`}>{app.jobs?.apply_email || "—"}</td>
-                  <td className={tdClass}>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[app.status] ?? "bg-zinc-200/60 text-zinc-500"}`}>
-                      {app.status}
-                    </span>
-                  </td>
-                  <td className={`${tdClass} text-zinc-400 whitespace-nowrap`}>
-                    {new Date(app.sent_at || app.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </td>
                 </tr>
               ))
@@ -208,6 +179,82 @@ export default function ApplicationsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Applications popup */}
+      {selectedJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[85vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
+            <div className="sticky top-0 flex items-center justify-between border-b border-zinc-200/60 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{selectedJob.title}</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {selectedJob.company} &middot; {selectedJob.applicationCount} application{selectedJob.applicationCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => { setSelectedJob(null); setJobApps([]); }}
+                className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              {appsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : jobApps.length === 0 ? (
+                <p className="py-8 text-center text-sm text-zinc-400">No applications found.</p>
+              ) : (
+                <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-zinc-50 dark:bg-zinc-800">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">Name</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">Email</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">Type</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">Salary</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">Status</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">Date</th>
+                        <th className="px-3 py-2 font-semibold text-zinc-500">CV</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                      {jobApps.map((app) => (
+                        <tr key={app.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                          <td className="px-3 py-2 text-zinc-700 dark:text-zinc-300">{app.name || "—"}</td>
+                          <td className="px-3 py-2 text-zinc-500">{app.email}</td>
+                          <td className="px-3 py-2 text-zinc-500">{app.type}</td>
+                          <td className="px-3 py-2 text-zinc-500">{app.salary}</td>
+                          <td className="px-3 py-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[app.status] ?? "bg-zinc-200/60 text-zinc-500"}`}>
+                              {app.status}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2 text-zinc-400">
+                            {new Date(app.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </td>
+                          <td className="px-3 py-2">
+                            {app.cv_url ? (
+                              <a href={app.cv_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                View
+                              </a>
+                            ) : (
+                              <span className="text-zinc-400">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

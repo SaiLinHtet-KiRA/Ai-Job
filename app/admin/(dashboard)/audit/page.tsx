@@ -1,6 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface AuditLog {
   id: number;
@@ -17,8 +21,6 @@ const PAGE_SIZE = 10;
 const actionLabels: Record<string, string> = {
   user_banned: "User Banned",
   user_activated: "User Activated",
-  email_verified: "Email Verified",
-  password_reset_sent: "Password Reset Sent",
   job_listing_created: "Job Listing Created",
   job_listing_updated: "Job Listing Updated",
   job_listing_deleted: "Job Listing Deleted",
@@ -27,8 +29,6 @@ const actionLabels: Record<string, string> = {
 const actionColors: Record<string, string> = {
   user_banned: "bg-rose-500/10 text-rose-600",
   user_activated: "bg-emerald-500/10 text-emerald-600",
-  email_verified: "bg-blue-500/10 text-blue-600",
-  password_reset_sent: "bg-amber-500/10 text-amber-600",
   job_listing_created: "bg-purple-500/10 text-purple-600",
   job_listing_updated: "bg-primary/10 text-primary",
   job_listing_deleted: "bg-zinc-500/10 text-zinc-600",
@@ -38,20 +38,22 @@ const FILTER_ACTIONS = [
   "all",
   "user_banned",
   "user_activated",
-  "email_verified",
-  "password_reset_sent",
   "job_listing_created",
   "job_listing_updated",
   "job_listing_deleted",
 ];
 
 export default function AuditLogPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const actionFromUrl = searchParams.get("action") ?? "all";
+
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(actionFromUrl);
 
   const fetchAuditLogs = useCallback(async (p: number, actionFilter: string) => {
     setLoading(true);
@@ -76,29 +78,14 @@ export default function AuditLogPage() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchAuditLogs(page, filter);
-  }, [fetchAuditLogs, page, filter]);
+    setFilter(actionFromUrl);
+    setPage(1);
+    fetchAuditLogs(1, actionFromUrl);
+  }, [actionFromUrl]);
 
   const goToPage = (p: number) => {
     if (p < 1 || p > totalPages) return;
     setPage(p);
-  };
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (page > 3) pages.push("...");
-      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
-        pages.push(i);
-      }
-      if (page < totalPages - 2) pages.push("...");
-      pages.push(totalPages);
-    }
-    return pages;
   };
 
   const formatTime = (date: string) => {
@@ -140,7 +127,14 @@ export default function AuditLogPage() {
         {FILTER_ACTIONS.map((f) => (
           <button
             key={f}
-            onClick={() => { setFilter(f); setPage(1); }}
+            onClick={() => {
+              setFilter(f);
+              setPage(1);
+              const params = new URLSearchParams(searchParams.toString());
+              if (f !== "all") params.set("action", f);
+              else params.delete("action");
+              router.replace(`/admin/audit?${params.toString()}`, { scroll: false });
+            }}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-all ${
               filter === f ? "bg-primary/10 text-primary" : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
             }`}
@@ -192,41 +186,13 @@ export default function AuditLogPage() {
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-1">
-          <button
-            onClick={() => goToPage(page - 1)}
-            disabled={page <= 1}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          >
-            Prev
-          </button>
-          {getPageNumbers().map((p, i) =>
-            typeof p === "string" ? (
-              <span key={`ellipsis-${i}`} className="px-2 text-sm text-zinc-400">...</span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => goToPage(p)}
-                className={`min-w-[36px] rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                  p === page
-                    ? "bg-primary/10 text-primary dark:bg-primary/20"
-                    : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
-          <button
-            onClick={() => goToPage(page + 1)}
-            disabled={page >= totalPages}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <div className="mt-6 flex justify-center">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+        />
+      </div>
     </div>
   );
 }

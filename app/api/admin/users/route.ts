@@ -4,7 +4,7 @@ import { isAuthenticated } from "@/lib/auth";
 
 /**
  * List users
- * @description Returns paginated user profiles with optional ?status filter (active/banned/all).
+ * @description Returns paginated user profiles with optional ?status and ?email filters.
  * @tags ["Admin - Users"]
  */
 export async function GET(req: NextRequest) {
@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10) || 1);
     const pageSize = Math.min(50, Math.max(1, parseInt(req.nextUrl.searchParams.get("pageSize") ?? "10", 10) || 10));
     const status = req.nextUrl.searchParams.get("status") || undefined;
+    const email = req.nextUrl.searchParams.get("email") || undefined;
 
     const supabase = getSupabaseAdmin();
 
@@ -29,6 +30,10 @@ export async function GET(req: NextRequest) {
 
     if (status && status !== "all") {
       query = query.eq("status", status);
+    }
+
+    if (email) {
+      query = query.ilike("email", `%${email}%`);
     }
 
     const { data: profiles, count, error } = await query.range(from, to);

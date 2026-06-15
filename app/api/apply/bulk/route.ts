@@ -138,6 +138,20 @@ export async function POST(req: NextRequest) {
           status: DEMO_MODE ? "mock_sent" : "sent",
         });
 
+        // Append application ID to job's applications array
+        if (appRecord) {
+          const { data: existingJob } = await supabase
+            .from("job_listings")
+            .select("applications")
+            .eq("id", app.job_id)
+            .single();
+          const currentApps: number[] = (existingJob?.applications as number[]) ?? [];
+          await supabase
+            .from("job_listings")
+            .update({ applications: [...currentApps, appRecord.id] })
+            .eq("id", app.job_id);
+        }
+
         results.successful++;
         results.details.push({ job_id: app.job_id, status: "success" });
 

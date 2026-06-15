@@ -12,6 +12,12 @@ import {
   cvScoresIdSchema,
   emailsQuerySchema,
   auditQuerySchema,
+  usersQuerySchema,
+  userActionSchema,
+  courseCreateSchema,
+  courseUpdateSchema,
+  bulkCourseSchema,
+  bulkCoursesRequestSchema,
 } from "@/lib/validations";
 
 describe("formatZodError", () => {
@@ -459,5 +465,248 @@ describe("auditQuerySchema", () => {
     expect(result.success).toBe(true);
     expect(result.data?.page).toBe(3);
     expect(result.data?.pageSize).toBe(5);
+  });
+});
+
+describe("usersQuerySchema", () => {
+  it("accepts empty params", () => {
+    const result = usersQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(1);
+    expect(result.data?.pageSize).toBe(10);
+  });
+
+  it("accepts status and email filters", () => {
+    const result = usersQuerySchema.safeParse({
+      status: "banned",
+      email: "test@example.com",
+    });
+    expect(result.success).toBe(true);
+    expect(result.data?.status).toBe("banned");
+    expect(result.data?.email).toBe("test@example.com");
+  });
+
+  it("accepts pagination", () => {
+    const result = usersQuerySchema.safeParse({ page: "2", pageSize: "30" });
+    expect(result.success).toBe(true);
+    expect(result.data?.page).toBe(2);
+    expect(result.data?.pageSize).toBe(30);
+  });
+
+  it("rejects pageSize over 50", () => {
+    const result = usersQuerySchema.safeParse({ pageSize: "51" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("userActionSchema", () => {
+  it("accepts ban action", () => {
+    const result = userActionSchema.safeParse({ action: "ban" });
+    expect(result.success).toBe(true);
+    expect(result.data?.action).toBe("ban");
+  });
+
+  it("accepts unban action", () => {
+    const result = userActionSchema.safeParse({ action: "unban" });
+    expect(result.success).toBe(true);
+    expect(result.data?.action).toBe("unban");
+  });
+
+  it("rejects invalid action", () => {
+    const result = userActionSchema.safeParse({ action: "delete" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("ban");
+    }
+  });
+
+  it("rejects empty action", () => {
+    const result = userActionSchema.safeParse({ action: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects missing action", () => {
+    const result = userActionSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("courseCreateSchema", () => {
+  it("accepts minimal course with title and url", () => {
+    const result = courseCreateSchema.safeParse({
+      title: "React Fundamentals",
+      url: "https://example.com/react",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.platform).toBe("other");
+      expect(result.data.level).toBe("beginner");
+    }
+  });
+
+  it("accepts full course with roles", () => {
+    const result = courseCreateSchema.safeParse({
+      title: "Advanced React",
+      url: "https://example.com/advanced-react",
+      platform: "udemy",
+      duration: "10 hours",
+      level: "advanced",
+      description: "Deep dive into React",
+      instructor: "Jane Doe",
+      roles: [{ role: "frontend", sort_order: 1 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing title", () => {
+    const result = courseCreateSchema.safeParse({ url: "https://example.com" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toBe("Title is required.");
+    }
+  });
+
+  it("rejects missing url", () => {
+    const result = courseCreateSchema.safeParse({ title: "Some Course" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toBe("URL is required.");
+    }
+  });
+
+  it("rejects empty title", () => {
+    const result = courseCreateSchema.safeParse({ title: "", url: "https://x.com" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toBe("Title is required.");
+    }
+  });
+});
+
+describe("courseUpdateSchema", () => {
+  it("accepts partial update (title only)", () => {
+    const result = courseUpdateSchema.safeParse({ title: "Updated Title" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts empty object", () => {
+    const result = courseUpdateSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts roles update", () => {
+    const result = courseUpdateSchema.safeParse({
+      roles: [
+        { role: "backend", sort_order: 0 },
+        { role: "fullstack", sort_order: 1 },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts full update", () => {
+    const result = courseUpdateSchema.safeParse({
+      title: "New Title",
+      url: "https://newurl.com",
+      platform: "coursera",
+      duration: "20 hours",
+      level: "intermediate",
+      description: "Updated description",
+      instructor: "New Instructor",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty title", () => {
+    const result = courseUpdateSchema.safeParse({ title: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty url", () => {
+    const result = courseUpdateSchema.safeParse({ url: "" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("bulkCourseSchema", () => {
+  it("accepts a single valid course", () => {
+    const result = bulkCourseSchema.safeParse({
+      title: "Python Basics",
+      url: "https://example.com/python",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a course with all fields", () => {
+    const result = bulkCourseSchema.safeParse({
+      title: "ML with Python",
+      url: "https://example.com/ml",
+      platform: "coursera",
+      duration: "4 weeks",
+      level: "intermediate",
+      description: "Learn ML",
+      instructor: "Prof. Smith",
+      roles: ["data science", "python"],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing title", () => {
+    const result = bulkCourseSchema.safeParse({ url: "https://example.com" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects missing url", () => {
+    const result = bulkCourseSchema.safeParse({ title: "Some Course" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("bulkCoursesRequestSchema", () => {
+  it("accepts a single course in array", () => {
+    const result = bulkCoursesRequestSchema.safeParse({
+      courses: [{ title: "React", url: "https://react.dev" }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts multiple courses", () => {
+    const result = bulkCoursesRequestSchema.safeParse({
+      courses: [
+        { title: "React", url: "https://react.dev" },
+        { title: "Node.js", url: "https://nodejs.org" },
+        { title: "TypeScript", url: "https://typescriptlang.org" },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty courses array", () => {
+    const result = bulkCoursesRequestSchema.safeParse({ courses: [] });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("At least one course");
+    }
+  });
+
+  it("rejects missing courses", () => {
+    const result = bulkCoursesRequestSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts courses with roles", () => {
+    const result = bulkCoursesRequestSchema.safeParse({
+      courses: [
+        {
+          title: "Advanced CSS",
+          url: "https://example.com/css",
+          platform: "udemy",
+          duration: "8 hours",
+          level: "advanced",
+          roles: ["frontend", "design"],
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
   });
 });

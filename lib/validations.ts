@@ -74,3 +74,68 @@ export const auditQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(50).optional().default(10),
   action: z.string().optional(),
 });
+
+export const usersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).optional().default(10),
+  status: z.string().optional(),
+  email: z.string().optional(),
+});
+
+export const userActionSchema = z.object({
+  action: z.enum(["ban", "unban"], { message: "Action must be 'ban' or 'unban'." }),
+});
+
+export const courseCreateSchema = z.object({
+  title: z.string({ message: "Title is required." }).min(1, "Title is required."),
+  url: z.string({ message: "URL is required." }).min(1, "URL is required."),
+  platform: z.string().optional().default("other"),
+  duration: z.string().optional(),
+  level: z.string().optional().default("beginner"),
+  description: z.string().optional(),
+  instructor: z.string().optional(),
+  roles: z
+    .array(
+      z.object({
+        role: z.string().min(1),
+        sort_order: z.number().int().optional(),
+      }),
+    )
+    .optional(),
+});
+
+export const courseUpdateSchema = z.object({
+  title: z.string().min(1).optional(),
+  url: z.string().min(1).optional(),
+  platform: z.string().optional(),
+  duration: z.string().optional(),
+  level: z.string().optional(),
+  description: z.string().optional(),
+  instructor: z.string().optional(),
+  roles: z
+    .array(
+      z.object({
+        role: z.string().min(1),
+        sort_order: z.number().int().optional(),
+      }),
+    )
+    .optional(),
+});
+
+export const bulkCourseSchema = z.object({
+  title: z.string({ message: "Title is required." }).min(1),
+  url: z.string({ message: "URL is required." }).min(1),
+  platform: z.string().optional(),
+  duration: z.string().optional(),
+  level: z.string().optional(),
+  description: z.string().optional(),
+  instructor: z.string().optional(),
+  roles: z.array(z.string()).optional(),
+});
+
+export const bulkCoursesRequestSchema = z.object({
+  courses: z
+    .array(bulkCourseSchema)
+    .min(1, "At least one course is required.")
+    .max(500, "Maximum 500 courses per bulk import."),
+});

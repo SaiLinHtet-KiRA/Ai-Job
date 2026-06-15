@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS job_listings (
   description TEXT,
   apply_url TEXT,
   apply_email TEXT,
+  applications JSONB NOT NULL DEFAULT '[]',
   source TEXT NOT NULL DEFAULT 'mock',
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -55,6 +56,9 @@ CREATE POLICY admin_full_access_job_listings ON job_listings
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_job_listings_external ON job_listings (source, external_id);
 CREATE INDEX IF NOT EXISTS idx_job_listings_skills ON job_listings USING GIN (skills);
+
+-- Migration: add applications tracking column
+ALTER TABLE job_listings ADD COLUMN IF NOT EXISTS applications JSONB NOT NULL DEFAULT '[]';
 
 -- ── admins ─────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS admins (
@@ -175,6 +179,7 @@ CREATE TABLE IF NOT EXISTS courses (
   duration TEXT,
   level TEXT NOT NULL DEFAULT 'beginner',
   description TEXT,
+  instructor TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

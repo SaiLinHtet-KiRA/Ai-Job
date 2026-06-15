@@ -1,11 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  children?: { href: string; label: string; key: string }[];
+}
+
+const navItems: NavItem[] = [
   {
     href: "/admin/dashboard",
     label: "Dashboard",
@@ -32,6 +39,10 @@ const navItems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
       </svg>
     ),
+    children: [
+      { href: "/admin/users?status=active", label: "Active", key: "active" },
+      { href: "/admin/users?status=banned", label: "Banned", key: "banned" },
+    ],
   },
   {
     href: "/admin/job-listings",
@@ -53,7 +64,7 @@ const navItems = [
   },
   {
     href: "/admin/applications",
-    label: "Applications",
+    label: "Application Log",
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -68,6 +79,13 @@ const navItems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
       </svg>
     ),
+    children: [
+      { href: "/admin/emails?type=application", label: "Application", key: "application" },
+      { href: "/admin/emails?type=application_summary", label: "App Summary", key: "application_summary" },
+      { href: "/admin/emails?type=welcome", label: "Welcome", key: "welcome" },
+      { href: "/admin/emails?type=verification", label: "Verification", key: "verification" },
+      { href: "/admin/emails?type=score", label: "CV Score", key: "score" },
+    ],
   },
   {
     href: "/admin/actions",
@@ -86,6 +104,13 @@ const navItems = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
+    children: [
+      { href: "/admin/audit?action=user_banned", label: "User Banned", key: "user_banned" },
+      { href: "/admin/audit?action=user_activated", label: "User Activated", key: "user_activated" },
+      { href: "/admin/audit?action=job_listing_created", label: "Job Created", key: "job_listing_created" },
+      { href: "/admin/audit?action=job_listing_updated", label: "Job Updated", key: "job_listing_updated" },
+      { href: "/admin/audit?action=job_listing_deleted", label: "Job Deleted", key: "job_listing_deleted" },
+    ],
   },
   {
     href: "/admin/admins",
@@ -112,8 +137,10 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [sidebarOpenPathname, setSidebarOpenPathname] = useState<string | null>(null);
   const sidebarOpen = sidebarOpenPathname === pathname;
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -149,20 +176,74 @@ export default function AdminLayout({
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setSidebarOpenPathname(null)}
-            className={`${linkBase} ${
-              pathname.startsWith(item.href) ? linkActive : linkInactive
-            }`}
-          >
-            {item.icon}
-            {item.label}
-          </Link>
-        ))}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-300 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          const hasChildren = item.children && item.children.length > 0;
+          const isDropdownOpen = hasChildren && (hoveredMenu === item.href || isActive);
+
+          if (!hasChildren) {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setSidebarOpenPathname(null)}
+                className={`${linkBase} ${isActive ? linkActive : linkInactive}`}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            );
+          }
+
+          const currentStatus = searchParams.get("status") ?? "all";
+
+          return (
+            <div
+              key={item.href}
+              onMouseEnter={() => setHoveredMenu(item.href)}
+              onMouseLeave={() => setHoveredMenu(null)}
+            >
+              <Link
+                href={item.href}
+                onClick={() => setSidebarOpenPathname(null)}
+                className={`${linkBase} ${isActive ? linkActive : linkInactive} justify-between`}
+              >
+                <span className="flex items-center gap-3">
+                  {item.icon}
+                  {item.label}
+                </span>
+                <svg
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform ${isDropdownOpen ? "rotate-90" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+              {isDropdownOpen && (
+                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-zinc-200/60 pl-5 dark:border-zinc-700">
+                  {item.children!.map((child) => (
+                    <Link
+                      key={child.key}
+                      href={child.href}
+                      onClick={() => setSidebarOpenPathname(null)}
+                      className={`block rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                        isActive && currentStatus === child.key
+                          ? "bg-primary/10 text-primary dark:bg-primary/20"
+                          : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="border-t border-zinc-200/60 px-3 py-4 dark:border-zinc-800">

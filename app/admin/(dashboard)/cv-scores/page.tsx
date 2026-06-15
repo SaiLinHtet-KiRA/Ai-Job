@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import CVScoreDetail from "./CVScoreDetail";
+import { Pagination } from "@/components/ui/Pagination";
 
 type CVScore = {
   id: number;
@@ -61,22 +62,6 @@ export default function CVScoresPage() {
   const goToPage = (p: number) => {
     if (p < 1 || p > totalPages) return;
     fetchScores(p);
-  };
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      if (page > 3) pages.push("...");
-      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
-        pages.push(i);
-      }
-      if (page < totalPages - 2) pages.push("...");
-      pages.push(totalPages);
-    }
-    return pages;
   };
 
   return (
@@ -144,41 +129,13 @@ export default function CVScoresPage() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-1">
-          <button
-            onClick={() => goToPage(page - 1)}
-            disabled={page <= 1}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          >
-            Prev
-          </button>
-          {getPageNumbers().map((p, i) =>
-            typeof p === "string" ? (
-              <span key={`ellipsis-${i}`} className="px-2 text-sm text-zinc-400">...</span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => goToPage(p)}
-                className={`min-w-[36px] rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                  p === page
-                    ? "bg-primary/10 text-primary dark:bg-primary/20"
-                    : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
-          <button
-            onClick={() => goToPage(page + 1)}
-            disabled={page >= totalPages}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <div className="mt-6 flex justify-center">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+        />
+      </div>
 
       {selectedScoreId !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

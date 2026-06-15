@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import LocationSelector from "@/components/LocationSelector";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface Job {
   id: number;
@@ -37,18 +38,6 @@ function buildQuery(search: string, location: string, type: string, page: number
   return params.toString();
 }
 
-function getPageNumbers(current: number, total: number): (number | "ellipsis")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: (number | "ellipsis")[] = [1];
-  if (current > 3) pages.push("ellipsis");
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-  if (current < total - 2) pages.push("ellipsis");
-  pages.push(total);
-  return pages;
-}
-
 export default function JobsPage() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -63,7 +52,6 @@ export default function JobsPage() {
   const [search, setSearch] = useState(searchQ);
   const [location, setLocation] = useState(locationQ);
   const [type, setType] = useState(typeQ);
-  const [page, setPage] = useState(pageQ);
   const [limit, setLimit] = useState(limitQ);
 
   const [data, setData] = useState<JobsResponse | null>(null);
@@ -102,7 +90,6 @@ export default function JobsPage() {
   }, [searchQ, locationQ, typeQ, pageQ, limitQ, router, retryKey]);
 
   const applyFilters = () => {
-    setPage(1);
     router.push(`/jobs?${buildQuery(search, location, type, 1, limit)}`);
   };
 
@@ -119,20 +106,13 @@ export default function JobsPage() {
   };
 
   const goToPage = (p: number) => {
-    setPage(p);
     router.push(`/jobs?${buildQuery(search, location, type, p, limit)}`);
   };
 
   const changeLimit = (l: number) => {
     setLimit(l);
-    setPage(1);
     router.push(`/jobs?${buildQuery(search, location, type, 1, l)}`);
   };
-
-  const pages = useMemo(
-    () => (data ? getPageNumbers(data.page, data.totalPages) : []),
-    [data],
-  );
 
   return (
     <div className="min-h-screen bg-[#0a2540] px-6 py-16">
@@ -303,61 +283,12 @@ export default function JobsPage() {
                       </select>
                     </div>
 
-                    {pages.length > 1 && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => goToPage(1)}
-                          disabled={page <= 1}
-                          className="rounded-lg border border-white/10 px-2 py-2 text-[12px] text-[#8898aa] transition-colors hover:border-white/20 hover:text-white disabled:opacity-30"
-                          title="First page"
-                        >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => goToPage(page - 1)}
-                          disabled={page <= 1}
-                          className="rounded-lg border border-white/10 px-3 py-2 text-[12px] text-[#8898aa] transition-colors hover:border-white/20 hover:text-white disabled:opacity-30"
-                        >
-                          Prev
-                        </button>
-                        {pages.map((p, i) =>
-                          p === "ellipsis" ? (
-                            <span key={`e-${i}`} className="px-1 text-[#8898aa]">…</span>
-                          ) : (
-                            <button
-                              key={p}
-                              onClick={() => goToPage(p)}
-                              className={`min-w-[34px] rounded-lg py-2 text-[12px] font-medium transition-colors ${
-                                p === page
-                                  ? "bg-primary text-white"
-                                  : "border border-white/10 text-[#8898aa] hover:border-white/20 hover:text-white"
-                              }`}
-                            >
-                              {p}
-                            </button>
-                          ),
-                        )}
-                        <button
-                          onClick={() => goToPage(page + 1)}
-                          disabled={page >= (data?.totalPages ?? 1)}
-                          className="rounded-lg border border-white/10 px-3 py-2 text-[12px] text-[#8898aa] transition-colors hover:border-white/20 hover:text-white disabled:opacity-30"
-                        >
-                          Next
-                        </button>
-                        <button
-                          onClick={() => goToPage(data?.totalPages ?? 1)}
-                          disabled={page >= (data?.totalPages ?? 1)}
-                          className="rounded-lg border border-white/10 px-2 py-2 text-[12px] text-[#8898aa] transition-colors hover:border-white/20 hover:text-white disabled:opacity-30"
-                          title="Last page"
-                        >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
+                    <Pagination
+                      variant="dark"
+                      page={data.page}
+                      totalPages={data.totalPages}
+                      onPageChange={goToPage}
+                    />
                   </div>
                 </div>
               )}

@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 // POST /api/admin/courses — create a new course + optionally link to roles
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { title, url, platform, duration, level, description, roles } = body;
+  const { title, url, platform, duration, level, description, instructor, roles } = body;
 
   if (!title || !url) {
     return NextResponse.json(
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   // Insert course
   const { data: course, error } = await supabase
     .from("courses")
-    .insert({ title, url, platform, duration, level, description })
+    .insert({ title, url, platform, duration, level, description, instructor })
     .select()
     .single();
 
@@ -82,8 +82,16 @@ export async function POST(req: NextRequest) {
 
   // Link to roles if provided
   if (roles && Array.isArray(roles) && roles.length > 0) {
+    // Ensure all roles exist in the roles table
+    const roleNames = roles.map((r: { role: string }) => r.role.toLowerCase().trim()).filter(Boolean);
+    if (roleNames.length > 0) {
+      await supabase
+        .from("roles")
+        .upsert(roleNames.map((name) => ({ name })), { onConflict: "name" });
+    }
+
     const roleLinks = roles.map((r: { role: string; sort_order?: number }) => ({
-      role: r.role,
+      role: r.role.toLowerCase().trim(),
       course_id: course.id,
       sort_order: r.sort_order ?? 0,
     }));

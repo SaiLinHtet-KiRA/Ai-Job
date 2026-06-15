@@ -25,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   const body = await req.json();
-  const { title, url, platform, duration, level, description, roles } = body;
+  const { title, url, platform, duration, level, description, instructor, roles } = body;
 
   const supabase = getSupabaseAdmin();
 
@@ -37,6 +37,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (duration !== undefined) updates.duration = duration;
   if (level !== undefined) updates.level = level;
   if (description !== undefined) updates.description = description;
+  if (instructor !== undefined) updates.instructor = instructor;
 
   const { data, error } = await supabase
     .from("courses")
@@ -54,8 +55,18 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     await supabase.from("role_courses").delete().eq("course_id", id);
 
     if (roles.length > 0) {
+      // Ensure all roles exist
+      const roleNames = roles
+        .map((r: { role: string }) => r.role.toLowerCase().trim())
+        .filter(Boolean);
+      if (roleNames.length > 0) {
+        await supabase
+          .from("roles")
+          .upsert(roleNames.map((name) => ({ name })), { onConflict: "name" });
+      }
+
       const roleLinks = roles.map((r: { role: string; sort_order?: number }) => ({
-        role: r.role,
+        role: r.role.toLowerCase().trim(),
         course_id: Number(id),
         sort_order: r.sort_order ?? 0,
       }));

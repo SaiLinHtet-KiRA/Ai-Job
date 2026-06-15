@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { Pagination } from "@/components/ui/Pagination";
 
 interface Application {
   id: number;
@@ -56,8 +57,6 @@ export function ApplicationListClient({ initial }: { initial: PaginatedResponse 
   const from = (page - 1) * 10 + 1;
   const to = Math.min(page * 10, total);
 
-  const pages = generatePages(page, totalPages);
-
   return (
     <>
       <div className="mt-8 overflow-hidden rounded-2xl border border-zinc-200/60 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
@@ -109,71 +108,17 @@ export function ApplicationListClient({ initial }: { initial: PaginatedResponse 
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <p className="text-zinc-500 dark:text-zinc-400">
-            Showing {from}&ndash;{to} of {total}
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => fetchPage(page - 1)}
-              disabled={page <= 1 || loading}
-              className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-500 transition-all hover:border-primary/30 hover:text-primary-dark disabled:opacity-40 disabled:cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-            >
-              Prev
-            </button>
-            {pages.map((p, i) =>
-              p === "..." ? (
-                <span key={`dots-${i}`} className="px-1 text-zinc-400">...</span>
-              ) : (
-                <button
-                  key={p}
-                  onClick={() => fetchPage(p as number)}
-                  disabled={loading}
-                  className={`min-w-[32px] rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
-                    p === page
-                      ? "border-primary bg-primary text-white"
-                      : "border-zinc-200 bg-white text-zinc-500 hover:border-primary/30 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-                  }`}
-                >
-                  {p}
-                </button>
-              ),
-            )}
-            <button
-              onClick={() => fetchPage(page + 1)}
-              disabled={page >= totalPages || loading}
-              className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-500 transition-all hover:border-primary/30 hover:text-primary-dark disabled:opacity-40 disabled:cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <p className="text-zinc-500 dark:text-zinc-400">
+          Showing {from}&ndash;{to} of {total}
+        </p>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={fetchPage}
+          disabled={loading}
+        />
+      </div>
     </>
   );
-}
-
-function generatePages(current: number, total: number): (number | "...")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-
-  const pages: (number | "...")[] = [];
-
-  if (current <= 4) {
-    for (let i = 1; i <= 5; i++) pages.push(i);
-    pages.push("...");
-    pages.push(total);
-  } else if (current >= total - 3) {
-    pages.push(1);
-    pages.push("...");
-    for (let i = total - 4; i <= total; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    pages.push("...");
-    for (let i = current - 1; i <= current + 1; i++) pages.push(i);
-    pages.push("...");
-    pages.push(total);
-  }
-
-  return pages;
 }

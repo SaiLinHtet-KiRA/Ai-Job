@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Course = {
   id: number;
@@ -9,6 +10,7 @@ type Course = {
   platform: string;
   duration: string;
   level: string;
+  instructor: string;
   roles: string[];
 };
 
@@ -26,15 +28,31 @@ export default function CoursesPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", url: "", platform: "Udemy", duration: "", level: "beginner", roles: [] as string[] });
+  const [form, setForm] = useState({ title: "", url: "", platform: "Udemy", duration: "", level: "beginner", instructor: "", roles: [] as string[] });
   const [formError, setFormError] = useState("");
   const [rolesOpen, setRolesOpen] = useState(false);
   const [rolesSearch, setRolesSearch] = useState("");
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importPreview, setImportPreview] = useState<BulkCourse[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [importFileName, setImportFileName] = useState("");
   const rolesRef = useRef<HTMLDivElement>(null);
   const rolesInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  interface BulkCourse {
+    title: string;
+    url: string;
+    platform?: string;
+    duration?: string;
+    level?: string;
+    instructor?: string;
+    roles?: string[];
+  }
 
   const fetchCourses = useCallback(async (p = 1) => {
     setLoading(true);
@@ -49,6 +67,7 @@ export default function CoursesPage() {
         platform: string;
         duration: string | null;
         level: string;
+        instructor: string | null;
         role_courses?: { role: string; sort_order: number }[];
       }>).map((c) => ({
         id: c.id,
@@ -57,6 +76,7 @@ export default function CoursesPage() {
         platform: c.platform,
         duration: c.duration ?? "",
         level: c.level,
+        instructor: c.instructor ?? "",
         roles: (c.role_courses ?? []).map((rc) => rc.role),
       }));
       setCourses(mapped);
@@ -182,6 +202,7 @@ export default function CoursesPage() {
           platform: form.platform,
           duration: form.duration,
           level: form.level,
+          instructor: form.instructor.trim(),
           roles: form.roles.map((role) => ({ role })),
         }),
       });
@@ -190,7 +211,7 @@ export default function CoursesPage() {
         setFormError(err.error ?? "Save failed");
         return;
       }
-      setForm({ title: "", url: "", platform: "Udemy", duration: "", level: "beginner", roles: [] });
+      setForm({ title: "", url: "", platform: "Udemy", duration: "", level: "beginner", instructor: "", roles: [] });
       setShowForm(false);
       setPage(1);
     } catch {
@@ -217,6 +238,123 @@ export default function CoursesPage() {
   );
   const showCreate = rolesSearch.trim() && !hasExactMatch;
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFileName(file.name);
+    setImportError("");
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        let parsed: BulkCourse[];
+
+        if (file.name.endsWith(".json")) {
+          const data = JSON.parse(text);
+          parsed = Array.isArray(data) ? data : data.courses ?? data.data ?? [];
+          if (!Array.isArray(parsed)) throw new Error("JSON must contain an array of courses");
+        } else {
+          parsed = parseCSV(text);
+        }
+
+        if (parsed.length === 0) {
+          setImportError("No courses found in file");
+          return;
+        }
+
+        setImportPreview(parsed);
+        setImportOpen(true);
+      } catch (err) {
+        setImportError(err instanceof Error ? err.message : "Failed to parse file");
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const parseCSV = (text: string): BulkCourse[] => {
+    const lines = text.split("\n").filter((l) => l.trim());
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].toLowerCase().split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+    const titleIdx = headers.indexOf("title");
+    const urlIdx = headers.indexOf("url");
+
+    if (titleIdx === -1 || urlIdx === -1) {
+      throw new Error("CSV must have 'title' and 'url' columns");
+    }
+
+    const platformIdx = headers.indexOf("platform");
+    const durationIdx = headers.indexOf("duration");
+    const levelIdx = headers.indexOf("level");
+    const instructorIdx = headers.indexOf("instructor");
+    const rolesIdx = headers.indexOf("roles");
+
+    return lines.slice(1).map((line) => {
+      const cols = parseCSVLine(line);
+      const get = (idx: number) => cols[idx]?.trim().replace(/^"|"$/g, "") || "";
+      return {
+        title: get(titleIdx),
+        url: get(urlIdx),
+        platform: platformIdx >= 0 ? get(platformIdx) : undefined,
+        duration: durationIdx >= 0 ? get(durationIdx) : undefined,
+        level: levelIdx >= 0 ? get(levelIdx) : undefined,
+        instructor: instructorIdx >= 0 ? get(instructorIdx) : undefined,
+        roles: rolesIdx >= 0 && get(rolesIdx)
+          ? get(rolesIdx).split(";").map((r) => r.trim()).filter(Boolean)
+          : undefined,
+      };
+    }).filter((c) => c.title && c.url);
+  };
+
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+      } else if (ch === "," && !inQuotes) {
+        result.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    result.push(current);
+    return result;
+  };
+
+  const handleBulkImport = async () => {
+    if (importPreview.length === 0) return;
+    setImportLoading(true);
+    setImportError("");
+    try {
+      const res = await fetch("/api/admin/courses/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courses: importPreview }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImportError(data.error ?? "Import failed");
+        return;
+      }
+      setImportOpen(false);
+      setImportPreview([]);
+      setImportFileName("");
+      fetchCourses(page);
+    } catch {
+      setImportError("Network error during import");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const filtered = search.trim()
     ? courses.filter(
         (c) =>
@@ -234,15 +372,26 @@ export default function CoursesPage() {
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Courses</h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{total} courses in catalog</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/25"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Add Course
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-600 transition-all hover:border-primary/30 hover:text-primary-dark dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Import
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/25"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Course
+          </button>
+        </div>
       </div>
 
       <div className="mt-4">
@@ -251,6 +400,13 @@ export default function CoursesPage() {
           placeholder="Search courses by title, URL, platform, or role..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv,.json"
+          onChange={handleFileUpload}
+          className="hidden"
         />
       </div>
 
@@ -270,6 +426,7 @@ export default function CoursesPage() {
             <select className={inputClass} value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}>
               <option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option>
             </select>
+            <input className={inputClass} placeholder="Instructor" value={form.instructor} onChange={(e) => setForm({ ...form, instructor: e.target.value })} />
             <div ref={rolesRef} className="relative">
               <button
                 type="button"
@@ -292,7 +449,7 @@ export default function CoursesPage() {
                       placeholder="Search roles..."
                       value={rolesSearch}
                       onChange={(e) => setRolesSearch(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
+                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                   <div className="max-h-40 overflow-y-auto py-1">
@@ -404,6 +561,7 @@ export default function CoursesPage() {
             <thead className="border-b border-zinc-200/60 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
               <tr>
                 <th className={thClass}>Course</th>
+                <th className={thClass}>Instructor</th>
                 <th className={thClass}>Platform</th>
                 <th className={thClass}>Level</th>
                 <th className={thClass}>Duration</th>
@@ -417,6 +575,7 @@ export default function CoursesPage() {
                   <td className={tdClass}>
                     <a href={course.url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">{course.title}</a>
                   </td>
+                  <td className={`${tdClass} text-zinc-400`}>{course.instructor || "—"}</td>
                   <td className={`${tdClass} text-zinc-400`}>{course.platform}</td>
                   <td className={tdClass}>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${course.level === "beginner" ? "bg-emerald-500/10 text-emerald-600" : course.level === "intermediate" ? "bg-amber-500/10 text-amber-600" : "bg-rose-500/10 text-rose-600"}`}>
@@ -439,44 +598,80 @@ export default function CoursesPage() {
             </tbody>
           </table>
         )}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
-            <span className="text-sm text-zinc-400">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex gap-1">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          showInfo
+        />
+      </div>
+
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
+            <div className="sticky top-0 flex items-center justify-between border-b border-zinc-200/60 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <div>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Import Courses</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{importFileName} &middot; {importPreview.length} courses</p>
+              </div>
               <button
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-                className="rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                onClick={() => { setImportOpen(false); setImportPreview([]); setImportError(""); }}
+                className="rounded p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
               >
-                First
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              >
-                Prev
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              >
-                Next
-              </button>
-              <button
-                onClick={() => setPage(totalPages)}
-                disabled={page === totalPages}
-                className="rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              >
-                Last
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
+            <div className="p-6">
+              {importError && (
+                <p className="mb-4 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600 dark:bg-rose-950 dark:text-rose-400">{importError}</p>
+              )}
+              <div className="max-h-96 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+                <table className="w-full text-left text-xs">
+                  <thead className="sticky top-0 bg-zinc-50 dark:bg-zinc-800">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold text-zinc-500">Title</th>
+                      <th className="px-3 py-2 font-semibold text-zinc-500">Instructor</th>
+                      <th className="px-3 py-2 font-semibold text-zinc-500">URL</th>
+                      <th className="px-3 py-2 font-semibold text-zinc-500">Platform</th>
+                      <th className="px-3 py-2 font-semibold text-zinc-500">Level</th>
+                      <th className="px-3 py-2 font-semibold text-zinc-500">Roles</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {importPreview.map((c, i) => (
+                      <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                        <td className="max-w-[200px] truncate px-3 py-2 text-zinc-700 dark:text-zinc-300">{c.title}</td>
+                        <td className="px-3 py-2 text-zinc-500">{c.instructor || "—"}</td>
+                        <td className="max-w-[150px] truncate px-3 py-2 text-zinc-500">{c.url}</td>
+                        <td className="px-3 py-2 text-zinc-500">{c.platform || "—"}</td>
+                        <td className="px-3 py-2 text-zinc-500">{c.level || "—"}</td>
+                        <td className="px-3 py-2 text-zinc-500">{(c.roles ?? []).join(", ") || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => { setImportOpen(false); setImportPreview([]); setImportError(""); }}
+                  className="flex-1 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkImport}
+                  disabled={importLoading}
+                  className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark disabled:opacity-50"
+                >
+                  {importLoading ? "Importing..." : `Import ${importPreview.length} Courses`}
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -145,8 +145,8 @@ describe("CVScoresPage", () => {
     render(<CVScoresPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Prev")).toBeInTheDocument();
-      expect(screen.getByText("Next")).toBeInTheDocument();
+      expect(screen.getByLabelText("Previous page")).toBeInTheDocument();
+      expect(screen.getByLabelText("Next page")).toBeInTheDocument();
       expect(screen.getByText("1")).toBeInTheDocument();
     });
   });
@@ -167,8 +167,8 @@ describe("CVScoresPage", () => {
     render(<CVScoresPage />);
 
     await waitFor(() => expect(screen.getByText("resume.pdf")).toBeInTheDocument());
-    expect(screen.queryByText("Prev")).not.toBeInTheDocument();
-    expect(screen.queryByText("Next")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Previous page")).toBeDisabled();
+    expect(screen.getByLabelText("Next page")).toBeDisabled();
   });
 
   it("opens detail modal when row is clicked", async () => {

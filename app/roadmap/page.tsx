@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Course = {
   id: number;
@@ -261,41 +262,13 @@ export default function RoadmapPage() {
               </a>
             ))}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4">
-                <span className="text-[12px] text-[#8898aa]/60">
-                  Page {page} of {totalPages}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => fetchCourses(role, 1)}
-                    disabled={page === 1}
-                    className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-[#8898aa] hover:border-white/20 hover:text-white disabled:opacity-30"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() => fetchCourses(role, page - 1)}
-                    disabled={page === 1}
-                    className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-[#8898aa] hover:border-white/20 hover:text-white disabled:opacity-30"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    onClick={() => fetchCourses(role, page + 1)}
-                    disabled={page === totalPages}
-                    className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-[#8898aa] hover:border-white/20 hover:text-white disabled:opacity-30"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => fetchCourses(role, totalPages)}
-                    disabled={page === totalPages}
-                    className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-[#8898aa] hover:border-white/20 hover:text-white disabled:opacity-30"
-                  >
-                    Last
-                  </button>
-                </div>
-              </div>
+              <Pagination
+                variant="dark"
+                page={page}
+                totalPages={totalPages}
+                onPageChange={(p) => fetchCourses(role, p)}
+                showInfo
+              />
             )}
           </div>
         )}

@@ -56,29 +56,37 @@ export async function POST(req: NextRequest) {
       data: { publicUrl },
     } = supabase.storage.from("resumes").getPublicUrl(filePath);
 
-    const { error: insertError } = await supabase.from("applications").insert({
+    const { data: application, error: insertError } = await supabase.from("applications").insert({
       name,
       email,
       position,
       type,
       salary,
       cv_url: publicUrl,
-    });
+    }).select("id").single();
 
-    if (insertError) {
+    if (insertError || !application) {
       console.error("Insert error:", JSON.stringify(insertError, null, 2));
       return NextResponse.json(
-        { error: insertError.message || "Failed to save application." },
+        { error: insertError?.message || "Failed to save application." },
         { status: 500 },
       );
     }
 
     const { data: jobs } = await supabase
       .from("job_listings")
-      .select("id, title, company, location, job_type, salary_range, description, apply_email")
+      .select("id, title, company, location, job_type, salary_range, description, apply_email, applications")
       .ilike("title", `%${position}%`);
 
     if (jobs?.length) {
+      for (const job of jobs) {
+        const currentApps: number[] = (job.applications as number[]) ?? [];
+        await supabase
+          .from("job_listings")
+          .update({ applications: [...currentApps, application.id] })
+          .eq("id", job.id);
+      }
+
       sendApplicationEmails({
         name,
         email,

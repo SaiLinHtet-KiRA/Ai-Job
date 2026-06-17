@@ -66,7 +66,7 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a2540] px-6 py-16">
+    <div className="px-6 py-16">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-center py-20">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -84,22 +84,6 @@ export default function ApplicationsPage() {
           <div>
             <h1 className="text-2xl font-semibold text-white">My Applications</h1>
             <p className="mt-1 text-[14px] text-[#8898aa]">Track your job applications</p>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-lg border border-white/10 px-4 py-2 text-[13px] font-medium text-[#8898aa] transition-colors hover:border-white/20 hover:text-white"
-            >
-              Dashboard
-            </Link>
-            <form action="/api/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="rounded-lg border border-white/10 px-4 py-2 text-[13px] font-medium text-[#8898aa] transition-colors hover:border-white/20 hover:text-white"
-              >
-                Sign out
-              </button>
-            </form>
           </div>
         </div>
 

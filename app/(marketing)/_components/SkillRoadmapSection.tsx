@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function SkillRoadmapSection() {
   return (
-    <section className="border-t border-white/5 px-6 py-20">
+    <section className="border-t border-white/5 px-6 py-14">
       <div className="mx-auto max-w-6xl">
         <div className="grid items-center gap-12 md:grid-cols-2">
           <div>

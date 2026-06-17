@@ -11,7 +11,7 @@ CV scoring — free, no signup, instant ATS feedback powered by Gemini 2.5 Flash
 | Framework | Next.js 16 (App Router) + React 19 |
 | Styling | Tailwind CSS 4 |
 | Database | Supabase (PostgreSQL) |
-| Auth | HMAC-signed session cookies |
+| Auth | NextAuth.js (credentials + JWT) + custom HMAC admin sessions |
 | Rate limiting | Upstash Redis (sliding window) |
 | AI | Gemini 2.5 Flash (via @ai-sdk/google) |
 | Email | Resend |
@@ -28,6 +28,7 @@ CV scoring — free, no signup, instant ATS feedback powered by Gemini 2.5 Flash
 - **Bulk apply** — Select matching jobs, enter job type and expected salary, then send your CV to multiple employers at once
 - **Email notifications** — Welcome emails, verification codes, score results, application confirmations. All emails logged to `email_logs` table
 - **Study roadmap** — Personalized learning path with curated courses and time estimates
+- **Shared navigation** — TopNav with active page highlighting, auth-aware links, and notification center across all user pages
 - **Notification bell** — Real-time notification center for job matches, application status, and system updates
 - **Admin audit log** — All admin actions (user bans, job CRUD, data operations) tracked in `audit_logs`
 - **Admin actions** — Manual triggers: ingest jobs, run matching, send digests, re-score CVs, cleanup old data, export database
@@ -152,7 +153,7 @@ npm run openapi:generate    # regenerate manually
 
 ## Testing
 
-### Unit (Vitest) — 16 test files, 230+ tests
+### Unit (Vitest) — 17 test files, 236 tests
 
 ```
 lib/__tests__/validations.test.ts   — 85+ tests for all Zod schemas
@@ -195,6 +196,15 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 
 ```
 ├── app/
+│   ├── (app)/                    # user-facing pages (shared TopNav layout)
+│   │   ├── layout.tsx             #   TopNav + consistent chrome
+│   │   ├── dashboard/            #   user dashboard (matches + bulk apply)
+│   │   ├── jobs/                 #   browse / search job listings
+│   │   ├── applications/         #   track sent applications
+│   │   ├── profile/              #   user profile + CV management
+│   │   └── roadmap/              #   skill/learning roadmap
+│   ├── (auth)/                   # auth pages (no TopNav)
+│   ├── (marketing)/              # landing page (custom TopNav)
 │   ├── admin/                  # admin dashboard (login, job listings, admins)
 │   │   ├── (auth)/             #   login page
 │   │   └── (dashboard)/        #   dashboard, job listings CRUD, admins CRUD
@@ -228,12 +238,10 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   ├── score/              # public CV scoring
 │   │   └── titles/             # title listing
 │   ├── api-docs/               # Scalar API docs page
-│   ├── auth/                   # OAuth callback handler
-│   ├── dashboard/              # user dashboard (matches + bulk apply)
-│   ├── cv-check/               # authenticated CV scoring page
-│   ├── profile/                # user profile page
-│   ├── layout.tsx
-│   └── page.tsx
+│   ├── cv-check/               # CV score checker page (custom nav)
+│   ├── components/               # app-level shared: TopNav, CVManager, NotificationCenter
+│   ├── layout.tsx                # root layout (SessionProvider)
+│   └── page.tsx                  # re-exports (marketing)/page
 ├── components/
 │   ├── __tests__/
 │   ├── NotificationCenter.tsx   # notification bell + dropdown
@@ -260,7 +268,7 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   ├── user-profile.ts          # User profile helpers
 │   └── validations.ts           # Zod schemas (20+ schemas)
 ├── add-data/                    # batch job listing data
-├── middleware.ts                 # auth guard (admin routes + API + cv-check)
+├── middleware.ts                  # auth guard + Supabase cookie sync
 ├── next.config.ts               # withNextOpenApi wrapper
 ├── next.openapi.json            # OpenAPI spec + generation config
 └── vitest.config.ts

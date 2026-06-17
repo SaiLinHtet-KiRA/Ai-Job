@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
+import { updateUserSuitableTitle } from "@/lib/user-profile";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function DELETE(_req: NextRequest) {
+export async function DELETE(req: NextRequest) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getSupabaseAdmin();
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -17,10 +14,9 @@ export async function DELETE(_req: NextRequest) {
     }
     const userId = session.user.id;
 
-    // Get user's CV
     const { data: cv, error: fetchError } = await supabase
       .from("user_cvs")
-      .select("storage_path")
+      .select("id, storage_path")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -28,7 +24,6 @@ export async function DELETE(_req: NextRequest) {
       return NextResponse.json({ error: "No CV found" }, { status: 404 });
     }
 
-    // Delete from storage
     const { error: storageError } = await supabase.storage
       .from("cvs")
       .remove([cv.storage_path]);
@@ -37,14 +32,26 @@ export async function DELETE(_req: NextRequest) {
       console.error("Storage delete error:", storageError);
     }
 
-    // Delete from database
+    const { error: unlinkError } = await supabase
+      .from("applications")
+      .update({ cv_id: null })
+      .eq("cv_id", cv.id);
+
+    if (unlinkError) {
+      console.error("Unlink applications error:", unlinkError);
+    }
+
+    updateUserSuitableTitle(userId, []).catch((err) => {
+      console.error("Failed to clear suitable title:", err);
+    });
+
     const { error: dbError } = await supabase
       .from("user_cvs")
       .delete()
-      .eq("user_id", userId);
+      .eq("id", cv.id);
 
     if (dbError) {
-      return NextResponse.json({ error: "Failed to delete CV" }, { status: 500 });
+      return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

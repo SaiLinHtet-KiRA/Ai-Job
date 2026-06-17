@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function CTASection() {
   return (
-    <section className="relative overflow-hidden border-t border-white/5 px-6 py-28">
+    <section className="relative overflow-hidden border-t border-white/5 px-6 py-20">
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-purple-500/5 to-blue-500/8" />
         <div className="absolute top-0 left-1/2 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />

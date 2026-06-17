@@ -1,21 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function HowItWorksSection() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return (
-    <section className="border-t border-white/5 px-6 py-24">
+    <section className="border-t border-white/5 px-6 py-16">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-white">Your full job search, in one place</h2>
           <p className="mt-4 text-[16px] text-[#8898aa]">From CV to offer — every step covered</p>
         </div>
 
-        <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
               step: "01",
               title: "Upload CV",
               description: "Upload your CV to your profile. AI extracts your skills, experience, and preferences automatically.",
-              href: "/login",
+              href: isAuthenticated ? "/profile" : "/login",
               cta: "Go to Profile",
               color: "from-primary/20 to-primary/5",
               border: "border-primary/20",
@@ -29,7 +35,7 @@ export default function HowItWorksSection() {
               step: "02",
               title: "Browse Jobs",
               description: "AI matches your profile with thousands of jobs. Filter by role, salary, and location.",
-              href: "/login",
+              href: isAuthenticated ? "/jobs" : "/login",
               cta: "Browse Jobs",
               color: "from-blue-500/20 to-blue-500/5",
               border: "border-blue-500/20",
@@ -43,7 +49,7 @@ export default function HowItWorksSection() {
               step: "03",
               title: "Smart Apply",
               description: "Select jobs and apply in bulk. AI writes a tailored cover letter for each application.",
-              href: "/login",
+              href: isAuthenticated ? "/applications" : "/login",
               cta: "Start Applying",
               color: "from-emerald-500/20 to-emerald-500/5",
               border: "border-emerald-500/20",
@@ -57,7 +63,7 @@ export default function HowItWorksSection() {
               step: "04",
               title: "Track Progress",
               description: "See every application's status in one dashboard. Know exactly where you stand.",
-              href: "/login",
+              href: isAuthenticated ? "/dashboard" : "/login",
               cta: "View Tracker",
               color: "from-purple-500/20 to-purple-500/5",
               border: "border-purple-500/20",

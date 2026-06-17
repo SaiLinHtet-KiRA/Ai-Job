@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/next-auth";
 import { getUserProfile } from "@/lib/user-profile";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import Link from "next/link";
-import TopNav from "../components/TopNav";
 import MatchesFeed from "./MatchesFeed";
 import { Suspense } from "react";
 
@@ -129,9 +128,7 @@ export default async function DashboardPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#0a2540]">
-      <TopNav />
-
+    <>
       <main className="px-6 py-8">
         <div className="mx-auto max-w-6xl">
           {/* Welcome Section */}
@@ -316,6 +313,6 @@ export default async function DashboardPage() {
 
         </div>
       </main>
-    </div>
+    </>
   );
 }

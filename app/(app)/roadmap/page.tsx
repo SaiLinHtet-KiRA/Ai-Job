@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import { Pagination } from "@/components/ui/Pagination";
 
 type Course = {
@@ -112,14 +111,8 @@ export default function RoadmapPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a2540] px-6 py-16">
+    <div className="px-6 py-16">
       <div className="mx-auto max-w-3xl">
-        <Link href="/dashboard" className="mb-8 inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:text-primary-dark">
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          Dashboard
-        </Link>
 
         <h1 className="text-2xl font-semibold text-white">Learning Roadmap</h1>
         <p className="mt-2 text-[14px] text-[#8898aa]">

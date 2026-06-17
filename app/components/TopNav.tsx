@@ -2,18 +2,25 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import NotificationCenter from "./NotificationCenter";
 
 export default function TopNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
 
+  const navLinkClass = (href: string) =>
+    `text-[14px] transition-colors ${
+      pathname.startsWith(href)
+        ? "font-semibold text-white"
+        : "text-[#8898aa] hover:text-white"
+    }`;
+
   const handleSignOut = async () => {
-    console.log("dasdasd");
     const supabase = getSupabaseBrowser();
     await supabase.auth.signOut();
     await signOut({ redirect: false });
@@ -38,28 +45,16 @@ export default function TopNav() {
         {/* Navigation Links */}
         {isAuthenticated && (
           <div className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/dashboard"
-              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
-            >
+            <Link href="/dashboard" className={navLinkClass("/dashboard")}>
               Dashboard
             </Link>
-            <Link
-              href="/jobs"
-              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
-            >
+            <Link href="/jobs" className={navLinkClass("/jobs")}>
               Browse Jobs
             </Link>
-            <Link
-              href="/applications"
-              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
-            >
+            <Link href="/applications" className={navLinkClass("/applications")}>
               Applications
             </Link>
-            <Link
-              href="/profile"
-              className="text-[14px] text-[#8898aa] hover:text-white transition-colors"
-            >
+            <Link href="/profile" className={navLinkClass("/profile")}>
               Profile
             </Link>
           </div>

@@ -15,6 +15,7 @@ vi.mock("next-auth/react", () => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockRouterPush }),
+  usePathname: () => "/dashboard",
 }));
 
 vi.mock("@/lib/supabase-browser", () => ({
@@ -25,10 +26,12 @@ vi.mock("next/link", () => ({
   default: ({
     children,
     href,
+    className,
   }: {
     children: React.ReactNode;
     href: string;
-  }) => <a href={href}>{children}</a>,
+    className?: string;
+  }) => <a href={href} className={className}>{children}</a>,
 }));
 
 vi.mock("@/app/components/NotificationCenter", () => ({
@@ -132,6 +135,20 @@ describe("TopNav", () => {
     it("renders Browse Jobs link", () => {
       render(<TopNav />);
       expect(screen.getByText("Browse Jobs")).toBeInTheDocument();
+    });
+
+    it("highlights Dashboard link as active when on /dashboard", () => {
+      render(<TopNav />);
+      const dashLink = screen.getByText("Dashboard");
+      expect(dashLink.className).toContain("font-semibold");
+      expect(dashLink.className).toContain("text-white");
+    });
+
+    it("does not highlight Browse Jobs as active when on /dashboard", () => {
+      render(<TopNav />);
+      const jobsLink = screen.getByText("Browse Jobs");
+      expect(jobsLink.className).toContain("text-[#8898aa]");
+      expect(jobsLink.className).not.toContain("font-semibold");
     });
   });
 

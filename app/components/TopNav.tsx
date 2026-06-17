@@ -24,10 +24,7 @@ export default function TopNav() {
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0a2540]/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         {/* Logo */}
-        <Link
-          href={isAuthenticated ? "/dashboard" : "/"}
-          className="flex items-center gap-2"
-        >
+        <Link href={"/"} className="flex items-center gap-2">
           <Image
             src="/logo.avif"
             alt="easy2apply"

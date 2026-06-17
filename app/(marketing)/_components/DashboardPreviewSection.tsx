@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function DashboardPreviewSection() {
   return (
-    <section className="border-t border-white/5 px-6 py-20">
+    <section className="border-t border-white/5 px-6 py-14">
       <div className="mx-auto max-w-6xl">
         <div className="grid items-center gap-12 md:grid-cols-2">
           <div className="order-2 md:order-1 rounded-2xl border border-white/10 bg-white/[0.02] p-6">

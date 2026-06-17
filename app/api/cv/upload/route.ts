@@ -79,6 +79,11 @@ export async function POST(req: NextRequest) {
       for (const oldCv of oldCvs) {
         await supabase.storage.from("cvs").remove([oldCv.storage_path]);
       }
+      // Unlink applications referencing old CV
+      await supabase
+        .from("applications")
+        .update({ cv_id: null })
+        .in("cv_id", oldCvs.map((c) => c.id));
       // Delete old records
       await supabase.from("user_cvs").delete().eq("user_id", userId);
     }

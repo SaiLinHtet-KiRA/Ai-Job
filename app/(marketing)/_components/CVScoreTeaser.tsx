@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function CVScoreTeaser() {
   return (
-    <section className="border-t border-white/5 px-6 py-20">
+    <section className="border-t border-white/5 px-6 py-14">
       <div className="mx-auto max-w-6xl">
         <div className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent">
           <div className="grid gap-0 md:grid-cols-2">

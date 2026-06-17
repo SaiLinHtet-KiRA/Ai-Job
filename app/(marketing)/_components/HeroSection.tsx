@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-6 py-24 lg:py-32">
+    <section className="relative overflow-hidden px-6 py-16 lg:py-24">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -right-1/4 h-[900px] w-[900px] rounded-full bg-gradient-to-br from-primary/20 via-purple-500/10 to-transparent blur-3xl" />
         <div className="absolute -bottom-1/4 -left-1/4 h-[700px] w-[700px] rounded-full bg-gradient-to-tr from-blue-500/10 via-primary/10 to-transparent blur-3xl" />
@@ -22,10 +22,10 @@ export default function HeroSection() {
             10x faster with AI
           </span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-[#8898aa]">
+        <p className="mx-auto mt-4 max-w-2xl text-[17px] leading-relaxed text-[#8898aa]">
           Upload your CV once. Our AI scores it, finds your best-fit jobs, generates tailored cover letters, and lets you bulk apply — all in minutes.
         </p>
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
             href="/login"
             className="w-full rounded-xl bg-primary px-8 py-4 text-[15px] font-semibold text-white transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 sm:w-auto"
@@ -40,7 +40,7 @@ export default function HeroSection() {
           </Link>
         </div>
 
-        <div className="mt-16 grid grid-cols-3 gap-8 border-t border-white/10 pt-10">
+        <div className="mt-12 grid grid-cols-3 gap-8 border-t border-white/10 pt-8">
           <div>
             <div className="text-3xl font-bold text-white">10k+</div>
             <div className="mt-1 text-[13px] text-[#8898aa]">Jobs Matched</div>

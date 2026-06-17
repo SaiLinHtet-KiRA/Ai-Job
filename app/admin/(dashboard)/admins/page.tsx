@@ -1,6 +1,8 @@
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { AdminListClient } from "./AdminListClient";
 
+export const dynamic = "force-dynamic";
+
 interface Admin {
   id: number;
   email: string;

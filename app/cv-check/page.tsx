@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import CVCheckNav from "./_components/CVCheckNav";
 import CVCheckHero from "./_components/CVCheckHero";
 import UploadCard from "./_components/UploadCard";
@@ -8,11 +10,15 @@ import CVCheckResults from "./_components/CVCheckResults";
 import SocialProofBar from "./_components/SocialProofBar";
 import HowItWorksSection from "./_components/HowItWorksSection";
 import FeaturesSection from "./_components/FeaturesSection";
-import TestimonialsSection from "./_components/TestimonialsSection";
+import AboutUsSection from "./_components/AboutUsSection";
 import CVCheckFAQ from "./_components/CVCheckFAQ";
 import { ScoreResult, MatchedJob } from "./_components/types";
 
 export default function Home() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const router = useRouter();
+
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,6 +66,10 @@ export default function Home() {
   );
 
   const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
     if (!file) return;
     setLoading(true);
     setError(null);
@@ -203,7 +213,7 @@ export default function Home() {
           <SocialProofBar />
           <HowItWorksSection />
           <FeaturesSection />
-          <TestimonialsSection />
+          <AboutUsSection />
         </>
       )}
 

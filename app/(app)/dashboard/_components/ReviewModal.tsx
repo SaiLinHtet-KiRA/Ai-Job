@@ -51,7 +51,7 @@ export default function ReviewModal({
           </button>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto p-6">
+        <div className="max-h-[60vh] overflow-y-auto p-6 scrollbar-dark">
           {!canBulkApply && (
             <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[13px] text-amber-400">
               Some selected jobs require manual application (no email provided). Only email-apply jobs will be processed.
@@ -74,7 +74,37 @@ export default function ReviewModal({
             </div>
           ) : (
             <>
-              <div className="space-y-4">
+              <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[12px] font-medium uppercase text-[#8898aa]">Application Details</p>
+
+                <div>
+                  <label className="mb-1 block text-[13px] text-[#8898aa]">Job Type</label>
+                  <select
+                    value={jobType}
+                    onChange={(e) => setJobType(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-[#0a2540] px-3 py-2.5 text-[14px] text-white outline-none focus:border-primary/50"
+                  >
+                    {JOB_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[13px] text-[#8898aa]">Expected Salary</label>
+                  <input
+                    type="text"
+                    value={expectedSalary}
+                    onChange={(e) => setExpectedSalary(e.target.value)}
+                    placeholder="e.g. $80,000 - $100,000"
+                    className="w-full rounded-lg border border-white/10 bg-[#0a2540] px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-[#8898aa]/50 focus:border-primary/50"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-4">
                 {selectedMatches.map((match) => (
                   <div key={match.job_listings.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
                     <div className="flex items-start justify-between">
@@ -107,36 +137,6 @@ export default function ReviewModal({
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-6 space-y-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-[12px] font-medium uppercase text-[#8898aa]">Application Details</p>
-
-                <div>
-                  <label className="mb-1 block text-[13px] text-[#8898aa]">Job Type</label>
-                  <select
-                    value={jobType}
-                    onChange={(e) => setJobType(e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-[#0a2540] px-3 py-2.5 text-[14px] text-white outline-none focus:border-primary/50"
-                  >
-                    {JOB_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-[13px] text-[#8898aa]">Expected Salary</label>
-                  <input
-                    type="text"
-                    value={expectedSalary}
-                    onChange={(e) => setExpectedSalary(e.target.value)}
-                    placeholder="e.g. $80,000 - $100,000"
-                    className="w-full rounded-lg border border-white/10 bg-[#0a2540] px-3 py-2.5 text-[14px] text-white outline-none placeholder:text-[#8898aa]/50 focus:border-primary/50"
-                  />
-                </div>
               </div>
             </>
           )}

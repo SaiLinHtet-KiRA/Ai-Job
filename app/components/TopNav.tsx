@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import NotificationCenter from "./NotificationCenter";
 
 export default function TopNav() {
-  const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
 
   const navLinkClass = (href: string) =>
@@ -24,7 +24,9 @@ export default function TopNav() {
     const supabase = getSupabaseBrowser();
     await supabase.auth.signOut();
     await signOut({ redirect: false });
-    router.push("/");
+    try { localStorage.clear(); } catch {}
+    try { sessionStorage.clear(); } catch {}
+    window.location.replace("/");
   };
 
   return (
@@ -51,6 +53,12 @@ export default function TopNav() {
             <Link href="/jobs" className={navLinkClass("/jobs")}>
               Browse Jobs
             </Link>
+            <Link href="/roadmap" className={navLinkClass("/roadmap")}>
+              Courses
+            </Link>
+            <Link href="/cv-check" className={navLinkClass("/cv-check")}>
+              CV Score
+            </Link>
             <Link href="/applications" className={navLinkClass("/applications")}>
               Applications
             </Link>
@@ -62,7 +70,9 @@ export default function TopNav() {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-          {isAuthenticated ? (
+          {isLoading ? (
+            <div className="h-4 w-16 animate-pulse rounded bg-white/10" />
+          ) : isAuthenticated ? (
             <div className="flex items-center gap-3">
               <NotificationCenter />
               <span className="hidden text-[13px] text-[#8898aa] sm:block">
@@ -77,12 +87,6 @@ export default function TopNav() {
             </div>
           ) : (
             <>
-              <Link
-                href="/cv-check"
-                className="hidden text-[14px] text-[#8898aa] hover:text-white transition-colors sm:block"
-              >
-                CV Score
-              </Link>
               <Link
                 href="/login"
                 className="text-[14px] text-[#8898aa] hover:text-white transition-colors"

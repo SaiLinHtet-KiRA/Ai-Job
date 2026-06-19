@@ -26,6 +26,11 @@ export async function middleware(request: NextRequest) {
 
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
+  const authPages = ["/login", "/signup", "/forgot-password", "/reset-password"];
+  if (authPages.some((p) => pathname.startsWith(p)) && token) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   const protectedPaths = ["/dashboard", "/jobs", "/roadmap", "/applications", "/profile", "/cv-check"];
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
 

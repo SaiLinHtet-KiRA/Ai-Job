@@ -101,6 +101,7 @@ export default function EmailsPage() {
   useEffect(() => {
     setTypeFilter(typeFromUrl);
     fetchEmails(1, typeFromUrl, statusFilter);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeFromUrl]);
 
   const goToPage = (p: number) => {

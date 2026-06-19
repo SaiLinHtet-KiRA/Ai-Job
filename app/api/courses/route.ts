@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error, count } = await supabase
     .from("role_courses")
-    .select("sort_order, courses(id, title, url, platform, duration, level, description)", { count: "exact" })
+    .select("sort_order, courses(id, title, url, platform, duration, level, description, instructor, created_at)", { count: "exact" })
     .eq("role", role.toLowerCase())
     .order("sort_order", { ascending: true })
     .range(offset, offset + limit - 1);

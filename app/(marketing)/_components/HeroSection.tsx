@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function HeroSection() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return (
     <section className="relative overflow-hidden px-6 py-16 lg:py-24">
       <div className="absolute inset-0 overflow-hidden">
@@ -27,7 +33,7 @@ export default function HeroSection() {
         </p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
-            href="/login"
+            href={isAuthenticated ? "/dashboard" : "/login"}
             className="w-full rounded-xl bg-primary px-8 py-4 text-[15px] font-semibold text-white transition-all hover:bg-primary-dark hover:shadow-xl hover:shadow-primary/20 sm:w-auto"
           >
             Get Started Free

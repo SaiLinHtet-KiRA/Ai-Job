@@ -11,6 +11,8 @@ type Course = {
   duration: string | null;
   level: string;
   description: string | null;
+  instructor: string;
+  created_at: string;
   sort_order: number;
 };
 
@@ -210,58 +212,69 @@ export default function RoadmapPage() {
         )}
 
         {!loading && courses.length > 0 && (
-          <div className="mt-8 space-y-3">
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-[#8898aa]">
+          <div className="mt-8">
+            <p className="mb-4 text-[12px] font-semibold uppercase tracking-wider text-[#8898aa]">
               {total} course{total !== 1 ? "s" : ""} recommended
             </p>
-            {courses.map((course, i) => (
-              <a
-                key={course.id}
-                href={course.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-all hover:border-white/20 hover:bg-white/[0.05]"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 text-lg">{platformIcon(course.platform)}</span>
-                    <div>
-                      <h3 className="text-[15px] font-medium text-white group-hover:text-primary">
-                        {(page - 1) * 20 + i + 1}. {course.title}
-                      </h3>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-[#8898aa]">
-                        <span className="capitalize">{course.platform}</span>
-                        {course.duration && (
-                          <>
-                            <span className="text-white/20">&middot;</span>
-                            <span>{course.duration}</span>
-                          </>
-                        )}
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${levelColor(course.level)}`}>
-                          {course.level}
-                        </span>
-                      </div>
-                      {course.description && (
-                        <p className="mt-2 text-[13px] leading-relaxed text-[#8898aa]">
-                          {course.description}
-                        </p>
-                      )}
-                    </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {courses.map((course, i) => (
+                <a
+                  key={course.id}
+                  href={course.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-all hover:border-white/20 hover:bg-white/[0.05]"
+                >
+                  <div className="mb-3 flex items-start justify-between">
+                    <span className="text-xl">{platformIcon(course.platform)}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${levelColor(course.level)}`}>
+                      {course.level}
+                    </span>
                   </div>
-                  <svg className="mt-1 h-4 w-4 shrink-0 text-[#8898aa] transition-colors group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                  </svg>
-                </div>
-              </a>
-            ))}
+                  <h3 className="text-[14px] font-medium text-white group-hover:text-primary leading-snug">
+                    {(page - 1) * 20 + i + 1}. {course.title}
+                  </h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#8898aa]">
+                    <span className="capitalize">{course.platform}</span>
+                    {course.duration && (
+                      <>
+                        <span className="text-white/20">&middot;</span>
+                        <span>{course.duration}</span>
+                      </>
+                    )}
+                    {course.instructor && (
+                      <>
+                        <span className="text-white/20">&middot;</span>
+                        <span>{course.instructor}</span>
+                      </>
+                    )}
+                    <span className="text-white/20">&middot;</span>
+                    <span>{new Date(course.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {course.description && (
+                    <p className="mt-3 text-[13px] leading-relaxed text-[#8898aa] line-clamp-3">
+                      {course.description}
+                    </p>
+                  )}
+                  <div className="mt-auto pt-3 flex items-center gap-1 text-[12px] text-[#8898aa] group-hover:text-primary">
+                    View course
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </div>
+                </a>
+              ))}
+            </div>
             {totalPages > 1 && (
-              <Pagination
-                variant="dark"
-                page={page}
-                totalPages={totalPages}
-                onPageChange={(p) => fetchCourses(role, p)}
-                showInfo
-              />
+              <div className="mt-6">
+                <Pagination
+                  variant="dark"
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={(p) => fetchCourses(role, p)}
+                  showInfo
+                />
+              </div>
             )}
           </div>
         )}

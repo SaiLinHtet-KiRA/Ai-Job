@@ -1,14 +1,13 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const errorParam = searchParams.get("error");
   const error = errorParam === "banned" ? "Your account has been banned." : errorParam;
   const [email, setEmail] = useState("");
@@ -44,7 +43,7 @@ function LoginContent() {
       setLocalError("Invalid email or password");
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   }
 

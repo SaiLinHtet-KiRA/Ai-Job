@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
 import { updateUserSuitableTitle } from "@/lib/user-profile";
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE() {
   try {
     const supabase = getSupabaseAdmin();
 

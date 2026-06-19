@@ -289,17 +289,17 @@ export default function AdminLayout({
         />
       )}
 
-      {/* Sidebar — desktop: fixed, mobile: slide-in */}
+      {/* Sidebar — desktop: static, mobile: slide-in */}
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-full w-60 flex-col border-r border-zinc-200/60 bg-white/80 backdrop-blur-sm transition-transform duration-300 dark:border-zinc-800 dark:bg-zinc-900/80 ${
+        className={`fixed left-0 top-0 z-40 flex h-screen w-60 flex-col border-r border-zinc-200/60 bg-white/95 transition-transform duration-300 dark:border-zinc-800 dark:bg-zinc-900/95 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
+        } lg:relative lg:translate-x-0 lg:z-0`}
       >
         {sidebarContent}
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 px-4 pb-8 pt-20 lg:ml-60 lg:px-8 lg:pt-8">
+      <main className="flex-1 px-4 pb-8 pt-20 lg:px-8 lg:pt-8">
         {children}
       </main>
     </div>

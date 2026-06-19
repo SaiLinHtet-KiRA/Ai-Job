@@ -81,6 +81,7 @@ export default function AuditLogPage() {
     setFilter(actionFromUrl);
     setPage(1);
     fetchAuditLogs(1, actionFromUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actionFromUrl]);
 
   const goToPage = (p: number) => {

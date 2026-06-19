@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import LocationSelector from "@/components/LocationSelector";
 import { Pagination } from "@/components/ui/Pagination";

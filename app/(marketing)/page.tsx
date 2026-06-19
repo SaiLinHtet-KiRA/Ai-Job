@@ -2,10 +2,8 @@ import TopNav from "../components/TopNav";
 import HeroSection from "./_components/HeroSection";
 import CVScoreTeaser from "./_components/CVScoreTeaser";
 import HowItWorksSection from "./_components/HowItWorksSection";
-import SkillRoadmapSection from "./_components/SkillRoadmapSection";
-import DashboardPreviewSection from "./_components/DashboardPreviewSection";
+import SkillAndDashboardSection from "./_components/SkillAndDashboardSection";
 import CTASection from "./_components/CTASection";
-import Footer from "./_components/Footer";
 
 export default function LandingPage() {
   return (
@@ -14,10 +12,8 @@ export default function LandingPage() {
       <HeroSection />
       <CVScoreTeaser />
       <HowItWorksSection />
-      <SkillRoadmapSection />
-      <DashboardPreviewSection />
+      <SkillAndDashboardSection />
       <CTASection />
-      <Footer />
     </div>
   );
 }

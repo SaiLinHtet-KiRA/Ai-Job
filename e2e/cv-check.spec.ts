@@ -17,8 +17,8 @@ test.describe("CV Check Page", () => {
 
     await page.locator("#how-it-works").scrollIntoViewIfNeeded();
     await expect(page.locator("#how-it-works").getByText("Upload your CV")).toBeVisible();
-    await expect(page.locator("#how-it-works").getByText("AI analyzes it")).toBeVisible();
-    await expect(page.locator("#how-it-works").getByText("Get your score")).toBeVisible();
+    await expect(page.locator("#how-it-works").getByText("AI analyzes instantly")).toBeVisible();
+    await expect(page.locator("#how-it-works").getByText("Get actionable feedback")).toBeVisible();
   });
 
   test("shows social proof section with stats", async ({ page }) => {
@@ -39,12 +39,12 @@ test.describe("CV Check Page", () => {
     await expect(page.locator("#features").getByText("Missing keywords")).toBeVisible();
   });
 
-  test("shows testimonials section", async ({ page }) => {
+  test("shows about us section", async ({ page }) => {
     await page.goto("/cv-check");
 
-    await page.locator("text=What people say").scrollIntoViewIfNeeded();
-    await expect(page.locator("text=Sarah K.")).toBeVisible();
-    await expect(page.locator("text=James L.")).toBeVisible();
+    await page.locator("#about-us").scrollIntoViewIfNeeded();
+    await expect(page.locator("#about-us").getByText("About us")).toBeVisible();
+    await expect(page.locator("#about-us").getByText("AI-first approach")).toBeVisible();
   });
 
   test("shows FAQ section", async ({ page }) => {

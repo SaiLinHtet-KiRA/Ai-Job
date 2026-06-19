@@ -1,4 +1,3 @@
-import Image from "next/image";
 import FAQSection from "./FAQSection";
 
 export default function CVCheckFAQ() {
@@ -6,9 +5,9 @@ export default function CVCheckFAQ() {
     <>
       <FAQSection />
 
-      <section className="bg-white">
+      <section className="border-t border-white/5 bg-[#0a2540]">
         <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
-          <div className="overflow-hidden rounded-2xl bg-[#0a2540]">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-primary/10 to-purple-500/10">
             <div className="relative px-8 py-16 sm:px-16 sm:py-20">
               <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-[80px]" />
               <div className="absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-accent/15 blur-[60px]" />
@@ -34,20 +33,6 @@ export default function CVCheckFAQ() {
           </div>
         </div>
       </section>
-
-      <footer className="border-t border-[#e6ebf1] bg-white dark:border-white/10 dark:bg-[#0a2540]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-center sm:flex-row">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.avif" alt="easy2apply" width={20} height={20} className="h-5 w-5 rounded" />
-            <span className="text-[13px] text-[#8898aa]">
-              &copy; {new Date().getFullYear()} easy2apply
-            </span>
-          </div>
-          <p className="text-[13px] text-[#8898aa]">
-            Built for job seekers everywhere.
-          </p>
-        </div>
-      </footer>
     </>
   );
 }

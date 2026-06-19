@@ -68,9 +68,9 @@ describe("TopNav", () => {
       expect(screen.getByText("Get Started")).toBeInTheDocument();
     });
 
-    it("renders CV Score link", () => {
+    it("does not render CV Score link when unauthenticated", () => {
       render(<TopNav />);
-      expect(screen.getByText("CV Score")).toBeInTheDocument();
+      expect(screen.queryByText("CV Score")).toBeNull();
     });
 
     it("does not render dashboard nav links", () => {
@@ -160,9 +160,10 @@ describe("TopNav", () => {
       });
     });
 
-    it("renders Sign in link during loading", () => {
+    it("shows loading placeholder during loading", () => {
       render(<TopNav />);
-      expect(screen.getByText("Sign in")).toBeInTheDocument();
+      expect(screen.getByRole("navigation").querySelector(".animate-pulse")).toBeTruthy();
+      expect(screen.queryByText("Sign in")).toBeNull();
     });
 
     it("does not render authenticated nav during loading", () => {

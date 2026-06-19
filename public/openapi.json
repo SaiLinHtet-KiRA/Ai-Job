@@ -1226,10 +1226,10 @@
                           "with": {
                             "type": "object"
                           },
-                          "__@iterator@565": {
+                          "__@iterator@575": {
                             "type": "object"
                           },
-                          "__@unscopables@567": {
+                          "__@unscopables@577": {
                             "type": "object",
                             "properties": {
                               "length": {
@@ -1973,7 +1973,7 @@
                                   }
                                 ]
                               },
-                              "__@iterator@565": {
+                              "__@iterator@575": {
                                 "oneOf": [
                                   {
                                     "type": "object"
@@ -1992,7 +1992,7 @@
                                   }
                                 ]
                               },
-                              "__@unscopables@567": {
+                              "__@unscopables@577": {
                                 "oneOf": [
                                   {
                                     "type": "object"
@@ -2055,8 +2055,8 @@
                           "toSorted",
                           "toSpliced",
                           "with",
-                          "__@iterator@565",
-                          "__@unscopables@567"
+                          "__@iterator@575",
+                          "__@unscopables@577"
                         ]
                       }
                     },
@@ -3039,10 +3039,10 @@
                           "with": {
                             "type": "object"
                           },
-                          "__@iterator@565": {
+                          "__@iterator@575": {
                             "type": "object"
                           },
-                          "__@unscopables@567": {
+                          "__@unscopables@577": {
                             "type": "object",
                             "properties": {
                               "length": {
@@ -3786,7 +3786,7 @@
                                   }
                                 ]
                               },
-                              "__@iterator@565": {
+                              "__@iterator@575": {
                                 "oneOf": [
                                   {
                                     "type": "object"
@@ -3805,7 +3805,7 @@
                                   }
                                 ]
                               },
-                              "__@unscopables@567": {
+                              "__@unscopables@577": {
                                 "oneOf": [
                                   {
                                     "type": "object"
@@ -3868,8 +3868,8 @@
                           "toSorted",
                           "toSpliced",
                           "with",
-                          "__@iterator@565",
-                          "__@unscopables@567"
+                          "__@iterator@575",
+                          "__@unscopables@577"
                         ]
                       }
                     },

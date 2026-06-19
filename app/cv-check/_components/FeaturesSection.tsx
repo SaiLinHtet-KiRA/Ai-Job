@@ -1,15 +1,15 @@
 export default function FeaturesSection() {
   return (
-    <section id="features" className="bg-[#f6f9fc]">
+    <section id="features" className="border-t border-white/5 bg-[#0a2540]">
       <div className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
         <div className="mb-16 max-w-xl">
           <p className="text-[13px] font-semibold uppercase tracking-[0.15em] text-accent">
             What you get
           </p>
-          <h2 className="mt-3 text-[2rem] font-semibold leading-[1.15] tracking-[-0.02em] text-[#0a2540] sm:text-[2.5rem]">
+          <h2 className="mt-3 text-[2rem] font-semibold leading-[1.15] tracking-[-0.02em] text-white sm:text-[2.5rem]">
             Specific feedback, not generic advice
           </h2>
-          <p className="mt-4 text-[16px] leading-[1.7] text-[#425466]">
+          <p className="mt-4 text-[16px] leading-[1.7] text-[#8898aa]">
             Every result is tailored to your actual CV — not a template response.
           </p>
         </div>
@@ -39,13 +39,13 @@ export default function FeaturesSection() {
           ].map((f) => (
             <div
               key={f.title}
-              className="group rounded-xl border border-[#e6ebf1] bg-white p-8 transition-all duration-300 hover:border-[#d3dce6] hover:shadow-md hover:shadow-[#0a2540]/[0.04]"
+              className="group rounded-xl border border-white/10 bg-white/[0.03] p-8 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06]"
             >
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a2540]">{f.title}</h3>
-                <span className="rounded-full bg-[#f6f9fc] px-2.5 py-1 text-[11px] font-semibold text-[#8898aa]">{f.tag}</span>
+                <h3 className="text-[16px] font-semibold tracking-[-0.01em] text-white">{f.title}</h3>
+                <span className="rounded-full bg-white/[0.08] px-2.5 py-1 text-[11px] font-semibold text-[#8898aa]">{f.tag}</span>
               </div>
-              <p className="text-[14px] leading-[1.65] text-[#425466]">{f.desc}</p>
+              <p className="text-[14px] leading-[1.65] text-[#8898aa]">{f.desc}</p>
             </div>
           ))}
         </div>

@@ -74,8 +74,9 @@ export default function HowItWorksSection() {
               ),
             },
           ].map((item) => (
-            <div
+            <Link
               key={item.step}
+              href={item.href}
               className={`group relative overflow-hidden rounded-2xl border ${item.border} bg-gradient-to-b ${item.color} p-6 transition-all hover:scale-[1.02]`}
             >
               <div className="mb-5 flex items-center justify-between">
@@ -86,16 +87,13 @@ export default function HowItWorksSection() {
               </div>
               <h3 className="text-lg font-semibold text-white">{item.title}</h3>
               <p className="mt-2 text-[13px] leading-relaxed text-[#8898aa]">{item.description}</p>
-              <Link
-                href={item.href}
-                className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-white/60 transition-colors hover:text-white"
-              >
+              <div className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-white/60 group-hover:text-white">
                 {item.cta}
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </Link>
-            </div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>

@@ -66,7 +66,7 @@ function computeMatchScore(
   );
   const titleScore = (matched.length / userTitles.length) * 100;
 
-  return Math.min(100, Math.round(titleScore * 0.8 + Math.random() * 5));
+  return Math.min(100, Math.round(titleScore * 0.8));
 }
 
 async function getJobMatches(
@@ -77,7 +77,8 @@ async function getJobMatches(
   const { data: jobs } = await supabase
     .from("job_listings")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(200);
 
   if (!jobs?.length) return [];
 
@@ -95,22 +96,23 @@ async function getJobMatches(
 async function getDashboardStats(userId: string, email: string) {
   const supabase = getSupabaseAdmin();
 
-  const { count: applicationsSent } = await supabase
-    .from("applications")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId);
-
-  const { data: cvScore } = await supabase
-    .from("cv_scores")
-    .select("score")
-    .eq("email", email)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [appsResult, cvResult] = await Promise.all([
+    supabase
+      .from("applications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId),
+    supabase
+      .from("cv_scores")
+      .select("score")
+      .eq("email", email)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   return {
-    applicationsSent: applicationsSent ?? 0,
-    profileScore: cvScore?.score ?? 0,
+    applicationsSent: appsResult.count ?? 0,
+    profileScore: cvResult.data?.score ?? 0,
   };
 }
 
@@ -122,10 +124,12 @@ export default async function DashboardPage() {
   }
 
   const userHasCV = await hasCV(user.id);
-  const stats = userHasCV ? await getDashboardStats(user.id, user.email) : null;
-  const matches = userHasCV && user.suitable_title.length > 0
-    ? await getJobMatches(user.suitable_title)
-    : [];
+  const [stats, matches] = await Promise.all([
+    userHasCV ? getDashboardStats(user.id, user.email) : null,
+    userHasCV && user.suitable_title.length > 0
+      ? getJobMatches(user.suitable_title)
+      : Promise.resolve([] as MatchResult[]),
+  ]);
 
   return (
     <>

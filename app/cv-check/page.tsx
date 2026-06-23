@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import CVCheckNav from "./_components/CVCheckNav";
 import CVCheckHero from "./_components/CVCheckHero";
 import UploadCard from "./_components/UploadCard";
 import CVCheckResults from "./_components/CVCheckResults";
@@ -12,7 +11,7 @@ import HowItWorksSection from "./_components/HowItWorksSection";
 import FeaturesSection from "./_components/FeaturesSection";
 import AboutUsSection from "./_components/AboutUsSection";
 import CVCheckFAQ from "./_components/CVCheckFAQ";
-import { ScoreResult, MatchedJob } from "./_components/types";
+import { ScoreResult } from "./_components/types";
 
 export default function Home() {
   const { status } = useSession();
@@ -24,12 +23,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScoreResult | null>(null);
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
-  const [matchLoading, setMatchLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const MAX_SIZE = 5 * 1024 * 1024;
@@ -83,7 +76,6 @@ export default function Home() {
       }
       const data = await res.json();
       setResult(data.score ?? null);
-      fetchMatches();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -91,79 +83,33 @@ export default function Home() {
     }
   };
 
-  const fetchMatches = async () => {
-    setMatchLoading(true);
-    try {
-      const formData = new FormData();
-      if (file) formData.append("file", file);
-      const res = await fetch("/api/match", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cv_text: file?.name || "general experience skills" }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMatchedJobs(data.jobs?.slice(0, 3) ?? []);
-      }
-    } catch {
-    } finally {
-      setMatchLoading(false);
-    }
-  };
-
-  const resetState = () => {
-    setFile(null);
-    setResult(null);
-    setError(null);
-    setLoading(false);
-    setEmail("");
-    setEmailError(null);
-    setEmailSent(false);
-    setEmailLoading(false);
-    setMatchedJobs([]);
-    setMatchLoading(false);
-    if (inputRef.current) inputRef.current.value = "";
-  };
-
-  const handleEmailSubmit = async () => {
-    setEmailError(null);
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setEmailError("Please enter your email.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setEmailError("Please enter a valid email address.");
-      return;
-    }
-    setEmailLoading(true);
-    try {
-      const res = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmed, source: "cv_score" }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Something went wrong.");
-      }
-      setEmailSent(true);
-    } catch (err) {
-      setEmailError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-    } finally {
-      setEmailLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen">
-      <CVCheckNav />
 
       <section className="relative overflow-hidden bg-[#0a2540]">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-[400px] -right-[300px] h-[800px] w-[800px] rounded-full bg-[#635BFF]/20 blur-[120px]" />
-          <div className="absolute -bottom-[200px] -left-[200px] h-[600px] w-[600px] rounded-full bg-[#00D4AA]/15 blur-[120px]" />
-          <div className="absolute top-[200px] left-1/2 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[#80E9FF]/10 blur-[100px]" />
+          <div className="absolute -top-[400px] -right-[300px] h-[800px] w-[800px] rounded-full bg-[#7C3AED]/25 blur-[120px]" />
+          <div className="absolute -bottom-[200px] -left-[200px] h-[600px] w-[600px] rounded-full bg-[#06B6D4]/20 blur-[120px]" />
+          <div className="absolute top-[200px] left-1/2 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-[#F472B6]/15 blur-[100px]" />
+        </div>
+
+        <div className="absolute top-6 right-6 z-10 hidden items-center gap-3 sm:flex">
+          {[
+            { id: "how-it-works", label: "How it works" },
+            { id: "features", label: "Features" },
+            { id: "about-us", label: "About" },
+            { id: "faq", label: "FAQ" },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="rounded-full border border-white/10 px-3 py-1.5 text-[12px] font-medium text-white/60 transition-colors hover:border-white/20 hover:text-white"
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
 
         <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-36 sm:pb-32 sm:pt-44">
@@ -187,19 +133,7 @@ export default function Home() {
                   onDragLeave={() => setDragActive(false)}
                 />
               ) : (
-                <CVCheckResults
-                  result={result}
-                  email={email}
-                  emailError={emailError}
-                  emailSent={emailSent}
-                  emailLoading={emailLoading}
-                  matchedJobs={matchedJobs}
-                  matchLoading={matchLoading}
-                  onEmailChange={(e) => { setEmail(e.target.value); setEmailError(null); }}
-                  onEmailSubmit={handleEmailSubmit}
-                  onEmailKeyDown={(e) => { if (e.key === "Enter") handleEmailSubmit(); }}
-                  onReset={resetState}
-                />
+                <CVCheckResults result={result} />
               )}
             </div>
           </div>

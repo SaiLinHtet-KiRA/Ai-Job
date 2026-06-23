@@ -102,18 +102,16 @@ Each phase **validates** the next. Don't advance without signal.
 │  Upload CV     │     │  "Analyzing    │     │  Score: 74/100 │
 │  (PDF / Word)  │     │   your CV..."  │     │  Strengths (3) │
 │                │     │   5-10 sec     │     │  Weaknesses(3) │
-│  No signup.    │     │                │     │  Keywords      │
+│  No signup.    │     │                │     │  Summary       │
 │  Free.         │     │                │     │                │
-└────────────────┘     └────────────────┘     │  ── gate ──   │
-                                              │  [Email] →     │
-                                              │  Full report   │
-                                              └────────────────┘
+└────────────────┘     └────────────────┘     └────────────────┘
 ```
 
 **Rules:**
-- CV never stored until user gives email
+- CV never stored without permission
 - Rate limit: 3/hour/IP
 - Errors are friendly, never crashes
+- Results shown inline on the page (no email gate)
 
 ---
 
@@ -161,4 +159,4 @@ Phase 3:  job_snapshots, cv_drafts
 
 ---
 
-*v1.0 — 2025-05-30*
+*v1.1 — 2025-06-23*

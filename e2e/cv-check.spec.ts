@@ -1,6 +1,15 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("CV Check Page", () => {
+  test("shows main TopNav with logo and nav links", async ({ page }) => {
+    await page.goto("/cv-check");
+
+    await expect(page.getByText("easy2apply").first()).toBeVisible();
+    await expect(page.getByText("CV Score")).toBeVisible();
+    await expect(page.getByText("Sign in")).toBeVisible();
+    await expect(page.getByText("Get Started")).toBeVisible();
+  });
+
   test("loads with hero section visible", async ({ page }) => {
     await page.goto("/cv-check");
 
@@ -10,6 +19,30 @@ test.describe("CV Check Page", () => {
     await expect(
       page.getByText("Drop your CV here"),
     ).toBeVisible();
+  });
+
+  test("shows scroll nav tags in hero section", async ({ page }) => {
+    await page.goto("/cv-check");
+
+    await expect(
+      page.locator("button").filter({ hasText: "How it works" }),
+    ).toBeVisible();
+    await expect(
+      page.locator("button").filter({ hasText: "Features" }),
+    ).toBeVisible();
+    await expect(
+      page.locator("button").filter({ hasText: "About" }),
+    ).toBeVisible();
+    await expect(
+      page.locator("button").filter({ hasText: "FAQ" }),
+    ).toBeVisible();
+  });
+
+  test("scrolls to section via nav tag click", async ({ page }) => {
+    await page.goto("/cv-check");
+
+    await page.locator("button").filter({ hasText: "FAQ" }).click();
+    await expect(page.locator("text=Common questions")).toBeVisible();
   });
 
   test("shows how it works section", async ({ page }) => {

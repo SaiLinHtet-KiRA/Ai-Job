@@ -1,6 +1,6 @@
 # easy2apply — User Journey & Flows
 
-> **Last updated:** 2025-05-30
+> **Last updated:** 2025-06-23
 > **Depends on:** product_direction.md
 
 ---
@@ -55,7 +55,7 @@
 ### 2.1 Phase 1: CV Score Flow (Anonymous)
 
 ```
-[Landing Page]
+[Landing Page / CV Check]
      │
      ▼
 ┌──────────────┐    No file?     ┌──────────────────┐
@@ -79,69 +79,47 @@
        │ Success
        ▼
 ┌──────────────────────────────┐
-│ RESULTS PAGE                 │
+│ RESULTS                      │
 │                              │
 │ ┌──────────────────────────┐ │
 │ │ Score: 74/100            │ │
 │ │ ✓ Strengths (3)         │ │
 │ │ ✗ Weaknesses (3)        │ │
-│ │ Summary (2 sentences)   │ │
+│ │ Summary                  │ │
 │ └──────────────────────────┘ │
-│                              │
-│ ─── SOFT GATE BELOW ───     │
-│                              │
-│ "Get your full keyword       │
-│  report + save this result"  │
-│                              │
-│ [Email input] [Send report]  │
-│                              │
-│ (small) "We never share your │
-│ CV without your approval."   │
-└──────────────┬───────────────┘
-               │
-               │ User enters email?
-               ▼
-┌──────────────────────────────┐
-│ SAVE & EMAIL                 │
-│ 1. Store CV in Supabase      │
-│ 2. Insert lead row           │
-│ 3. Send confirmation email   │
-│ 4. Show: "Check your inbox!" │
 └──────────────────────────────┘
 ```
 
-### 2.2 Phase 2: Job Matching Flow (After Score)
+**Note:** The legacy email capture ("Get your full keyword report") and job match teaser ("Jobs that match your CV") sections have been removed from the cv-check page. The page now focuses purely on CV scoring with results displayed inline.
+
+### 2.2 Phase 2: Job Matching Flow (Registered Users)
 
 ```
-[Results Page (after scoring)]
+[Dashboard — after registration]
      │
-     │ Below score + soft gate:
      ▼
 ┌──────────────────────────────┐
-│ "Jobs that match your CV"    │
+│ "Your Top Matches"           │
 │                              │
 │ ┌────────────────────────┐   │
-│ │ 1. Frontend Dev @ Acme │   │   ← top 3 shown free
+│ │ 1. Frontend Dev @ Acme │   │
 │ │ 2. React Dev @ StartCo │   │
 │ │ 3. UI Engineer @ BigCo │   │
 │ └────────────────────────┘   │
 │                              │
-│ "See all 12 matches →"       │   ← registration gate
-│ (requires account)           │
+│ Select jobs → Bulk Apply     │
 └──────────────┬───────────────┘
                │
                │ User clicks a job?
                ▼
 ┌──────────────────────────────┐
-│ JOB DETAIL                   │
+│ JOB DETAIL (Browse Jobs)     │
 │                              │
 │ Title, company, location     │
 │ Required skills              │
-│ Your match: 78%              │
-│ Skills you're missing: [x,y] │
+│ Your match score             │
 │                              │
-│ [Tailor my CV for this role] │  ← Phase 3 (CV Drafting)
-│ [View courses to close gaps] │  ← Phase 2 (Roadmap)
+│ [Apply Now]                  │
 └──────────────────────────────┘
 ```
 

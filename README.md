@@ -174,7 +174,7 @@ npm test
 ```
 e2e/home.spec.ts    — landing page, navigation
 e2e/api.spec.ts     — API response shapes, status codes, auth guards
-e2e/cv-check.spec.ts — CV check page sections
+e2e/cv-check.spec.ts — CV check page: TopNav, hero section, scroll nav tags
 e2e/auth-flow.spec.ts — login, signup, admin login, redirects
 e2e/pages.spec.ts   — protected page redirects
 e2e/admin-cv-scores.spec.ts — admin API auth guards
@@ -238,7 +238,7 @@ push / PR → lint → test → e2e → deploy (main only, Vercel)
 │   │   ├── score/              # public CV scoring
 │   │   └── titles/             # title listing
 │   ├── api-docs/               # Scalar API docs page
-│   ├── cv-check/               # CV score checker page (custom nav)
+│   ├── cv-check/               # CV score checker page (uses main TopNav layout)
 │   ├── components/               # app-level shared: TopNav, CVManager, NotificationCenter
 │   ├── layout.tsx                # root layout (SessionProvider)
 │   └── page.tsx                  # re-exports (marketing)/page

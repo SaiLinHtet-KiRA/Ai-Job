@@ -18,6 +18,7 @@ import {
   courseUpdateSchema,
   bulkCourseSchema,
   bulkCoursesRequestSchema,
+  profileUpdateSchema,
 } from "@/lib/validations";
 
 describe("formatZodError", () => {
@@ -708,5 +709,283 @@ describe("bulkCoursesRequestSchema", () => {
       ],
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("profileUpdateSchema", () => {
+  it("accepts an empty object (all fields optional)", () => {
+    const result = profileUpdateSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts basic string fields", () => {
+    const result = profileUpdateSchema.safeParse({
+      full_name: "John Doe",
+      headline: "Senior Engineer at Acme",
+      location: "San Francisco, CA",
+      about: "Experienced engineer...",
+      website: "https://johndoe.com",
+      linkedin_url: "https://linkedin.com/in/johndoe",
+      phone: "+1 555 123 4567",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.full_name).toBe("John Doe");
+      expect(result.data.headline).toBe("Senior Engineer at Acme");
+      expect(result.data.phone).toBe("+1 555 123 4567");
+    }
+  });
+
+  it("accepts null for optional string fields", () => {
+    const result = profileUpdateSchema.safeParse({
+      full_name: null,
+      headline: null,
+      about: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts skills array", () => {
+    const result = profileUpdateSchema.safeParse({
+      skills: ["React", "TypeScript", "Node.js"],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.skills).toEqual(["React", "TypeScript", "Node.js"]);
+    }
+  });
+
+  it("accepts work experience array", () => {
+    const result = profileUpdateSchema.safeParse({
+      work_experience: [
+        {
+          title: "Senior Engineer",
+          company: "Acme Corp",
+          location: "Remote",
+          start_date: "Jan 2022",
+          end_date: "",
+          current: true,
+          description: "Led engineering team...",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.work_experience).toHaveLength(1);
+      expect(result.data.work_experience![0].title).toBe("Senior Engineer");
+      expect(result.data.work_experience![0].current).toBe(true);
+    }
+  });
+
+  it("rejects work experience with missing title", () => {
+    const result = profileUpdateSchema.safeParse({
+      work_experience: [{ title: "", company: "Acme", start_date: "2022" }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("Job title");
+    }
+  });
+
+  it("rejects work experience with missing company", () => {
+    const result = profileUpdateSchema.safeParse({
+      work_experience: [{ title: "Engineer", company: "", start_date: "2022" }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("Company");
+    }
+  });
+
+  it("accepts education array", () => {
+    const result = profileUpdateSchema.safeParse({
+      education: [
+        {
+          school: "MIT",
+          degree: "Bachelor's",
+          field: "Computer Science",
+          start_year: "2016",
+          end_year: "2020",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.education![0].school).toBe("MIT");
+    }
+  });
+
+  it("rejects education with missing school", () => {
+    const result = profileUpdateSchema.safeParse({
+      education: [{ school: "", degree: "BS", start_year: "2016" }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("School");
+    }
+  });
+
+  it("rejects education with missing degree", () => {
+    const result = profileUpdateSchema.safeParse({
+      education: [{ school: "MIT", degree: "", start_year: "2016" }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("Degree");
+    }
+  });
+
+  it("accepts certifications array", () => {
+    const result = profileUpdateSchema.safeParse({
+      certifications: [
+        {
+          name: "AWS Solutions Architect",
+          issuer: "Amazon Web Services",
+          date: "Jun 2024",
+          url: "https://credential.example.com",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.certifications![0].name).toBe("AWS Solutions Architect");
+    }
+  });
+
+  it("rejects certification with missing name", () => {
+    const result = profileUpdateSchema.safeParse({
+      certifications: [{ name: "", issuer: "AWS" }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("Name");
+    }
+  });
+
+  it("accepts languages array with valid proficiency", () => {
+    const result = profileUpdateSchema.safeParse({
+      languages: [
+        { name: "English", proficiency: "native" },
+        { name: "Spanish", proficiency: "professional" },
+        { name: "French", proficiency: "elementary" },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.languages).toHaveLength(3);
+    }
+  });
+
+  it("rejects language with invalid proficiency", () => {
+    const result = profileUpdateSchema.safeParse({
+      languages: [{ name: "English", proficiency: "fluent" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects language with missing name", () => {
+    const result = profileUpdateSchema.safeParse({
+      languages: [{ name: "", proficiency: "native" }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(formatZodError(result)).toContain("Language name");
+    }
+  });
+
+  it("accepts career preferences", () => {
+    const result = profileUpdateSchema.safeParse({
+      experience_level: "senior",
+      target_roles: ["Staff Engineer", "Engineering Manager"],
+      preferred_locations: ["San Francisco", "Remote"],
+      remote_ok: false,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.remote_ok).toBe(false);
+      expect(result.data.target_roles).toHaveLength(2);
+    }
+  });
+
+  it("accepts full profile update with all sections", () => {
+    const result = profileUpdateSchema.safeParse({
+      full_name: "Jane Doe",
+      headline: "Full Stack Developer",
+      location: "New York, NY",
+      about: "Passionate developer with 5 years of experience.",
+      skills: ["React", "Node.js", "PostgreSQL", "AWS"],
+      languages: [{ name: "English", proficiency: "native" }],
+      website: "https://janedoe.dev",
+      linkedin_url: "https://linkedin.com/in/janedoe",
+      phone: "+1 555 000 1234",
+      work_experience: [
+        {
+          title: "Senior Developer",
+          company: "Tech Co",
+          location: "New York",
+          start_date: "Mar 2023",
+          current: true,
+          description: "Building awesome products.",
+        },
+      ],
+      education: [
+        {
+          school: "NYU",
+          degree: "Master's",
+          field: "Computer Science",
+          start_year: "2019",
+          end_year: "2021",
+        },
+      ],
+      certifications: [
+        {
+          name: "AWS Developer Associate",
+          issuer: "Amazon",
+          date: "2022",
+        },
+      ],
+      experience_level: "senior",
+      target_roles: ["Senior Developer", "Tech Lead"],
+      preferred_locations: ["New York", "Remote"],
+      remote_ok: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("applies defaults for work experience fields", () => {
+    const result = profileUpdateSchema.safeParse({
+      work_experience: [
+        { title: "Dev", company: "Inc", start_date: "2020" },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.work_experience![0].location).toBe("");
+      expect(result.data.work_experience![0].current).toBe(false);
+      expect(result.data.work_experience![0].description).toBe("");
+      expect(result.data.work_experience![0].end_date).toBe("");
+    }
+  });
+
+  it("applies defaults for education fields", () => {
+    const result = profileUpdateSchema.safeParse({
+      education: [{ school: "MIT", degree: "BS", start_year: "2018" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.education![0].field).toBe("");
+      expect(result.data.education![0].end_year).toBe("");
+    }
+  });
+
+  it("applies defaults for certification fields", () => {
+    const result = profileUpdateSchema.safeParse({
+      certifications: [{ name: "Cert", issuer: "Org" }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.certifications![0].date).toBe("");
+      expect(result.data.certifications![0].url).toBe("");
+    }
   });
 });

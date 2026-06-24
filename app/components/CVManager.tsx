@@ -6,7 +6,7 @@ import CVCard from "./CVCard";
 import CVScoreCard from "./CVScoreCard";
 import type { CV, CVScore } from "./types-cv";
 
-export default function CVManager() {
+export default function CVManager({ onCvUploaded }: { onCvUploaded?: () => void }) {
   const [cv, setCv] = useState<CV | null>(null);
   const [score, setScore] = useState<CVScore | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +79,7 @@ export default function CVManager() {
         setScore(data.score);
       }
       setSuccess("CV uploaded successfully!");
+      onCvUploaded?.();
     } catch {
       setError("Failed to upload CV. Please try again.");
     } finally {

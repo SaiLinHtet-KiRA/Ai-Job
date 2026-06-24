@@ -366,6 +366,152 @@
         "properties": {
           "applications": { "type": "array", "items": { "$ref": "#/components/schemas/Application" } }
         }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "string" },
+          "email": { "type": "string" },
+          "full_name": { "type": "string", "nullable": true },
+          "headline": { "type": "string", "nullable": true },
+          "location": { "type": "string", "nullable": true },
+          "about": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "proficiency": { "type": "string", "enum": ["elementary", "limited", "professional", "full", "native"] }
+              }
+            }
+          },
+          "website": { "type": "string", "nullable": true },
+          "linkedin_url": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "work_experience": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "company": { "type": "string" },
+                "location": { "type": "string" },
+                "start_date": { "type": "string" },
+                "end_date": { "type": "string" },
+                "current": { "type": "boolean" },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "school": { "type": "string" },
+                "degree": { "type": "string" },
+                "field": { "type": "string" },
+                "start_year": { "type": "string" },
+                "end_year": { "type": "string" }
+              }
+            }
+          },
+          "certifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "issuer": { "type": "string" },
+                "date": { "type": "string" },
+                "url": { "type": "string" }
+              }
+            }
+          },
+          "suitable_title": { "type": "array", "items": { "type": "string" } },
+          "experience_level": { "type": "string" },
+          "target_roles": { "type": "array", "items": { "type": "string" } },
+          "preferred_locations": { "type": "array", "items": { "type": "string" } },
+          "remote_ok": { "type": "boolean" },
+          "status": { "type": "string" },
+          "created_at": { "type": "string" },
+          "updated_at": { "type": "string" }
+        }
+      },
+      "ProfileUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "full_name": { "type": "string", "nullable": true },
+          "headline": { "type": "string", "nullable": true },
+          "location": { "type": "string", "nullable": true },
+          "about": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "proficiency": { "type": "string", "enum": ["elementary", "limited", "professional", "full", "native"] }
+              }
+            }
+          },
+          "website": { "type": "string", "nullable": true },
+          "linkedin_url": { "type": "string", "nullable": true },
+          "phone": { "type": "string", "nullable": true },
+          "work_experience": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "company": { "type": "string" },
+                "location": { "type": "string" },
+                "start_date": { "type": "string" },
+                "end_date": { "type": "string" },
+                "current": { "type": "boolean" },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "school": { "type": "string" },
+                "degree": { "type": "string" },
+                "field": { "type": "string" },
+                "start_year": { "type": "string" },
+                "end_year": { "type": "string" }
+              }
+            }
+          },
+          "certifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "issuer": { "type": "string" },
+                "date": { "type": "string" },
+                "url": { "type": "string" }
+              }
+            }
+          },
+          "experience_level": { "type": "string" },
+          "target_roles": { "type": "array", "items": { "type": "string" } },
+          "preferred_locations": { "type": "array", "items": { "type": "string" } },
+          "remote_ok": { "type": "boolean" }
+        }
       }
     }
   },
@@ -455,6 +601,51 @@
           },
           "400": { "description": "Validation error" },
           "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Get authenticated user's profile",
+        "description": "Returns the full user profile including work experience, education, skills, and preferences.",
+        "tags": ["User - Profile"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Profile" }
+              }
+            }
+          },
+          "401": { "description": "Not authenticated" },
+          "404": { "description": "Profile not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update authenticated user's profile",
+        "description": "Partial update of profile fields. All fields are optional — only send the fields you want to change.",
+        "tags": ["User - Profile"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProfileUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Profile" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Not authenticated" },
+          "404": { "description": "Profile not found" }
         }
       }
     },

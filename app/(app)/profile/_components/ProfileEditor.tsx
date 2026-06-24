@@ -125,6 +125,35 @@ export default function ProfileEditor({ profile }: { profile: ProfileData }) {
     [],
   );
 
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetch("/api/profile");
+      if (!res.ok) return;
+      const data: ProfileData = await res.json();
+      setForm((prev) => ({
+        full_name: prev.full_name || data.full_name || "",
+        headline: prev.headline || data.headline || "",
+        location: prev.location || data.location || "",
+        about: prev.about || data.about || "",
+        avatar_url: prev.avatar_url || data.avatar_url || "",
+        website: prev.website || data.website || "",
+        linkedin_url: prev.linkedin_url || data.linkedin_url || "",
+        phone: prev.phone || data.phone || "",
+        skills: prev.skills.length > 0 ? prev.skills : data.skills ?? [],
+        languages: prev.languages.length > 0 ? prev.languages : data.languages ?? [],
+        work_experience: prev.work_experience.length > 0 ? prev.work_experience : data.work_experience ?? [],
+        education: prev.education.length > 0 ? prev.education : data.education ?? [],
+        certifications: prev.certifications.length > 0 ? prev.certifications : data.certifications ?? [],
+        experience_level: prev.experience_level !== "mid" ? prev.experience_level : data.experience_level ?? "mid",
+        target_roles: prev.target_roles.length > 0 ? prev.target_roles : data.target_roles ?? [],
+        preferred_locations: prev.preferred_locations.length > 0 ? prev.preferred_locations : data.preferred_locations ?? [],
+        remote_ok: prev.remote_ok !== data.remote_ok ? prev.remote_ok : data.remote_ok ?? true,
+      }));
+    } catch {
+      console.error("Failed to refetch profile after CV upload");
+    }
+  }, []);
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -282,6 +311,7 @@ export default function ProfileEditor({ profile }: { profile: ProfileData }) {
         <div className="flex items-start gap-5">
           <div className="h-20 w-20 flex-shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
             {form.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={form.avatar_url}
                 alt={profileName}
@@ -1049,7 +1079,7 @@ export default function ProfileEditor({ profile }: { profile: ProfileData }) {
 
       {/* CV Section */}
       <div>
-        <CVManager />
+        <CVManager onCvUploaded={fetchProfile} />
       </div>
     </div>
   );

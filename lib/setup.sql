@@ -252,6 +252,21 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+-- LinkedIn-style profile fields (migration)
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS headline TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS about TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS skills JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS languages JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS work_experience JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS education JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS certifications JSONB NOT NULL DEFAULT '[]';
+
 -- ── applications_sent (audit log) ─────────────────────────
 CREATE TABLE IF NOT EXISTS applications_sent (
   id BIGSERIAL PRIMARY KEY,

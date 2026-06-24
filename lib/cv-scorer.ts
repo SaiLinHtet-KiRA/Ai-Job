@@ -30,6 +30,18 @@ const scoreSchema = z.object({
     .array(z.string())
     .describe("Job titles that best match the candidate's experience and skills"),
   summary: z.string().describe("Brief summary of the evaluation"),
+  full_name: z
+    .string()
+    .optional()
+    .describe("Candidate's full name extracted from the resume header"),
+  headline: z
+    .string()
+    .optional()
+    .describe("Professional headline inferred from current/most recent role"),
+  location: z
+    .string()
+    .optional()
+    .describe("Candidate's location (city, state, or country) mentioned in the resume"),
 });
 
 export interface CVScoreResult {
@@ -40,6 +52,9 @@ export interface CVScoreResult {
   skills: string[];
   recommended_job_titles: string[];
   summary: string;
+  full_name?: string;
+  headline?: string;
+  location?: string;
   cv_score_id: number | null;
 }
 
@@ -57,6 +72,9 @@ Extract and generate:
 * weaknesses: exactly 3 specific weaknesses that reduce ATS performance
 * keywords_missing: relevant ATS keywords missing for the candidate's likely target role(s)
 * summary: concise 2-4 sentence professional summary
+* full_name: candidate's full name as it appears at the top of the resume (optional — omit if unclear)
+* headline: a short professional headline inferred from the candidate's current or most recent role, e.g. "Senior Software Engineer at Google" (optional — omit if unclear)
+* location: candidate's city/state/country mentioned on the resume (optional — omit if unclear)
 
 Return JSON in this exact format:
 
@@ -70,7 +88,10 @@ Return JSON in this exact format:
 "strengths": [],
 "weaknesses": [],
 "keywords_missing": [],
-"summary": ""
+"summary": "",
+"full_name": "",
+"headline": "",
+"location": ""
 }
 
 Rules:
@@ -89,6 +110,9 @@ Rules:
 12. Ensure all arrays contain plain strings only.
 13. Infer the candidate's most likely career track and target role before generating skills, recommended_job_titles, and keywords_missing.
 14. Prioritize business capabilities, domain expertise, and professional competencies over software tools when generating skills.
+15. For full_name, extract the name from the top/header of the resume. If unclear, return an empty string.
+16. For headline, create a concise professional headline like "Job Title at Company" based on the most recent position. If unclear, return an empty string.
+17. For location, extract the city/state/country. If multiple locations appear, use the most recent. If unclear, return an empty string.
 
 `;
 

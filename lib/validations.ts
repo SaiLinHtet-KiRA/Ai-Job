@@ -144,3 +144,56 @@ export const bulkCoursesRequestSchema = z.object({
     .min(1, "At least one course is required.")
     .max(500, "Maximum 500 courses per bulk import."),
 });
+
+const workExperienceSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1, "Job title is required."),
+  company: z.string().min(1, "Company is required."),
+  location: z.string().optional().default(""),
+  start_date: z.string().min(1, "Start date is required."),
+  end_date: z.string().optional().default(""),
+  current: z.boolean().optional().default(false),
+  description: z.string().optional().default(""),
+});
+
+const educationSchema = z.object({
+  id: z.string().optional(),
+  school: z.string().min(1, "School is required."),
+  degree: z.string().min(1, "Degree is required."),
+  field: z.string().optional().default(""),
+  start_year: z.string().min(1, "Start year is required."),
+  end_year: z.string().optional().default(""),
+});
+
+const certificationSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required."),
+  issuer: z.string().min(1, "Issuer is required."),
+  date: z.string().optional().default(""),
+  url: z.string().optional().default(""),
+});
+
+const languageSchema = z.object({
+  name: z.string().min(1, "Language name is required."),
+  proficiency: z.enum(["elementary", "limited", "professional", "full", "native"]),
+});
+
+export const profileUpdateSchema = z.object({
+  full_name: z.string().optional().nullable(),
+  headline: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  about: z.string().optional().nullable(),
+  avatar_url: z.string().optional().nullable(),
+  skills: z.array(z.string()).optional(),
+  languages: z.array(languageSchema).optional(),
+  website: z.string().optional().nullable(),
+  linkedin_url: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  work_experience: z.array(workExperienceSchema).optional(),
+  education: z.array(educationSchema).optional(),
+  certifications: z.array(certificationSchema).optional(),
+  experience_level: z.string().optional(),
+  target_roles: z.array(z.string()).optional(),
+  preferred_locations: z.array(z.string()).optional(),
+  remote_ok: z.boolean().optional(),
+});

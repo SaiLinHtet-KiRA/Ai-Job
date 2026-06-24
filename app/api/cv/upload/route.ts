@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/next-auth";
 import { extractCVText } from "@/lib/extract-cv-text";
 import { scoreCV } from "@/lib/cv-scorer";
-import { updateUserSuitableTitle } from "@/lib/user-profile";
+import { updateUserSuitableTitle, getUserProfile, updateUserProfile } from "@/lib/user-profile";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -118,10 +118,50 @@ export async function POST(req: NextRequest) {
       return null;
     });
 
-    if (scoreResult?.recommended_job_titles?.length) {
-      await updateUserSuitableTitle(userId, scoreResult.recommended_job_titles).catch((err) => {
-        console.error("Failed to update user suitable title:", err);
-      });
+    if (scoreResult) {
+      const currentProfile = await getUserProfile(userId);
+
+      if (currentProfile) {
+        const updates: Record<string, unknown> = {};
+
+        if (scoreResult.recommended_job_titles?.length) {
+          updates.suitable_title = scoreResult.recommended_job_titles;
+        }
+
+        if (scoreResult.skills?.length && (!currentProfile.skills || currentProfile.skills.length === 0)) {
+          updates.skills = scoreResult.skills;
+        }
+
+        if (scoreResult.summary && !currentProfile.about) {
+          updates.about = scoreResult.summary;
+        }
+
+        if (scoreResult.full_name && !currentProfile.full_name) {
+          updates.full_name = scoreResult.full_name;
+        }
+
+        if (scoreResult.headline && !currentProfile.headline) {
+          updates.headline = scoreResult.headline;
+        }
+
+        if (scoreResult.location && !currentProfile.location) {
+          updates.location = scoreResult.location;
+        }
+
+        if (scoreResult.recommended_job_titles?.length && (!currentProfile.target_roles || currentProfile.target_roles.length === 0)) {
+          updates.target_roles = scoreResult.recommended_job_titles.slice(0, 3);
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await updateUserProfile(userId, updates).catch((err) => {
+            console.error("Failed to auto-fill profile from CV:", err);
+          });
+        }
+      } else if (scoreResult.recommended_job_titles?.length) {
+        await updateUserSuitableTitle(userId, scoreResult.recommended_job_titles).catch((err) => {
+          console.error("Failed to update user suitable title:", err);
+        });
+      }
     }
 
     return NextResponse.json({

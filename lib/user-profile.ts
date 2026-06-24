@@ -6,11 +6,57 @@ const supabaseAdmin = () =>
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+export interface WorkExperience {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  start_date: string;
+  end_date: string;
+  current: boolean;
+  description: string;
+}
+
+export interface Education {
+  id: string;
+  school: string;
+  degree: string;
+  field: string;
+  start_year: string;
+  end_year: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  url: string;
+}
+
+export interface Language {
+  name: string;
+  proficiency: "elementary" | "limited" | "professional" | "full" | "native";
+}
+
 export interface UserProfile {
   id: number;
   user_id: string;
   email: string;
   status: string;
+  full_name: string | null;
+  headline: string | null;
+  location: string | null;
+  about: string | null;
+  avatar_url: string | null;
+  skills: string[];
+  languages: Language[];
+  website: string | null;
+  linkedin_url: string | null;
+  phone: string | null;
+  work_experience: WorkExperience[];
+  education: Education[];
+  certifications: Certification[];
   suitable_title: string[];
   experience_level: string;
   target_roles: string[];
@@ -55,8 +101,14 @@ export async function ensureUserProfile(
     suitable_title: [],
     target_roles: [],
     preferred_locations: [],
-    experience_level: name ? "mid" : "mid",
+    experience_level: "mid",
     remote_ok: true,
+    skills: [],
+    languages: [],
+    work_experience: [],
+    education: [],
+    certifications: [],
+    full_name: name ?? null,
   });
 }
 
@@ -82,4 +134,27 @@ export async function updateUserSuitableTitle(
       last_scored_at: new Date().toISOString(),
     })
     .eq("user_id", userId);
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: Record<string, unknown>,
+): Promise<UserProfile | null> {
+  const supabase = supabaseAdmin();
+  const { data: updated, error } = await supabase
+    .from("user_profiles")
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("Profile update error:", error);
+    return null;
+  }
+
+  return updated as UserProfile;
 }

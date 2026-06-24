@@ -138,4 +138,41 @@ describe("CVManager", () => {
       expect(viewLink.closest("a")).toHaveAttribute("target", "_blank");
     });
   });
+
+  it("calls onCvUploaded callback after successful upload with score", async () => {
+    const onCvUploaded = vi.fn();
+
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ cv: null }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            cv: { id: 1, fileName: "resume.pdf", url: "url", parsedText: "..." },
+            score: { score: 85 },
+          }),
+      } as Response);
+
+    render(<CVManager onCvUploaded={onCvUploaded} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Click to upload your CV")).toBeInTheDocument();
+    });
+
+    const input = document.querySelector("input[type='file']") as HTMLInputElement;
+    expect(input).toBeInTheDocument();
+
+    const file = new File(["dummy"], "resume.pdf", { type: "application/pdf" });
+    const user = (await import("@testing-library/user-event")).default;
+    const ue = user.setup();
+    await ue.upload(input, file);
+
+    await waitFor(() => {
+      expect(onCvUploaded).toHaveBeenCalledTimes(1);
+    });
+  });
 });
